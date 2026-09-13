@@ -8,7 +8,7 @@ class StorageTests(unittest.TestCase):
    root=Path(temp);source=root/'old';target=root/'new';source.mkdir();(source/'engine').mkdir();(source/'library.json').write_text('{"fits":[]}',encoding='utf-8');(source/'engine'/'state.json').write_text('engine',encoding='utf-8')
    with patch.object(storage,'CONFIG',root/'config.json'):
     directory,backup=storage.migrate(source,str(target))
-    self.assertEqual(directory,target);self.assertEqual(storage.read_location(source),target)
+    self.assertEqual(directory,target.resolve());self.assertEqual(storage.read_location(source),target.resolve())
     self.assertEqual((backup/'library.json').read_text(),'{"fits":[]}')
     (source/'engine'/'later.txt').write_text('new engine write')
     self.assertEqual((target/'engine'/'later.txt').read_text(),'new engine write')
