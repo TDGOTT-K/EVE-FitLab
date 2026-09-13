@@ -796,5 +796,41 @@ window.siteTranslations = {
     "zh-TW": "發行說明與下載檔案 ↗",
     "en": "Release notes and files ↗",
     "ja": "リリースノートとファイル ↗"
+  },
+  "QQ 交流群": {
+    "zh-CN": "QQ 交流群",
+    "zh-TW": "QQ 交流群",
+    "en": "QQ community",
+    "ja": "QQ コミュニティ"
+  },
+  "一起配船，一起把 FitLab 做得更好。": {
+    "zh-CN": "一起配船，一起把 FitLab 做得更好。",
+    "zh-TW": "一起配船，一起把 FitLab 做得更好。",
+    "en": "Better fits. A better FitLab. Together.",
+    "ja": "一緒に装備を考え、FitLab をもっと良く。"
+  },
+  "加入 QQ 交流群，交流装配、反馈问题、获取版本消息。": {
+    "zh-CN": "加入 QQ 交流群，交流装配、反馈问题、获取版本消息。",
+    "zh-TW": "加入 QQ 交流群，交流裝配、回報問題、取得版本消息。",
+    "en": "Join our QQ group to discuss fits, report issues and hear about new releases.",
+    "ja": "QQ グループで装備を相談し、不具合を報告したり、新バージョンの情報を受け取れます。"
+  },
+  "复制群号": {
+    "zh-CN": "复制群号",
+    "zh-TW": "複製群號",
+    "en": "Copy group ID",
+    "ja": "グループ番号をコピー"
+  },
+  "在 QQ 中搜索群号，申请加入「EVE Fitlab交流群」。": {
+    "zh-CN": "在 QQ 中搜索群号，申请加入「EVE Fitlab交流群」。",
+    "zh-TW": "在 QQ 中搜尋群號，申請加入「EVE Fitlab交流群」。",
+    "en": "Search this group ID in QQ and request to join “EVE Fitlab交流群”.",
+    "ja": "QQ でこの番号を検索し、「EVE Fitlab交流群」への参加を申請してください。"
+  },
+  "EVE Fitlab交流群，群号 704164562": {
+    "zh-CN": "EVE Fitlab交流群，群号 704164562",
+    "zh-TW": "EVE Fitlab交流群，群號 704164562",
+    "en": "EVE Fitlab QQ community, group ID 704164562",
+    "ja": "EVE Fitlab QQ グループ、番号 704164562"
   }
 };
