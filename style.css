@@ -357,3 +357,7 @@ html[lang=en] body{font-family:'Segoe UI',sans-serif}html[lang=ja] body{font-fam
 
 .brand{position:relative;padding-bottom:15px}.brand .official-site{position:absolute;left:0;bottom:-2px;white-space:nowrap;font:10px/1.4 "Segoe UI","Microsoft YaHei",sans-serif;letter-spacing:.2px;color:var(--accent);text-decoration:none}.brand .official-site:hover{text-decoration:underline;color:var(--text)}.developer-download{margin:0 0 18px;padding:12px;border:1px solid var(--accent);background:var(--row)}.developer-download a{color:var(--accent);text-decoration:none}.developer-download a:hover{text-decoration:underline}
 .brand .official-site{font-size:12px;font-weight:600}
+
+/* Item details can overlap the native titlebar after loading or dragging.
+   Keep that overlay interactive; its titlebar uses JS pointer dragging. */
+.desktop-app #info-window,.desktop-app #info-window .info-titlebar,.desktop-app #info-close{-webkit-app-region:no-drag;app-region:no-drag}
