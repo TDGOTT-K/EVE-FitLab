@@ -27,7 +27,7 @@ venv/
 *.exe
 *.msi
 # Download official SDE separately (large CCP dataset).
-sde/
+/sde/
 
 # Private development notes and temporary deployment probes
 docs/2026-09-14-*.md
