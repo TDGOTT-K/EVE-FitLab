@@ -1,0 +1,6 @@
+const imageDialog=document.querySelector('#image-dialog'),sponsorDialog=document.querySelector('#sponsor-dialog');
+document.querySelector('#preview').onclick=()=>imageDialog.showModal();
+document.querySelector('#sponsor').onclick=()=>sponsorDialog.showModal();
+for(const dialog of document.querySelectorAll('dialog')){dialog.querySelector('.close').onclick=()=>dialog.close();dialog.addEventListener('click',event=>{if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();}});}
+let toastTimer;async function copy(text){const toast=document.querySelector('#toast');try{await navigator.clipboard.writeText(text);toast.textContent=window.siteT('已复制');}catch{toast.textContent=window.siteT('复制失败，请手动复制：')+text;}toast.classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('visible'),3500);}
+document.querySelector('#copy-qq').onclick=()=>copy('2377951590');document.querySelector('#copy-address').onclick=()=>copy('TYDiRLFWukWdHpiZKQdGLoX7ivH2PFtPBS');

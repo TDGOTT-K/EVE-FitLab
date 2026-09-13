@@ -1,0 +1,4 @@
+from pathlib import Path
+p=Path('server.py');s=p.read_text(encoding='utf-8');s=s.replace("TYPES={t['id']:t for t in CATALOG}","TYPES={t['id']:t for t in CATALOG}\nMETADATA=json.loads((ROOT/'data/item-metadata.json').read_text(encoding='utf-8'))")
+s=s.replace("   if self.path=='/api/library'", "   if re.fullmatch(r'/api/items/\\d+',self.path):\n    item=TYPES.get(int(self.path.rsplit('/',1)[1]))\n    if not item:return self.reply({'error':'物品不存在'},404)\n    attrs=[dict(METADATA['attributes'].get(str(k),{}),value=v) for k,v in item['attrs'].items()]\n    return self.reply({'attributes':attrs,'units':METADATA['units'],'effects':[METADATA['effects'].get(str(i),{}) for i in item['effects']],'description':METADATA['descriptions'].get(str(item['id']),{})})\n   if self.path=='/api/library'")
+p.write_text(s,encoding='utf-8')

@@ -1,0 +1,1 @@
+Ship corner PNGs copied unchanged from local EVE-Nexus reference assets: EVE Nexus/Assets.xcassets/corners/{T2,T3,Factions}.imageset. These are existing reference-project artwork, not newly drawn FitLab icons.\n

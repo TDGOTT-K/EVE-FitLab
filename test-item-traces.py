@@ -1,0 +1,2 @@
+from pathlib import Path
+p=Path(r'D:/IT/EVE/EdenOsRewrite/tests/EdenOS.Application.Tests/DogmaFittingIntegrationTests.cs');s=p.read_text(encoding='utf-8');s=s.replace('foreach (var trace in result.Attributes.AttributeTraces.Values.Where(t => t.IsComplete))', 'Assert.Contains(result.Snapshot.Modules, m => m.AttributeTraces.Count > 0);\n        foreach (var trace in result.Attributes.AttributeTraces.Values.Concat(result.Snapshot.Modules.SelectMany(m => m.AttributeTraces.Values)).Where(t => t.IsComplete))');p.write_text(s,encoding='utf-8')

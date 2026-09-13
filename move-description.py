@@ -1,0 +1,3 @@
+from pathlib import Path
+p=Path('item-info.js');s=p.read_text(encoding='utf-8');old='${description?`<details class="item-description"><summary>物品描述</summary><p>${esc(description)}</p></details>`:\'\'}';assert old in s;s=s.replace(old,'');s=s.replace('<nav class="info-tabs">','${description?.trim()?`<p class="info-description">${esc(description.trim())}</p>`:\'\'}<nav class="info-tabs">');p.write_text(s,encoding='utf-8')
+p=Path('style.css');s=p.read_text(encoding='utf-8');s+='\n.info-description{margin:18px 0 0;font-size:12px;line-height:1.9;color:var(--text);white-space:pre-line;overflow-wrap:anywhere}\n';p.write_text(s,encoding='utf-8')

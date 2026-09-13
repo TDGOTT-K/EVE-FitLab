@@ -1,0 +1,2 @@
+from pathlib import Path
+p=Path('app.js');s=p.read_text(encoding='utf-8');s="import {mountEngineStats} from './engine-view.js';\n"+s;s+='\nfunction renderEngineStats(){const scroll=$(\'.inspector\').scrollTop;mountEngineStats($(\'#ship-stats\'),report,ship,fitRecord.characterName,defenseEhp,()=>{defenseEhp=!defenseEhp;renderEngineStats()});$(\'.inspector\').scrollTop=scroll}\n';p.write_text(s,encoding='utf-8')

@@ -1,0 +1,4 @@
+from pathlib import Path
+r=Path(r'D:/IT/EVE/EdenOsRewrite/src/application-csharp/EdenOS.Application/Fitting/Dogma')
+p=r/'DogmaFitAdapter.cs';s=p.read_text(encoding='utf-8');s=s.replace('            var requestedState = ToEffectState(module.State);','            if (module.State == FittingItemState.Offline)\n            {\n                resolvedModules.Add(module);\n                continue;\n            }\n            var requestedState = ToEffectState(module.State);');p.write_text(s,encoding='utf-8')
+p=r/'Engine/FittingCalculator.cs';s=p.read_text(encoding='utf-8');s=s.replace('            var state = ParseState(module.State);','            if (string.Equals(module.State, "offline", StringComparison.OrdinalIgnoreCase)) continue;\n            var state = ParseState(module.State);');p.write_text(s,encoding='utf-8')

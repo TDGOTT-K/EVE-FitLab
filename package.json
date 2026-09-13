@@ -1,0 +1,100 @@
+{
+  "name": "eve-fitlab",
+  "version": "0.1.1",
+  "description": "EVE FitLab 舰船装配工作台",
+  "author": "深海的鱼 (ImFishMan)",
+  "private": true,
+  "main": "desktop/main.cjs",
+  "scripts": {
+    "desktop": "electron .",
+    "build:windows": "powershell -NoProfile -ExecutionPolicy Bypass -File desktop/build.ps1",
+    "package:windows": "electron-builder --win nsis --x64",
+    "build:qr": "esbuild desktop/qr-vendor-entry.js --bundle --format=esm --platform=browser --minify --outfile=qr-vendor.js",
+    "test:share-code": "node test_fit_image_code.mjs",
+    "build:locale-vendor": "esbuild desktop/locale-vendor-entry.js --bundle --format=esm --platform=browser --minify --outfile=locale-vendor.js",
+    "check:locales": "python scripts/check-locales.py"
+  },
+  "devDependencies": {
+    "@babel/generator": "^7.29.8",
+    "@babel/parser": "^7.29.8",
+    "@babel/traverse": "^7.29.8",
+    "@babel/types": "^7.29.8",
+    "electron": "44.3.0",
+    "electron-builder": "26.15.3",
+    "esbuild": "^0.25.12",
+    "jsqr": "^1.4.0",
+    "opencc-js": "^1.4.2",
+    "qrcode": "^1.5.4"
+  },
+  "build": {
+    "appId": "com.imfishman.evefitlab",
+    "productName": "EVE FitLab",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "desktop/main.cjs",
+      "desktop/preload.cjs",
+      "desktop/splash.html",
+      "package.json",
+      "desktop/icon.png"
+    ],
+    "extraResources": [
+      {
+        "from": "desktop/build/backend",
+        "to": "backend"
+      },
+      {
+        "from": "desktop/build/engine",
+        "to": "engine"
+      },
+      {
+        "from": "desktop/build/web",
+        "to": "web"
+      },
+      {
+        "from": "desktop/build/sde",
+        "to": "sde"
+      },
+      {
+        "from": "desktop/icon.ico",
+        "to": "icon.ico"
+      },
+      {
+        "from": "desktop/licenses",
+        "to": "licenses"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "desktop/icon.ico",
+      "artifactName": "EVE-FitLab-${version}-Windows-x64-Setup.${ext}",
+      "signExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "deleteAppDataOnUninstall": false,
+      "installerLanguages": [
+        "zh_CN",
+        "en_US"
+      ]
+    }
+  },
+  "license": "MIT",
+  "homepage": "https://imfishman.com/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TDGOTT-K/EVE-FitLab.git"
+  },
+  "bugs": {
+    "url": "https://github.com/TDGOTT-K/EVE-FitLab/issues"
+  },
+  "funding": {
+    "type": "custom",
+    "url": "https://github.com/TDGOTT-K/EVE-FitLab/blob/main/SPONSOR.md"
+  }
+}

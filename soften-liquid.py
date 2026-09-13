@@ -1,0 +1,3 @@
+from pathlib import Path
+p=Path('explanations.js');s=p.read_text(encoding='utf-8');s=s.replace('stdDeviation="1.6"','stdDeviation="0.9"').replace('rx="5" ry="2.4"','rx="3" ry="1.4"').replace('progress*length-i*5+length','progress*length-i*3+length').replace('width=4.8*(1-i/drops.length)+1.3','width=2.7*(1-i/drops.length)+0.75').replace('String(width+1.8)','String(width+1)').replace('width*.65+wave*.6','width*.65+wave*.35');p.write_text(s,encoding='utf-8')
+p=Path('style.css');s=p.read_text(encoding='utf-8').replace('.liquid-tail{opacity:.95}', '.liquid-tail{opacity:.78}').replace('drop-shadow(0 0 4px #f6c55c)','drop-shadow(0 0 2px #f6c55c99)');p.write_text(s,encoding='utf-8')

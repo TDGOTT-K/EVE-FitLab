@@ -1,0 +1,52 @@
+import hashlib, base64, unittest, urllib.parse
+from unittest.mock import patch
+import eve_sso
+from test_server import PersistenceTests
+
+class CharacterTests(PersistenceTests):
+ def test_character_edit_and_validation(self):
+  c=self.call('character',{'name':'自定义测试','skills':[{'skillTypeId':3300,'level':3}]})
+  self.assertEqual(c['source'],'自定义角色')
+  changed=self.call('character',dict(c,name='改名',skills=[]));self.assertEqual(changed['id'],c['id']);self.assertEqual(changed['skills'],[])
+  import urllib.error
+  with self.assertRaises(urllib.error.HTTPError):self.call('character',c)
+  with self.assertRaises(urllib.error.HTTPError):self.call('character',{'name':'无效','skills':[{'skillTypeId':3300,'level':9}]})
+  with self.assertRaises(urllib.error.HTTPError):self.call('character',{'id':'all5','name':'内置','skills':[]})
+  self.call('character/delete',{'id':c['id']})
+  import server
+  self.assertEqual(server.read_library()['characters'],[])
+ def test_callback_import_and_reimport(self):
+  import http.client,server,json
+  for expected in [1,2]:
+   conn=http.client.HTTPConnection('127.0.0.1',self.http.server_port)
+   conn.request('POST','/api/eve/login','{}',{'Origin':self.url,'Content-Type':'application/json'})
+   r=conn.getresponse();cookie=r.getheader('Set-Cookie').split(';')[0];url=json.loads(r.read())['url'];state=urllib.parse.parse_qs(urllib.parse.urlsplit(url).query)['state'][0]
+   self.assertEqual(urllib.parse.parse_qs(urllib.parse.urlsplit(url).query)['client_id'],[eve_sso.CLIENT_ID])
+   with patch('eve_sso.request_json',side_effect=[{'access_token':'test'}, {'CharacterID':123,'CharacterName':'测试官网角色','Scopes':eve_sso.SCOPE},{'skills':[{'skill_id':3300,'active_skill_level':4}]}]):
+    conn.request('GET','/api/eve/callback?state='+state+'&code=test',headers={'Cookie':cookie})
+    r=conn.getresponse();self.assertEqual(r.status,303);self.assertIn('imported',r.getheader('Location'));r.read()
+   saved=server.read_library()['characters'];self.assertEqual(len(saved),1);self.assertEqual(saved[0]['revision'],expected);self.assertNotIn('access_token',saved[0]);conn.close()
+
+class OAuthTests(unittest.TestCase):
+ def test_pkce_browser_binding_and_single_use(self):
+  url,cookie=eve_sso.begin('testclient123');q=urllib.parse.parse_qs(urllib.parse.urlsplit(url).query);state=q['state'][0]
+  self.assertEqual(q['code_challenge_method'],['S256'])
+  with self.assertRaises(ValueError):eve_sso.finish({'state':[state],'code':['code']},'wrong-browser')
+  def request(url,data=None,token=None):
+   if data:
+    digest=base64.urlsafe_b64encode(hashlib.sha256(data['code_verifier'].encode()).digest()).decode().rstrip('=');self.assertEqual(digest,q['code_challenge'][0]);return {'access_token':'test'}
+   if url.endswith('/verify'):return {'CharacterID':123,'CharacterName':'Pilot','Scopes':eve_sso.SCOPE}
+   return {'skills':[{'skill_id':3300,'active_skill_level':3}]}
+  with patch('eve_sso.request_json',side_effect=request):
+   self.assertEqual(eve_sso.finish({'state':[state],'code':['code']},cookie)['skills'][0]['level'],3)
+  with self.assertRaises(ValueError):eve_sso.finish({'state':[state],'code':['code']},cookie)
+ def test_missing_scope_is_rejected(self):
+  url,cookie=eve_sso.begin('testclient123');q=urllib.parse.parse_qs(urllib.parse.urlsplit(url).query)
+  with patch('eve_sso.request_json',side_effect=[{'access_token':'test'},{'CharacterID':123,'CharacterName':'Pilot','Scopes':''}]) as request:
+   with self.assertRaises(ValueError):eve_sso.finish({'state':q['state'],'code':['code']},cookie)
+   self.assertEqual(request.call_count,2)
+ def test_expired_authorization(self):
+  url,cookie=eve_sso.begin('testclient123');q=urllib.parse.parse_qs(urllib.parse.urlsplit(url).query)
+  with patch('eve_sso.time.time',return_value=10**12):
+   with self.assertRaises(ValueError):eve_sso.finish({'state':q['state'],'code':['code']},cookie)
+if __name__=='__main__':unittest.main()

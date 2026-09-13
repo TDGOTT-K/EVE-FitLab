@@ -1,0 +1,34 @@
+node_modules/
+release/
+desktop/build/
+desktop/engine/bin/
+desktop/engine/obj/
+__pycache__/
+state/
+.playwright-cli/
+
+# Local credentials, user data and generated artifacts
+output/
+.wrangler/
+.env
+.env.*
+!.env.example
+*.log
+*.pem
+*.key
+*.pfx
+*.p12
+**/bin/
+**/obj/
+.venv/
+venv/
+*.pyc
+*.zip
+*.exe
+*.msi
+# Download official SDE separately (large CCP dataset).
+sde/
+
+# Private development notes and temporary deployment probes
+docs/2026-09-14-*.md
+website/downloads/*test*

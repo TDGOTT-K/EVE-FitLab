@@ -1,0 +1,199 @@
+{
+  "schema_version": 2,
+  "generated_at_utc": "2026-04-17T16:34:44.121530+00:00",
+  "source": {
+    "build_number": 3307202,
+    "world": "tq",
+    "sde_jsonl_root": null,
+    "loader_json_root": null,
+    "effects_overlay_json_path": null,
+    "attributes_overlay_json_path": null
+  },
+  "slot_kinds": {
+    "high": {
+      "effect_ids": [
+        12
+      ],
+      "effect_names": [
+        "hiPower"
+      ]
+    },
+    "mid": {
+      "effect_ids": [
+        13
+      ],
+      "effect_names": [
+        "medPower"
+      ]
+    },
+    "low": {
+      "effect_ids": [
+        11
+      ],
+      "effect_names": [
+        "loPower"
+      ]
+    },
+    "rig": {
+      "effect_ids": [
+        2663
+      ],
+      "effect_names": [
+        "rigSlot"
+      ]
+    },
+    "subsystem": {
+      "effect_ids": [
+        3772
+      ],
+      "effect_names": [
+        "subSystem"
+      ]
+    },
+    "service": {
+      "effect_ids": [
+        6306
+      ],
+      "effect_names": [
+        "serviceSlot"
+      ]
+    }
+  },
+  "weapon_application_kinds": {
+    "turret": {
+      "effect_ids": [
+        34,
+        1086
+      ],
+      "effect_names": [
+        "projectileFired",
+        "projectileFiredForEntities",
+        "energyFired",
+        "hybridFired"
+      ]
+    },
+    "missile": {
+      "effect_ids": [
+        9,
+        101,
+        103,
+        104,
+        569,
+        12174
+      ],
+      "effect_names": [
+        "useMissiles",
+        "useMissilesFoe",
+        "missileLaunching",
+        "missileLaunchingForEntity",
+        "dotMissileLaunching",
+        "fofMissileLaunching",
+        "defenderMissileLaunching"
+      ]
+    },
+    "drone": {
+      "effect_ids": [
+        10
+      ],
+      "effect_names": [
+        "targetAttack"
+      ]
+    }
+  },
+  "named_effect_ids": {
+    "alignTime": -1,
+    "armorEffectiveRepairRate": -32,
+    "armorEhp": -26,
+    "armorRepairRate": -31,
+    "capacitorPeakDelta": -8,
+    "capacitorPeakLoad": -7,
+    "capacitorPeakRecharge": -2,
+    "chargeAmount": -9,
+    "chargeAmountAmmo": -10,
+    "cpuPowerFree": -12,
+    "cpuPowerLoad": -11,
+    "cycleTimeDuration": -3,
+    "cycleTimeDurationHighisGood": -4,
+    "cycleTimeReactivationDelay": -6,
+    "cycleTimeSpeed": -5,
+    "damageAlpha": -13,
+    "damagePerSecondBasedOnDuration": -15,
+    "damagePerSecondBasedOnSpeed": -14,
+    "damagePerSecondWithoutReload": -16,
+    "damagePerSecondWithReload": -17,
+    "damagePerSecondWithReloadDrone": -18,
+    "damageVolley": -21,
+    "damageVolleyAmmo": -19,
+    "damageVolleyDot": -20,
+    "damageVolleyMultiplier": -22,
+    "droneActive": -23,
+    "droneLoad": -24,
+    "ehp": -25,
+    "hullEffectiveRepairRate": -34,
+    "hullEhp": -27,
+    "hullRepairRate": -33,
+    "missileDamage": -29,
+    "passiveShieldRechargeRate": -37,
+    "scanStrength": -38,
+    "shieldBoostRate": -35,
+    "shieldEffectiveBoostRate": -36,
+    "shieldEhp": -28,
+    "velocityBoost": -30
+  },
+  "named_attribute_ids": {
+    "alignTime": -1,
+    "armorDamageEffectiveResonance": -30,
+    "armorEffectiveRepairRate": -46,
+    "armorEhp": -31,
+    "armorEmDamageEffectiveResonance": -26,
+    "armorExplosiveDamageEffectiveResonance": -27,
+    "armorKineticDamageEffectiveResonance": -28,
+    "armorRepairRate": -45,
+    "armorThermalDamageEffectiveResonance": -29,
+    "capacitorDepletesIn": -7,
+    "capacitorPeakDelta": -5,
+    "capacitorPeakDeltaPercentage": -6,
+    "capacitorPeakLoad": -4,
+    "capacitorPeakRecharge": -2,
+    "chargeAmount": -8,
+    "cpuFree": -9,
+    "cycleTime": -3,
+    "damageAlpha": -11,
+    "damagePerSecondWithoutReload": -12,
+    "damagePerSecondWithReload": -13,
+    "damageProfileEm": -17,
+    "damageProfileExplosive": -18,
+    "damageProfileKinetic": -19,
+    "damageProfileThermal": -20,
+    "damageVolley": -21,
+    "droneActive": -22,
+    "droneCapacityLoad": -24,
+    "droneDamagePerSecond": -14,
+    "droneUsage": -23,
+    "ehp": -25,
+    "hullDamageEffectiveResonance": -36,
+    "hullEffectiveRepairRate": -48,
+    "hullEhp": -37,
+    "hullEmDamageEffectiveResonance": -32,
+    "hullExplosiveDamageEffectiveResonance": -33,
+    "hullKineticDamageEffectiveResonance": -34,
+    "hullRepairRate": -47,
+    "hullThermalDamageEffectiveResonance": -35,
+    "passiveShieldEffectiveRechargeRate": -52,
+    "passiveShieldRechargeRate": -51,
+    "powerFree": -10,
+    "scanStrength": -53,
+    "shieldBoostRate": -49,
+    "shieldDamageEffectiveResonance": -42,
+    "shieldEffectiveBoostRate": -50,
+    "shieldEhp": -43,
+    "shieldEmDamageEffectiveResonance": -38,
+    "shieldExplosiveDamageEffectiveResonance": -39,
+    "shieldKineticDamageEffectiveResonance": -40,
+    "shieldThermalDamageEffectiveResonance": -41,
+    "speedOfReload": -15,
+    "speedWithReload": -16,
+    "thousand": -54,
+    "velocityBoost": -44
+  }
+}

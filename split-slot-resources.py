@@ -1,0 +1,10 @@
+from pathlib import Path
+p=Path('slot-metrics.js');s=p.read_text(encoding='utf-8');s=s.replace('selectSlotMetrics(type,computed,state)', "selectSlotMetrics(type,computed,state,group='details')");s=s.replace('SLOT_METRIC_PRIORITY.filter(metric=>metric.available(type))', "SLOT_METRIC_PRIORITY.filter(metric=>(group==='resources'?['cpu','power'].includes(metric.id):!['cpu','power'].includes(metric.id))&&metric.available(type))");p.write_text(s,encoding='utf-8')
+p=Path('app.js');s=p.read_text(encoding='utf-8');s=s.replace('function slotMetrics(s){', "function slotMetrics(s,group='details'){")
+s=s.replace('selectSlotMetrics(byId(s.item),m,moduleState(s))', 'selectSlotMetrics(byId(s.item),m,moduleState(s),group)')
+s=s.replace('<span class="slot-metric-label">${label}</span>', '''${group==='resources'?`<svg class="slot-resource-icon" viewBox="0 0 24 24" aria-hidden="true">${id==='cpu'?'<rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4m6-4v4M9 18v4m6-4v4M2 9h4m-4 6h4m12-6h4m-4 6h4"/>':'<path d="m13 2-8 12h6l-1 8 9-13h-6Z"/>'}</svg>`:`<span class="slot-metric-label">${label}</span>`}''')
+s=s.replace('title="${title}"><', 'title="${title}" aria-label="${title}"><')
+s=s.replace("if(s)el.innerHTML=slotMetrics(s)", "if(s)el.innerHTML=slotMetrics(s,el.dataset.metricGroup||'details')")
+s=s.replace("${t?esc(t.name):labels[kind]}${t?`<small>", "<span class=\"module-heading\"><span class=\"module-identity\">${t?esc(t.name):labels[kind]}${t?`<small>")
+s=s.replace("</small>`:''}${t&&kind!=='rig'?", "</small>`:''}</span>${t&&kind!=='rig'?`<span class=\"slot-resources\" data-module-metrics=\"${s.key}\" data-metric-group=\"resources\">${slotMetrics(s,'resources')}</span>`:''}</span>${t&&kind!=='rig'?")
+p.write_text(s,encoding='utf-8')

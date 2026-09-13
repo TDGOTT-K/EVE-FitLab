@@ -1,0 +1,3 @@
+from pathlib import Path
+p=Path('app.js');s=p.read_text(encoding='utf-8');s="import {selectSlotMetrics} from './slot-metrics.js';\n"+s;a=s.index(" const active=['Active','Overload'].includes(moduleState(s));",s.index('function slotMetrics'));b=s.index('\n}',a)
+s=s[:a]+''' return selectSlotMetrics(byId(s.item),m,moduleState(s)).map(({id,label,unit,title,value})=>`<span class="slot-metric" data-metric="${id}" title="${title}"><span class="slot-metric-label">${label}</span><b>${value==null?'—':new Intl.NumberFormat('zh-CN',{maximumFractionDigits:2}).format(value)}</b>${unit?`<span class="slot-metric-unit">${unit}</span>`:''}</span>`).join('');'''+s[b:];p.write_text(s,encoding='utf-8')

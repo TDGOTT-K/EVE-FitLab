@@ -1,0 +1,1 @@
+import {readFile,writeFile} from 'node:fs/promises';import {Converter} from 'opencc-js';const cv=Converter({from:'cn',to:'tw'});const source=JSON.parse(await readFile('locales/source.json','utf8'));await writeFile('locales/zh-TW.json',JSON.stringify(Object.fromEntries(Object.keys(source).map(s=>[s,cv(s)])),null,2));

@@ -1,0 +1,7 @@
+import {parse} from '@babel/parser';import traverseModule from '@babel/traverse';import {readFile,writeFile} from 'node:fs/promises';const traverse=traverseModule.default||traverseModule;
+const files=['app.js','character-manager.js','pilot-picker.js','pilot-folders.js','library-tree.js','engine-view.js','extended-stats.js','item-info.js','explanations.js','target-plane.js','target-map-controls.js','share-image.js','share-art.js','image-import.js','fit-image-code.js','fit-binary.js','slot-metrics.js','defense-profile.js','workspace-resize.js','drone-stacks.js'];const dict={};
+function add(s){s=s.trim();if(!/[\u3400-\u9fff]/.test(s)||s.length>700||/[<>{}=\\]/.test(s)||/^['"\[\]]/.test(s))return;dict[s]=s;}
+function pieces(s){if(/[<>]/.test(s)){for(const m of s.matchAll(/(?:title|aria-label|placeholder|alt)=["']([^"']*)["']/g))add(m[1]);for(const p of s.split(/<[^>]*>/g))for(const q of p.split(/[<>]/))add(q);}else add(s)}
+for(const file of files){const ast=parse(await readFile(file,'utf8'),{sourceType:'module'});traverse(ast,{StringLiteral(p){pieces(p.node.value)},TemplateElement(p){pieces(p.node.value.cooked||'')}})}pieces(await readFile('index.html','utf8'));
+for(const s of ['语言','界面语言','跟随系统','简体中文','繁體中文','English','日本語','导出语言','使用当前界面语言','已切换语言','未列入市场','内置','全技能 V','全技能 V · 模拟角色','无技能 · 基础对照'])add(s);
+await writeFile('locales/source.json',JSON.stringify(Object.fromEntries(Object.entries(dict).sort((a,b)=>a[0].localeCompare(b[0]))),null,2));console.log(Object.keys(dict).length);

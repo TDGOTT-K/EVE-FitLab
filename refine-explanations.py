@@ -1,0 +1,12 @@
+from pathlib import Path
+p=Path('stats.js');s=p.read_text(encoding='utf-8');s=s[:s.index('export function mountStats')];p.write_text(s,encoding='utf-8')
+p=Path('app.js');s=p.read_text(encoding='utf-8').replace("import {mountStats} from './stats.js'", "import {mountStats} from './stats-view.js'")
+s=s.replace("entries.push(['取消',()=>{}]);",'')
+s=s.replace("$('#info-title').textContent='物品信息';", "$('#info-title').textContent=t.path.join(' › ');$('#info-title').title=t.path.join(' › ');")
+s=s.replace('<div class="info-path">${esc(t.path.join(\' › \'))}</div>','')
+s=s.replace('<div><dt>类型 ID</dt><dd>${t.id}</dd></div>','')
+s=s.replace("explain.textContent=target.dataset.explain;", "const detail=JSON.parse(target.dataset.explain);const lines=rows=>rows.map(([label,value,kind])=>`<div class=\"explain-line ${kind==='source'?'explain-source':''}\"><span>${esc(label)}</span><b>${esc(value)}</b></div>`).join('');explain.innerHTML=`<div class=\"explain-heading\">${esc(detail.title)}</div><div class=\"explain-terms\">${lines(detail.terms.length?detail.terms:[['贡献项','0']])}</div><div class=\"explain-result\"><span>结果</span><b>${esc(detail.result)}</b></div><div class=\"explain-conditions\">${lines(detail.conditions)}</div>`;")
+p.write_text(s,encoding='utf-8')
+p=Path('style.css');s=p.read_text(encoding='utf-8');s+='''
+#info-title{font-size:11px;line-height:1.7;color:var(--muted);flex:1;min-width:0;overflow-wrap:anywhere}.info-titlebar{gap:14px}.info-titlebar button{flex-shrink:0}#info-content .info-section{margin-top:22px}#stat-explanation{white-space:normal;width:350px;padding:0}.explain-heading{padding:11px 14px;background:var(--row);font-weight:600;border-bottom:1px solid var(--line)}.explain-terms{padding:9px 14px}.explain-line{display:flex;justify-content:space-between;gap:16px;padding:4px 0;font-size:11px;align-items:baseline}.explain-line>span{color:var(--muted)}.explain-line>b{font-weight:500;text-align:right;font-variant-numeric:tabular-nums}.explain-source{border-bottom:1px solid var(--line);margin-top:5px}.explain-source>span{color:var(--text)}.explain-result{display:flex;justify-content:space-between;padding:10px 14px;border-block:1px solid var(--line);color:var(--accent);background:var(--row)}.explain-result b{font-variant-numeric:tabular-nums}.explain-conditions{padding:8px 14px}.explain-conditions .explain-line{font-size:10px}.explain-conditions b{color:var(--muted)}
+''';p.write_text(s,encoding='utf-8')
