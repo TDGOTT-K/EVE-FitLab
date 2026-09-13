@@ -3,3 +3,4 @@ header{gap:24px}header nav{margin-left:auto}.language-picker select{background:#
 .github-link{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#b8c7d0;white-space:nowrap;padding:8px 0}.github-link:hover{color:#efa66d}.download-support>button{color:#e4b58f;flex:none}@media(max-width:440px){.github-link{font-size:12px;gap:5px}}
 
 .missing-features{border-left:2px solid #efa66d;padding:10px 12px;background:#efa66d0b;color:#e4b58f!important;font-size:12px!important;line-height:1.8}
+#manual-copy-dialog{width:440px;max-width:92vw}#manual-copy-dialog h2{font-size:22px}#manual-copy-dialog p{font-size:13px;line-height:1.8;color:#abbcc7}#manual-copy-dialog input{width:100%;box-sizing:border-box;background:#09141b;border:1px solid #779aab;color:#f4d0ad;font:16px monospace;padding:12px;margin:10px 0 22px}#manual-copy-dialog .primary{width:100%}

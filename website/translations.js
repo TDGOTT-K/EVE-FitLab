@@ -838,5 +838,23 @@ window.siteTranslations = {
     "zh-TW": "尚未支援鐵騎艦載機（航空母艦配置）與深淵裝備系統。",
     "en": "Fighters (carrier fitting) and Abyssal modules are not supported yet.",
     "ja": "艦載戦闘機（艦載機母艦の装備構成）とアビサルモジュールには未対応です。"
+  },
+  "复制内容": {
+    "zh-CN": "复制内容",
+    "zh-TW": "複製內容",
+    "en": "Text to copy",
+    "ja": "コピーする内容"
+  },
+  "请手动复制": {
+    "zh-CN": "请手动复制",
+    "zh-TW": "請手動複製",
+    "en": "Copy manually",
+    "ja": "手動でコピーしてください"
+  },
+  "浏览器未允许自动复制。请复制下面的内容，或选中后按 Ctrl+C；手机可长按复制。": {
+    "zh-CN": "浏览器未允许自动复制。请复制下面的内容，或选中后按 Ctrl+C；手机可长按复制。",
+    "zh-TW": "瀏覽器未允許自動複製。請複製下方內容，或選取後按 Ctrl+C；手機可長按複製。",
+    "en": "Your browser blocked automatic copying. Copy the text below, or select it and press Ctrl+C (⌘C on Mac). On mobile, touch and hold to copy.",
+    "ja": "ブラウザーが自動コピーを許可していません。以下の内容を選択して Ctrl+C（Mac は ⌘C）を押すか、スマートフォンでは長押ししてコピーしてください。"
   }
 };
