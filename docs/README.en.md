@@ -6,7 +6,7 @@
 
 [Website & downloads](https://imfishman.com/) · [Support development](../SPONSOR.md) · [Report an issue](https://github.com/TDGOTT-K/EVE-FitLab/issues) · [简体中文](../README.md)
 
-> Source is available now. A public Windows installer is being prepared; check the official website for availability.
+> The first public beta **0.1.2-beta.1** is available. [Choose a version](https://imfishman.com/download) or [view the release](https://github.com/TDGOTT-K/EVE-FitLab/releases/tag/v0.1.2-beta.1). This is an unsigned test release; keep backups of important fits.
 
 ## 💛 Tokens are expensive… spare a little fuel?
 

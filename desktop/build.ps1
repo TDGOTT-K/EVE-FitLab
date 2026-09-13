@@ -1,5 +1,6 @@
-param([string]$EngineSourceRoot=(Join-Path $PSScriptRoot '../engine'),[Parameter(Mandatory=$true)][string]$SdeRoot)
+param([string]$EngineSourceRoot='',[Parameter(Mandatory=$true)][string]$SdeRoot)
 $ErrorActionPreference='Stop'
+if(-not $EngineSourceRoot){$EngineSourceRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../engine'))}
 Set-Location (Split-Path $PSScriptRoot -Parent)
 python desktop/prepare.py --engine $EngineSourceRoot --sde $SdeRoot
 if($LASTEXITCODE){throw 'Resource preparation failed'}

@@ -1,9 +1,10 @@
-﻿$ErrorActionPreference='Stop'
+$ErrorActionPreference='Stop'
 Set-Location (Split-Path $PSScriptRoot -Parent)
 $workspaceRoot=(Get-Location).Path
 $installPath=[IO.Path]::GetFullPath((Join-Path $workspaceRoot 'output/installed-desktop-test'))
 if(-not $installPath.StartsWith((Join-Path $workspaceRoot 'output')+[IO.Path]::DirectorySeparatorChar)){throw 'Invalid test installation path'}
-$installer=(Resolve-Path 'release/EVE-FitLab-0.1.1-Windows-x64-Setup.exe').Path
+$releaseVersion=(Get-Content package.json -Raw -Encoding UTF8 | ConvertFrom-Json).version
+$installer=(Resolve-Path ("release/EVE-FitLab-$releaseVersion-Windows-x64-Setup.exe")).Path
 $process=Start-Process -FilePath $installer -ArgumentList '/S',"/D=$installPath" -WindowStyle Hidden -Wait -PassThru
 if($process.ExitCode -ne 0){throw "Installer failed: $($process.ExitCode)"}
 if(-not(Test-Path -LiteralPath (Join-Path $installPath 'EVE FitLab.exe'))){throw 'Installed application missing'}

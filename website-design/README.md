@@ -1,7 +1,7 @@
-# FitLab 官网设计稿
+# FitLab 官网
 
-独立静态站点，预览：`python -m http.server 5217 --directory website-design`。
+四语言静态官网源文件。`download.html` 提供版本选择，首个公开测试版为 0.1.2-beta.1，默认展示预览版。安装文件托管在 GitHub Releases。
 
-未发布，不改动 `website/` 的链路测试页。下载按钮当前禁用，明确标记发布准备中。发布时需接入经过验证的新版 Windows 安装包链接，并更新下载区版本号；不要直接使用旧安装包作为最新版本。
+开发预览：`python -m http.server 5217 --directory website-design`。首页首屏按钮滚动到下载区，再由选择版本入口进入下载页。
 
-部署只需本目录 index.html、style.css、site.js 和 assets/，无需应用服务。图片均为本地素材，不依赖第三方图片接口。
+发布时将本目录 HTML/CSS/JS 和 assets 同步到 website，保留 website/_headers，再使用 Wrangler 部署 website。更新版本必须同时更新下载 URL、日期、大小、SHA-256 和四语言说明。安装包发布验证通过后才能开放链接。

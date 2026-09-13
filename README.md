@@ -7,7 +7,7 @@
 
 **EVE FitLab** 是一款为 EVE Online 玩家打造的 Windows 舰船装配工作台。把装配构思、角色技能、性能计算和图片分享放在一起，让每一个槽位都有理由。
 
-> **下载请认准 [imfishman.com](https://imfishman.com/)。** 当前仓库首先开放源码；公开安装包准备完成后会在官网提供。旧本地测试安装包不代表当前源码，不在这里冒充最新发行版。
+> **下载请认准 [imfishman.com](https://imfishman.com/)。** 首个公开测试版 **0.1.2-beta.1** 已发布：[选择版本并下载](https://imfishman.com/download) · [GitHub Release](https://github.com/TDGOTT-K/EVE-FitLab/releases/tag/v0.1.2-beta.1)。这是测试版，尚未代码签名，可能存在问题；重要装配请保留备份。
 
 ## 💛 支持开发
 
