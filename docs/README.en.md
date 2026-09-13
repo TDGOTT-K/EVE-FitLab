@@ -33,6 +33,8 @@ Requires Python 3.9+, Node.js/npm and .NET 9 SDK. Clone the repository, run `npm
 
 Required calculation engine sources are included under `engine/`; no private repository is needed. Full SDE is a separate large CCP data input. See the [main README](../README.md) for checks and [desktop documentation](../desktop/README.md) for packaging. The four-language website design is in `website-design/`.
 
+**Fighters (carrier fitting) and Abyssal modules are not supported yet.**
+
 The project is under active development: not a complete time-based combat simulator; real-account SSO verification, desktop code signing and automatic updates remain outstanding. Importing images requires a readable, complete fitting QR code.
 
 ## Contact and license

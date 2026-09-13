@@ -832,5 +832,11 @@ window.siteTranslations = {
     "zh-TW": "EVE Fitlab交流群，群號 704164562",
     "en": "EVE Fitlab QQ community, group ID 704164562",
     "ja": "EVE Fitlab QQ グループ、番号 704164562"
+  },
+  "尚未支持铁骑舰载机（航母配置）与深渊装备系统。": {
+    "zh-CN": "尚未支持铁骑舰载机（航母配置）与深渊装备系统。",
+    "zh-TW": "尚未支援鐵騎艦載機（航空母艦配置）與深淵裝備系統。",
+    "en": "Fighters (carrier fitting) and Abyssal modules are not supported yet.",
+    "ja": "艦載戦闘機（艦載機母艦の装備構成）とアビサルモジュールには未対応です。"
   }
 };
