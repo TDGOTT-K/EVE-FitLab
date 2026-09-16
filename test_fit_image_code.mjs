@@ -1,11 +1,17 @@
+import {withoutScenario,scenarioPresets,scenarioFields} from './scenario-presets.js';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {encodeFitCodes,decodeFitCodes} from './fit-image-code.js';
 const catalog=JSON.parse(await readFile(new URL('./data/full-catalog.json',import.meta.url),'utf8'));
 const source={shipId:587,name:'二维码往返测试',notes:'多段中文备注\n第二段',tags:['测试'],characterName:'隐藏名称',id:'must-not-export',scenario:{targetFitId:'local-only'},slots:[{key:'high-0',kind:'high',item:null,ammo:null,state:'Online',online:true}],drones:[],cargo:[],skills:catalog.filter(t=>t.kind==='skill').slice(0,505).map(t=>({skillTypeId:t.id,level:5}))};
+source.scenarios=[{id:'local-a',name:'private-scenario',value:source.scenario}];source.activeScenarioId='local-a';
+const original=structuredClone(source),neutral=withoutScenario(source);
+assert.deepEqual(neutral.scenario,{});assert.equal(neutral.scenarios,undefined);assert.equal(neutral.activeScenarioId,undefined);assert.deepEqual(source,original);
+const legacy=scenarioFields(scenarioPresets({scenario:{distance:12000}}));assert.equal(legacy.scenarios[0].name,'原有情景');assert.equal(legacy.scenario.distance,12000);
+assert.deepEqual(scenarioFields({...scenarioPresets(source),activeScenarioId:null}).scenario,{});
 const codes=await encodeFitCodes(source,{notes:true,pilot:true}),decoded=await decodeFitCodes(codes,catalog);
 for(const key of ['shipId','name','notes','tags','characterName','slots','drones','cargo'])assert.deepEqual(decoded[key],source[key]);
-assert.deepEqual(decoded.skills.sort((a,b)=>a.skillTypeId-b.skillTypeId),source.skills.sort((a,b)=>a.skillTypeId-b.skillTypeId));assert.equal(decoded.id,undefined);assert.deepEqual(decoded.scenario,{});
+assert.deepEqual(decoded.skills.sort((a,b)=>a.skillTypeId-b.skillTypeId),source.skills.sort((a,b)=>a.skillTypeId-b.skillTypeId));assert.equal(decoded.id,undefined);assert.deepEqual(decoded.scenario,{});assert.equal(decoded.scenarios,undefined);assert.equal(decoded.activeScenarioId,undefined);
 const hidden=await decodeFitCodes(await encodeFitCodes(source,{notes:false,pilot:false}),catalog);assert.equal(hidden.notes,'');assert.equal(hidden.characterName,'分享图技能快照');
 const corrupt=[...codes];corrupt[0]=corrupt[0].slice(0,-1)+(corrupt[0].endsWith('A')?'B':'A');await assert.rejects(()=>decodeFitCodes(corrupt,catalog),/校验失败/);
 if(codes.length>1)await assert.rejects(()=>decodeFitCodes(codes.slice(1),catalog),/不完整/);

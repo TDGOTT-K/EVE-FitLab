@@ -1,8 +1,8 @@
+import {openScenarioEditor} from './scenario-editor.js';
+import {scenarioPresets,scenarioFields,withoutScenario} from './scenario-presets.js';
 import {initI18n,setLocale,getLocale,matchesName,t,languages} from './i18n.js';
 import {showImageImport} from './image-import.js';
 import {showShareImage} from './share-image.js';
-import {installTargetMapControls} from './target-map-controls.js';
-import {mountTargetPlane} from './target-plane.js';
 import {installCharacterManager} from './character-manager.js';
 import {splitDroneStacks,maximumDroneQuantity} from './drone-stacks.js';
 import {createLibraryTree} from './library-tree.js';
@@ -90,7 +90,7 @@ function renderResources(){if(!report){$('#resources').innerHTML='<p class="prof
 
 function hardpoints(){return [['turret','炮塔',42,102],['launcher','导弹发射器',40,101]].map(([icon,name,effect,attr])=>{const used=slots.filter(s=>byId(s.item)?.effects?.includes(effect)).length,total=report?.attributes?.[icon==='turret'?'turretHardpointsAvailable':'launcherHardpointsAvailable']??ship.attrs[attr]??0;return `<span class="hardpoint ${used>total?'over':''}" tabindex="0" title="${name}挂点：${used} / ${total}" aria-label="${name}挂点：${used} / ${total}"><img src="assets/${icon}.png" alt="" width="26" height="26">${limit(used,total)}</span>`}).join('')}
 function limit(used,max){return `<b class="limit-${used<max?'free':used===max?'full':'over'}">${used}</b> / ${max}`}
-function renderShipStats(){if(report){renderEngineStats();return}$('#ship-stats').innerHTML='<div class="stat-block profile-note">正在计算装配属性…</div><div class="panel-title scenario-heading"><span>靶标</span>'+scenarioStatusMarkup()+'</div>'}
+function renderShipStats(){if(report){renderEngineStats();return}$('#ship-stats').innerHTML='<div class="stat-block profile-note">等待装配计算…</div>';renderScenario()}
 let infoOrigin=null;
 function closeInfo(){const panel=$('#info-window');if(panel.hidden)return;panel.hidden=true;if(infoOrigin?.isConnected)infoOrigin.focus({preventScroll:true})}
 let infoRequest=0;
@@ -149,7 +149,7 @@ installExplanations();
 
 async function api(path,body){const response=await fetch('/api/'+path,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await response.json();if(!response.ok)throw Error(data.error||'请求失败');return data}
 function updateShip(){ship=byId(fitRecord.shipId);counts.subsystem=ship.group===963?4:0;for(const [kind,id] of Object.entries({high:14,mid:13,low:12,rig:1137}))counts[kind]=ship.attrs[id]||0;$('.title h1').textContent=fitRecord.name;renderFitTags();$('#ship .ship-label').textContent=ship.en;renderShipBadge();$('#ship img').src=`https://images.evetech.net/types/${ship.id}/render?size=512`;$('#ship img').alt=ship.name;$('#ship .ship-caption').innerHTML=`${esc(ship.name)}<small>拖入弹药 · 装填全部兼容装备</small>`;renderPilot();}
-function restoreFit(record){editorFitDeleted=false;cancelInstallPreview();selectedSlots.clear();selectionAnchor=null;analysisVersion++;report=null;fitRecord=structuredClone(record);fitRecord.drones=splitDroneStacks(fitRecord.drones||[]);updateShip();slots=fresh().map(s=>record.slots?.find(x=>x.key===s.key)||s);for(const s of record.slots||[])if(s.item&&!slots.some(x=>x.key===s.key))slots.push(structuredClone(s));filter=ship.group===963?{key:'subsystem-0',ammo:false}:null;history=[];redoHistory=[];$('#undo').disabled=true;$('#redo').disabled=true;$('#search').value='';treeOpen.clear();renderSlots();renderTree();renderResources();renderShipStats();save()}
+function restoreFit(record){editorFitDeleted=false;cancelInstallPreview();selectedSlots.clear();selectionAnchor=null;analysisVersion++;report=null;fitRecord={...structuredClone(record),...scenarioFields(scenarioPresets(record))};fitRecord.drones=splitDroneStacks(fitRecord.drones||[]);updateShip();slots=fresh().map(s=>record.slots?.find(x=>x.key===s.key)||s);for(const s of record.slots||[])if(s.item&&!slots.some(x=>x.key===s.key))slots.push(structuredClone(s));filter=ship.group===963?{key:'subsystem-0',ammo:false}:null;history=[];redoHistory=[];$('#undo').disabled=true;$('#redo').disabled=true;$('#search').value='';treeOpen.clear();renderSlots();renderTree();renderResources();renderShipStats();save()}
 let saving=Promise.resolve();
 function persistFit(){const task=saving.catch(()=>{}).then(writeFit);saving=task;return task}
 async function writeFit(){const input=currentFit(),saved=await api('save',input);fitRecord={...fitRecord,id:saved.id,revision:saved.revision,updatedAt:saved.updatedAt};localStorage.setItem('fitlab-working-draft',JSON.stringify(currentFit()));$('#save').textContent=JSON.stringify(input.slots)===JSON.stringify(slots)&&JSON.stringify(input.skills)===JSON.stringify(fitRecord.skills)?'已保存 · '+new Date(saved.updatedAt).toLocaleTimeString():'已保存上一版本 · 当前改动待保存';return saved}
@@ -159,7 +159,7 @@ const flow=document.createElement('dialog');flow.id='flow-dialog';document.body.
 function openFlow(title,body){flow.innerHTML=`<div class="flow-head"><b>${esc(title)}</b><button aria-label="关闭">×</button></div><div class="flow-body">${body}</div><p id="flow-error"></p>`;flow.querySelector('.flow-head button').onclick=()=>flow.close();flow.showModal()}
 function guarded(fn){return async()=>{try{await fn()}catch(e){say(e.message);if(flow.open)$('#flow-error').textContent=e.message}}}
 $('#save-fit').onclick=guarded(persistFit);
-function exportFitImage(fit){return showShareImage(fit,{calculate:getCalculation,catalog,getPrice:async f=>{marketPricePromise??=api('prices').catch(e=>{marketPricePromise=null;throw e});return estimateFitPrice(f,await marketPricePromise)}})}
+function exportFitImage(fit){return showShareImage(withoutScenario(fit),{calculate:getCalculation,catalog,getPrice:async f=>{marketPricePromise??=api('prices').catch(e=>{marketPricePromise=null;throw e});return estimateFitPrice(f,await marketPricePromise)}})}
 $('#share-fit').onclick=()=>exportFitImage(currentFit());
 $('#import-fit-image').onclick=()=>showImageImport({catalog,calculate:getCalculation,save:fit=>api('save',fit),onSaved:record=>{libraryFits.unshift(record);refreshLibraryRows();libraryMessage('已导入新装配：'+record.name)}});
 let libraryFits=[],pageMode=null,navigationVersion=0,lastWorkPage='library',libraryLoaded=false;const pageScrollStates=new Map();let editorFitDeleted=false;let fitClipboard=null;try{fitClipboard=JSON.parse(sessionStorage.getItem('fitlab-fit-clipboard'))}catch{}
@@ -193,7 +193,7 @@ async function navigateFitPage(){
   $('#library-list').innerHTML='<div class="library-empty">正在读取装配库…</div>';
   try{const fits=await api('library');if(version!==navigationVersion)return;libraryFits=fits.sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||''));
  const draft=JSON.parse(localStorage.getItem('fitlab-working-draft')||'null');
- if(draft&&byId(draft.shipId)){const stored=libraryFits.find(f=>f.id===draft.id),fields=['name','notes','shipId','slots','tags','skills','damageProfile','damageLocks','defenseMode','drones','cargo','scenario'];if(!stored||fields.some(k=>JSON.stringify(stored[k])!==JSON.stringify(draft[k]))){libraryFits=libraryFits.filter(f=>!draft.id||f.id!==draft.id);libraryFits.unshift({...draft,_workingDraft:true})}}
+ if(draft&&byId(draft.shipId)){const stored=libraryFits.find(f=>f.id===draft.id),fields=['name','notes','shipId','slots','tags','skills','damageProfile','damageLocks','defenseMode','drones','cargo','scenario','scenarios','activeScenarioId'];if(!stored||fields.some(k=>JSON.stringify(stored[k])!==JSON.stringify(draft[k]))){libraryFits=libraryFits.filter(f=>!draft.id||f.id!==draft.id);libraryFits.unshift({...draft,_workingDraft:true})}}
  libraryTree.update(libraryFits);drawFitLibrary();libraryLoaded=true;restorePageScroll(next)}
   catch(e){if(version===navigationVersion)$('#library-list').textContent='读取失败：'+e.message}
  }
@@ -409,19 +409,21 @@ function renderShipBadge(){
 }
 
 function renderScenario(){
- const data=report?.scenarioAnalysis;if(!data)return;const links=report.scenarioLinks||{},fmt=v=>Number(v).toLocaleString(getLocale(),{maximumFractionDigits:2}),layerNames={shield:'护盾',armor:'装甲',structure:'结构'};
- const line=(name,value)=>'<div class="stat-row"><span>'+esc(name)+'</span><b>'+esc(value)+'</b></div>';
- let body=links.targetFitId?'<p class="scenario-fit-name">'+esc(links.targetFitId.name)+'</p><p class="profile-note">'+layerNames[fitRecord.scenario?.targetLayer||'shield']+' · '+fmt(data.target.distance/1000)+' km · '+fmt(data.target.speed)+' m/s · '+fmt(data.target.angular)+' rad/s</p>'+line('对目标期望 DPS',fmt(data.appliedWeaponDps))+'<p class="profile-note">目标抗性与信号半径来自所选装配；武器输出含换弹。</p>':'<p class="profile-note">选择目标装配，计算对它的实际应用伤害。</p>';
- for(const [key,label] of [['supportFitId','传电来源'],['hostileFitId','毁电来源']])if(links[key]){const link=links[key];body+='<p class="scenario-fit-name">'+label+' · '+esc(link.name)+'</p>'+line(key==='supportFitId'?'收到传电':'受到毁电',fmt((link.modules||[]).reduce((n,m)=>n+(m.perSecond||0),0))+' GJ/s')+(link.note?'<p class="profile-note">'+esc(link.note)+'</p>':'')+(link.modules||[]).filter(m=>m.status!=='生效').map(m=>'<p class="profile-note">'+esc(m.name+' · '+m.status)+'</p>').join('')}
- if(links.supportFitId||links.hostileFitId)body+='<p class="profile-note">按来源装备持续运转计算，暂不联算来源舰船耗尽电容后停机。</p>';
- $('#ship-stats').insertAdjacentHTML('beforeend','<div class="panel-title scenario-heading"><span>靶标</span>'+scenarioStatusMarkup()+'<button id="edit-scenario">设置</button></div><div class="stat-block">'+body+'</div>');
+ $('#scenario-controls')?.remove();
+ const state=scenarioPresets(fitRecord);
+ $('#ship-stats').insertAdjacentHTML('beforeend','<section id="scenario-controls"><div class="panel-title scenario-heading"><span>情景设置</span><button id="edit-scenario">设置</button></div><div class="scenario-inline"><select id="active-scenario" aria-label="应用情景"><option value="">不应用情景</option>'+state.scenarios.map(s=>'<option value="'+esc(s.id)+'">'+esc(s.name)+'</option>').join('')+'</select><small>仅本地 · 静态估算</small></div></section>');
+ $('#active-scenario').value=state.activeScenarioId||'';
+ async function commit(fields){
+  if(!fitRecord.id)throw Error('请先保存装配，再保存本地情景。');
+  const id=fitRecord.id,saved=await api('fit/scenarios',{id,revision:fitRecord.revision,...fields});
+  if(fitRecord.id!==id)return;
+  Object.assign(fitRecord,fields,{revision:saved.revision,updatedAt:saved.updatedAt});
+  const index=libraryFits.findIndex(f=>f.id===id);if(index>=0)libraryFits[index]=saved;
+  storeWorkingDraft();scheduleAnalysis();renderScenario();say('情景已保存并应用 · 装配修改仍独立保存');
+ }
+ $('#active-scenario').onchange=async e=>{const input=e.target;input.disabled=true;try{await commit(scenarioFields({...state,activeScenarioId:input.value||null}))}catch(error){say(error.message);input.value=state.activeScenarioId||'';input.disabled=false}};
  $('#edit-scenario').onclick=async()=>{try{
-  const fits=await api('library'),value=fitRecord.scenario||{};
-  openFlow('靶标','<form id="scenario-form">'+['targetFitId','supportFitId','hostileFitId','targetLayer','supportDistance','hostileDistance'].map(k=>'<input type="hidden" name="'+k+'" value="'+esc(value[k]??(k==='targetLayer'?'shield':k.endsWith('Distance')?10000:''))+'">').join('')+'<div id="target-plane-editor"></div><p class="profile-note">右键敌舰选择装配 · 点击生命条切换 0% / 100% · 右键地图设置支援来源</p><button>应用</button></form>');
-  const plane=mountTargetPlane($('#target-plane-editor'),value),scenarioForm=$('#scenario-form'),apply=scenarioForm.querySelector(':scope > button');let speedRequest=0;
-  const updateSpeedLimit=async()=>{const version=++speedRequest,id=scenarioForm.elements.targetFitId.value;if(!id){plane.setSpeedLimit(null,'选择目标装配后设置速度');apply.disabled=false;return}apply.disabled=true;plane.setSpeedLimit(null,'正在读取双方最大速度…');try{const enemy=fits.find(f=>f.id===id);const [own,target]=await Promise.all([getCalculation({...currentFit(),scenario:{}}),getCalculation({...enemy,scenario:{}})]);if(version!==speedRequest||!scenarioForm.isConnected)return;const a=own.attributes.maxVelocity,b=target.attributes.maxVelocity;if(!Number.isFinite(a)||!Number.isFinite(b))throw Error('最大速度数据缺失');plane.setSpeedLimit(a+b,'相对速度上限 '+fmt(a+b)+' m/s = 本舰 '+fmt(a)+' + 靶标 '+fmt(b));apply.disabled=false}catch(e){if(version===speedRequest&&scenarioForm.isConnected)plane.setSpeedLimit(null,'最大速度读取失败：'+e.message)}};
-  const mapControls=installTargetMapControls($('#target-plane-editor'),{form:scenarioForm,fits,ownShipId:ship.id,shipName:id=>byId(id)?.name||'未知舰船',onTargetChange:updateSpeedLimit,health:value.targetHealth});updateSpeedLimit();
-  $('#scenario-form').onsubmit=e=>{e.preventDefault();const form=new FormData(e.currentTarget);fitRecord.scenario={...Object.fromEntries(['targetFitId','targetLayer','supportFitId','hostileFitId'].map(k=>[k,form.get(k)])),...Object.fromEntries(['supportDistance','hostileDistance'].map(k=>[k,Number(form.get(k))])),...plane.value(),targetHealth:mapControls.health()};save();flow.close()};
+  const fits=await api('library');openScenarioEditor({fit:currentFit(),fits,shipName:id=>byId(id)?.name||'未知舰船',calculate:getCalculation,onSave:commit});
  }catch(e){say(e.message)}};
 }
 

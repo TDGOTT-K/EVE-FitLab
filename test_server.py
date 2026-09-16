@@ -35,4 +35,17 @@ class PersistenceTests(unittest.TestCase):
   self.call('save',self.sample())
   with self.assertRaises(urllib.error.HTTPError) as error:urllib.request.urlopen(self.url+'/state/library.json')
   self.assertEqual(error.exception.code,404)
+ def test_scenario_save_isolated_and_revision_checked(self):
+  first=self.call('save',self.sample());second=self.call('save',self.sample())
+  body={'id':first['id'],'revision':first['revision'],'name':'must not overwrite','scenarios':[{'id':'a','name':'互传','value':{'supportFitId':second['id'],'supportDistance':12000}},{'id':'b','name':'受毁电','value':{'hostileFitId':second['id'],'hostileDistance':20000}}],'activeScenarioId':'b'}
+  saved=self.call('fit/scenarios',body)
+  self.assertEqual(saved['name'],first['name']);self.assertEqual(saved['slots'],first['slots'])
+  self.assertEqual(saved['scenario']['hostileFitId'],second['id'])
+  self.assertEqual(next(f for f in self.call('library') if f['id']==second['id']),second)
+  with self.assertRaises(urllib.error.HTTPError) as error:self.call('fit/scenarios',body)
+  self.assertEqual(error.exception.code,409)
+  disabled=self.call('fit/scenarios',dict(body,revision=saved['revision'],activeScenarioId=None))
+  self.assertEqual(disabled['scenario'],{});self.assertEqual(len(disabled['scenarios']),2)
+  with self.assertRaises(urllib.error.HTTPError):self.call('fit/scenarios',dict(body,revision=disabled['revision'],activeScenarioId='missing'))
+  self.assertEqual(next(f for f in self.call('library') if f['id']==first['id']),disabled)
 if __name__=='__main__':unittest.main()

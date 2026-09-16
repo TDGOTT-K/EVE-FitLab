@@ -1,3 +1,4 @@
+from scenario_presets import validate_presets
 from linked_scenario import resolve_fit_scenario
 from sustained_tank import sustained_tank
 from fitting_scenario import calculate_scenario,validate_scenario
@@ -98,6 +99,7 @@ def validate_fit(f):
    if state=='Overload' and not t.get('canOverload'):raise ValueError('此装备不支持超载')
   if s.get('ammo') and (s['ammo'] not in TYPES or TYPES[s['ammo']]['kind']!='ammo'):raise ValueError('弹药数据无效')
  validate_scenario(f.get('scenario',{}))
+ if 'scenarios' in f:validate_presets(f)
  for kind in ['drones','cargo']:
   entries=f.get(kind,[])
   if not isinstance(entries,list) or len(entries)>200:raise ValueError('舱内物品列表无效')
@@ -215,9 +217,17 @@ class Handler(SimpleHTTPRequestHandler):
     data=json.dumps({'url':url}).encode();self.send_response(200);self.send_header('Content-Type','application/json');self.send_header('Content-Length',str(len(data)));self.send_header('Set-Cookie','fitlab-sso='+browser+'; Path=/api/eve; HttpOnly; SameSite=Lax; Max-Age=600');self.end_headers();self.wfile.write(data);return
    with LOCK:
     lib=read_library()
+    if self.path=='/api/fit/scenarios':
+     previous=next((x for x in lib['fits'] if x['id']==body.get('id')),None)
+     if previous is None:return self.reply({'error':'请先保存装配，再保存情景。'},404)
+     if body.get('revision')!=previous['revision']:return self.reply({'error':'装配已在另一窗口更新，请重新打开后再保存情景。'},409)
+     fields=validate_presets(body)
+     f=dict(previous,**fields);f['revision']=previous['revision']+1;f['updatedAt']=now()
+     lib['fits']=[f if x['id']==f['id'] else x for x in lib['fits']];write_library(lib);return self.reply(f)
     if self.path=='/api/save':
      f=validate_fit(body);previous=next((x for x in lib['fits'] if x['id']==f.get('id')),None)
      if previous and f.get('revision')!=previous['revision']:return self.reply({'error':'此装配已在另一窗口修改，请重新打开后再编辑。'},409)
+     if 'scenarios' in f:f.update(validate_presets(f))
      if not previous:f['id']=str(uuid.uuid4())
      f['revision']=(previous['revision'] if previous else 0)+1;f['updatedAt']=now();f['name']=f['name'].strip()
      lib['fits']=[x for x in lib['fits'] if x['id']!=f['id']]+[f];write_library(lib);return self.reply(f)
