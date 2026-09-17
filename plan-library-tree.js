@@ -29,13 +29,24 @@ export function relocateLibrary(layout,plans,source,target,mode){
 }
 export function installLibraryDrag(tree,blank,{canStart,validate,onDrop,onError}){
  let source=null,hover=null,timer=null,drop=null,cancelled=false,suppressContextUntil=0,press=null;
- tree.addEventListener('pointerdown',e=>{const row=e.target.closest('[data-library-key]');press=e.button===0&&row?{key:row.dataset.libraryKey,at:performance.now()}:null;},true);
- for(const type of ['pointerup','pointercancel'])document.addEventListener(type,()=>{press=null},true);
- window.addEventListener('blur',()=>{press=null});
+ const holdCursor=document.createElement('div');holdCursor.className='plan-hold-cursor';holdCursor.hidden=true;holdCursor.setAttribute('aria-hidden','true');holdCursor.innerHTML='<svg viewBox="0 0 24 24"><circle class="hold-track" cx="12" cy="12" r="9"/><circle class="hold-progress" cx="12" cy="12" r="9"/></svg>';document.body.append(holdCursor);
+ let holdFrame=0;
+ const positionHold=e=>{holdCursor.style.left=(e.clientX+14)+'px';holdCursor.style.top=(e.clientY+14)+'px'};
+ function clearHold(){cancelAnimationFrame(holdFrame);holdFrame=0;holdCursor.hidden=true;document.body.classList.remove('plan-drag-ready');}
+ function releasePress(){press=null;clearHold()}
+ function tickHold(){if(!press)return;const progress=Math.min(1,(performance.now()-press.at)/200);holdCursor.querySelector('.hold-progress').style.strokeDashoffset=String(56.55*(1-progress));holdCursor.classList.toggle('ready',progress===1);if(progress===1){document.body.classList.add('plan-drag-ready');return;}holdFrame=requestAnimationFrame(tickHold);}
+ tree.addEventListener('pointerdown',e=>{
+  releasePress();const row=e.target.closest('[data-library-key]');
+  if(e.button!==0||!row||row.dataset.libraryKey==='f:'||!canStart())return;
+  press={key:row.dataset.libraryKey,at:performance.now()};positionHold(e);holdCursor.hidden=false;holdCursor.classList.remove('ready');tickHold();
+ },true);
+ document.addEventListener('pointermove',e=>{if(press&&!source)positionHold(e)},true);
+ for(const type of ['pointerup','pointercancel'])document.addEventListener(type,releasePress,true);
+ window.addEventListener('blur',releasePress);
  const marker=document.createElement('div');marker.className='plan-drop-marker';marker.hidden=true;document.body.append(marker);
  function clear(){clearTimeout(timer);timer=null;hover=null;drop=null;marker.hidden=true;tree.querySelectorAll('.library-drop-inside').forEach(el=>el.classList.remove('library-drop-inside'));}
  function cancelRightDrag(e){
-  if(!source)return;source=null;cancelled=true;suppressContextUntil=Date.now()+700;clear();if(e.cancelable)e.preventDefault();e.stopImmediatePropagation();
+  if(!source&&!press)return;releasePress();source=null;cancelled=true;suppressContextUntil=Date.now()+700;clear();if(e.cancelable)e.preventDefault();e.stopImmediatePropagation();
  }
  for(const type of ['pointerdown','mousedown'])document.addEventListener(type,e=>{if(e.button===2)cancelRightDrag(e)},true);
  document.addEventListener('contextmenu',e=>{
@@ -62,8 +73,8 @@ export function installLibraryDrag(tree,blank,{canStart,validate,onDrop,onError}
   else if(!center)show(el,target,mode);
   const bounds=tree.getBoundingClientRect();if(e.clientY<bounds.top+24)tree.scrollTop-=8;else if(e.clientY>bounds.bottom-24)tree.scrollTop+=8;
  };
- tree.ondragstart=e=>{const row=e.target.closest('[data-library-key]');if(!row||row.dataset.libraryKey==='f:'||press?.key!==row.dataset.libraryKey||performance.now()-press.at<200||!canStart()){e.preventDefault();return}cancelled=false;suppressContextUntil=0;source=row.dataset.libraryKey;e.dataTransfer.setData('application/x-fitlab-library',source);e.dataTransfer.effectAllowed='move';};
+ tree.ondragstart=e=>{const row=e.target.closest('[data-library-key]');if(!row||row.dataset.libraryKey==='f:'||press?.key!==row.dataset.libraryKey||performance.now()-press.at<200||!canStart()){e.preventDefault();return}clearHold();cancelled=false;suppressContextUntil=0;source=row.dataset.libraryKey;e.dataTransfer.setData('application/x-fitlab-library',source);e.dataTransfer.effectAllowed='move';};
  tree.ondragend=()=>{source=null;clear();if(cancelled)suppressContextUntil=Date.now()+700;cancelled=false;};
  for(const zone of [tree,blank]){zone.ondragover=over;zone.ondragleave=e=>{if(!zone.contains(e.relatedTarget))clear()};zone.ondrop=e=>{if(!source)return;e.preventDefault();e.stopPropagation();const intent=drop,s=source;source=null;clear();if(intent)Promise.resolve(onDrop(s,intent.target,intent.mode)).catch(onError)};}
- document.addEventListener('keydown',e=>{if(e.key==='Escape'){source=null;clear()}});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'){releasePress();source=null;clear()}});
 }
