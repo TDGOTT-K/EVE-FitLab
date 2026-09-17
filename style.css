@@ -559,3 +559,4 @@ label:has(>input[type="checkbox"]:disabled){cursor:default;color:var(--muted)}
 .plan-workspace>.plan-editor{grid-column:2;grid-row:2}
 @media(max-height:720px){#plan-library-body .plan-list{height:76px}}
 @media(max-width:650px){#plan-library-body{grid-template-columns:130px minmax(0,1fr)}#plan-library-body .plan-entry{width:150px}}
+.plan-browser-item .plan-benefit{display:block;font-style:normal;font-size:10px;color:var(--muted);margin-top:3px;line-height:1.4}.plan-browser-item>small{font-size:9px}
