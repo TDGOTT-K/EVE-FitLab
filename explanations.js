@@ -20,6 +20,11 @@ export function installExplanations(){
    const host=document.createElement('div');host.className='dps-chart';result.after(host);
    const breakdown=document.createElement('details');breakdown.className='dps-chart-breakdown';breakdown.innerHTML='<summary>输出来源与计算条件</summary>';breakdown.append(terms,conditions);breakdown.hidden=terms.hidden&&conditions.hidden;panel.append(breakdown);
   }
+  if(detail.flow){
+   panel.classList.add('cap-flow-explanation');
+   const result=panel.querySelector('.explain-result');result.querySelector('span').textContent=detail.title==='受到毁电'?'实际损失':'实际收益';
+   panel.querySelector('.explain-heading').after(result);
+  }
   if(detail.capacitor){
    panel.classList.add('has-cap-chart');
    for(const selector of ['.explain-terms','.explain-conditions','.explain-result'])panel.querySelector(selector).remove();

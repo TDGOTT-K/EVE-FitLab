@@ -1,6 +1,33 @@
 import {escapeHtml,metricText} from './scenario-display.js';
 
 const timeText=seconds=>seconds<60?metricText(seconds,'s',1):metricText(seconds/60,'min',1);
+export function capacitorFlowDetail(title,report){
+ const cap=report.capacitorAnalysis||{},remote=title==='友方传电'||title==='受到毁电';
+ const field={'友方传电':'incomingTransferPerSecond','受到毁电':'incomingNeutPerSecond','吸电收益':'nosferatuPerSecond','注电收益':'injectionPerSecond'}[title];
+ if(!field)return null;
+ const terms=[],conditions=[],value=cap[field];
+ if(remote){
+  const link=report.scenarioLinks?.[title==='友方传电'?'supportFitId':'hostileFitId'];
+  if(link){
+   terms.push(['来源',link.name]);
+   if(Number.isFinite(link.distance))terms.push(['距离',metricText(link.distance/1000,'km')]);
+   const groups=new Map();
+   for(const m of link.modules||[]){
+    const key=m.name+'|'+m.status,group=groups.get(key)||{name:m.name,status:m.status,count:0,rate:0,known:true};
+    group.count++;group.rate+=m.perSecond||0;group.known&&=Number.isFinite(m.perSecond);groups.set(key,group);
+   }
+   for(const m of groups.values())terms.push([m.name+(m.count>1?' ×'+m.count:''),m.known&&m.rate>0?metricText(m.rate*(title==='受到毁电'?(cap.energyWarfareResonance??1):1),'GJ/s')+(m.status==='失准期望值'?' · 射程折算':''):m.status]);
+   if(link.note)conditions.push(['未生效',link.note]);
+  }else conditions.push(['来源','未配置来源装配']);
+  if(title==='受到毁电'&&Number.isFinite(cap.energyWarfareResonance)&&cap.energyWarfareResonance!==1)terms.push(['本舰毁电减免',metricText((1-cap.energyWarfareResonance)*100,'%',1)]);
+  conditions.push(['口径',title==='受到毁电'?'平均损失 · 已计本舰抗性':'平均传入 · 来源持续运行']);
+ }else if(title==='吸电收益'){
+  for(const [name,rate] of cap.nosferatuSources||[])terms.push([name,metricText(rate,'GJ/s')]);
+  conditions.push(['条件','目标电量充足，并满足吸电条件']);
+ }else conditions.push(['口径','含弹夹与换弹 · 持续补充弹药']);
+ return {title,result:metricText(value,'GJ/s'),terms,conditions,flow:true};
+}
+
 export function capacitorSummary(cap){
  if(!cap)return '等待计算';
  if(cap.status==='stable')return '稳定 · '+metricText(cap.lowPercent,'%',1)+(cap.highPercent-cap.lowPercent>.1?'–'+metricText(cap.highPercent,'%',1):'');

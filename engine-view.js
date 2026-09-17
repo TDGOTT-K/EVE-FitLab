@@ -1,4 +1,4 @@
-import {capacitorDetail} from './capacitor-chart.js';
+import {capacitorDetail,capacitorFlowDetail} from './capacitor-chart.js';
 import {renderWorkspaceAttack,numberAttributes,scenarioDetail,metricText} from './scenario-display.js';
 import {getLocale} from './i18n.js';
 import {extendedStats} from './extended-stats.js';
@@ -41,7 +41,7 @@ export function mountEngineStats(root,report,ship,pilot,mode,onToggle,catalog=[]
  const a=report.attributes,raw=ship.attrs,keys=['em','thermal','kinetic','explosive'],names=['电磁','热能','动能','爆炸'];
  const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const context=[['角色',pilot||'无技能'],['计算来源','Dogma 引擎'],['明细范围','当前返回值']];
- const tip=(title,result,terms,comparison)=>`tabindex="0" data-explain="${esc(JSON.stringify(['电容续航','净耗电'].includes(title)?capacitorDetail(report):comparison?scenarioDetail(title,result,comparison.value,comparison.baseline,terms,report.workspace?.conditions||context,comparison.baselineText):calculationDetail(a.calculationDetails?.[({'DPS':'appliedDamagePerSecond','无人机 DPS':'appliedDroneDamagePerSecond','模块耗电':'capacitorUsagePerSecond'})[title]],catalog,pilot)||{title,result,terms,conditions:context}))}"`;
+ const tip=(title,result,terms,comparison)=>`tabindex="0" data-explain="${esc(JSON.stringify(capacitorFlowDetail(title,report)||(['电容续航','净耗电'].includes(title)?capacitorDetail(report):comparison?scenarioDetail(title,result,comparison.value,comparison.baseline,terms,report.workspace?.conditions||context,comparison.baselineText):calculationDetail(a.calculationDetails?.[({'DPS':'appliedDamagePerSecond','无人机 DPS':'appliedDroneDamagePerSecond','模块耗电':'capacitorUsagePerSecond'})[title]],catalog,pilot)||{title,result,terms,conditions:context})))}"`;
  const unchanged=(name,value)=>{const id=({'锁定目标数':192,'回充时间':55,...(!ehp?{'护盾':263,'装甲':265,'结构':9}:{})})[name];return id!=null&&Math.abs(parseFloat(value)-(raw[id]/(id===55?1000:1)))<0.001};
  const row=(name,value,terms,comparison)=>`<div class="stat-row" ${!comparison&&unchanged(name,value)?'':tip(name,value,terms,comparison)}><span>${name}</span><b ${comparison?numberAttributes(comparison.value,comparison.baseline):''}>${value}</b></div>`;
  const base=(name,value,initial,unit)=>{if(Math.abs(value-initial)<0.001)return `<div class="stat-row"><span>${name}</span><b>${Number(value).toLocaleString(getLocale(),{maximumFractionDigits:5})} ${unit}</b></div>`;const attribute={'最大速度':'maxVelocity','信号半径':'signatureRadius','容量':'capacitorCapacity','锁定距离':'maxTargetRange','扫描分辨率':'scanResolution'}[name];const detail=attributeDetail(name,value,unit,attribute,a,catalog,pilot,unit==='km'?1000:1);return `<div class="stat-row" tabindex="0" data-explain="${esc(JSON.stringify(detail))}"><span>${name}</span><b>${detail.result}</b></div>`};

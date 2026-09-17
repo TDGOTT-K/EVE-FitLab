@@ -417,3 +417,13 @@ html[lang=en] body{font-family:'Segoe UI',sans-serif}html[lang=ja] body{font-fam
 .cap-flows>div{display:flex;justify-content:space-between;gap:8px;font-size:10px}
 .cap-flows span{color:var(--muted)}.cap-flows b{font-weight:500;white-space:nowrap;font-variant-numeric:tabular-nums}
 .cap-income{color:#75c99e}.cap-expense{color:#ef8585}
+
+.stat-explanation.cap-flow-explanation,#stat-explanation.cap-flow-explanation{width:320px;max-width:calc(100vw - 16px);line-height:1.55;border-color:var(--line)}
+.cap-flow-explanation .explain-heading{padding:8px 12px;font-size:12px}
+.cap-flow-explanation .explain-result{padding:10px 12px;background:transparent;border-top:0}
+.cap-flow-explanation .explain-result b{font-size:19px;font-weight:600}
+.cap-flow-explanation .explain-result>span{font-size:10px;color:var(--muted);align-self:center}
+.cap-flow-explanation .explain-terms{padding:6px 12px}
+.cap-flow-explanation .explain-line{gap:12px;font-size:10px;padding:4px 0}
+.cap-flow-explanation .explain-line>b{max-width:65%;overflow-wrap:anywhere}
+.cap-flow-explanation .explain-conditions{padding:5px 12px 8px;border-top:1px solid var(--line)}
