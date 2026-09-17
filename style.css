@@ -508,3 +508,24 @@ label:has(>input[type="checkbox"]:disabled){cursor:default;color:var(--muted)}
 .tactical-mode-menu>button{display:flex;align-items:center;gap:9px;width:100%;padding:9px 10px;border:0;font-size:12px;text-align:left}
 .tactical-mode-menu>button[aria-selected="true"]{color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--panel))}
 .tactical-mode-menu>button:hover,.tactical-mode-menu>button:focus-visible{background:var(--row);outline:1px solid var(--accent);outline-offset:-1px}
+
+#implant-config{font-size:11px;color:var(--accent);padding:6px 9px;align-self:center;white-space:nowrap}
+.implant-dialog{width:820px;max-width:calc(100vw - 24px);max-height:calc(100vh - 24px);padding:0;background:var(--panel);color:var(--text);border:1px solid var(--line)}
+.implant-dialog[open]{display:flex;flex-direction:column}.implant-dialog::backdrop{background:#0008}
+.implant-intro{display:flex;justify-content:space-between;gap:12px;padding:10px 16px;color:var(--muted);font-size:11px}.implant-intro small{font-size:10px}
+.implant-layout{display:grid;grid-template-columns:1fr 1fr;min-height:0;height:480px}
+.implant-slots{padding:0 10px 10px 16px;overflow:auto;display:flex;flex-direction:column;gap:5px}
+.implant-slot{display:flex;border:1px solid var(--line);min-height:41px;flex-shrink:0;background:var(--bg)}
+.implant-slot.active{border-color:var(--accent);background:var(--row)}
+.implant-slot-main{display:flex;align-items:center;gap:9px;text-align:left;min-width:0;flex:1;padding:5px 8px;border:0}
+.implant-slot-number{font-size:10px;color:var(--muted);width:17px;flex-shrink:0}
+.implant-slot img,.implant-empty-icon{width:28px;height:28px;flex-shrink:0}.implant-empty-icon{display:grid;place-items:center;color:var(--muted);font-size:20px}
+.implant-slot-name{font-size:11px;overflow-wrap:anywhere}.implant-remove{border:0;padding:3px 8px;color:var(--muted)}.implant-remove:hover{color:var(--danger)}
+.implant-browser{display:flex;flex-direction:column;min-height:0;border-left:1px solid var(--line)}
+.implant-search{padding:0 12px 8px}.implant-search input{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--text);padding:8px;font:inherit}
+.implant-match-count{display:block;font-size:10px;color:var(--muted);margin-top:6px}
+.implant-candidates{overflow:auto;flex:1;padding:0 8px}.implant-candidate{display:flex;align-items:center;gap:9px;width:100%;text-align:left;border:0;padding:8px;font-size:11px}
+.implant-candidate img{width:32px;height:32px;flex-shrink:0}.implant-candidate>span{flex:1;min-width:0;overflow-wrap:anywhere}.implant-candidate small{display:block;font-size:9px;color:var(--muted);margin-top:3px}.implant-candidate.chosen{color:var(--accent);background:var(--row)}
+.implant-hint{font-size:10px;color:var(--muted);padding:8px 12px;border-top:1px solid var(--line)}
+.implant-bottom{display:flex;align-items:center;gap:8px;padding:10px 16px;border-top:1px solid var(--line)}.implant-status{flex:1;font-size:11px;color:var(--muted)}.implant-bottom [data-apply]{color:var(--accent);border-color:var(--accent)}
+@media(max-height:750px){.implant-layout{height:360px}}
