@@ -5,7 +5,14 @@ export function mountDpsChart(root,data,{mode='distance',onMode=()=>{}}={}){
  const fmtX=(x,s)=>metricText(s.key==='distance'?x/1000:x,s.unit,s.key==='angular'?5:2);
  function render(){
   const labels=['距离','目标信号半径','角速度'];
-  root.innerHTML='<div class="dps-chart-modes">'+labels.map((label,i)=>'<span class="'+(i===index?'active':'')+'"'+(i===index?' aria-current="true"':'')+'>'+label+'</span>').join('')+'<small><kbd>Tab</kbd> 切换</small></div>';
+  let modes=root.querySelector('.dps-chart-modes');
+  if(!modes){
+   root.innerHTML='<div class="dps-chart-modes" role="group" aria-label="DPS 曲线类型">'+labels.map((label,i)=>'<button type="button" data-curve-mode="'+keys[i]+'">'+label+'</button>').join('')+'<small><kbd>Tab</kbd> 切换</small></div>';
+   modes=root.querySelector('.dps-chart-modes');
+   modes.querySelectorAll('button').forEach((button,i)=>button.onclick=()=>{if(index===i)return;index=i;onMode(keys[index]);render()});
+  }
+  for(const child of [...root.children])if(child!==modes)child.remove();
+  modes.querySelectorAll('button').forEach((button,i)=>{button.classList.toggle('active',i===index);button.setAttribute('aria-pressed',String(i===index))});
   root.dataset.mode=keys[index];
   if(data.status!=='ready'){const p=document.createElement('p');p.className='dps-chart-empty';p.textContent=data.reason;root.append(p);return;}
   const s=data.series.find(s=>s.key===keys[index]);if(!s)return;
