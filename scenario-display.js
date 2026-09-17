@@ -25,7 +25,7 @@ export function renderWorkspaceAttack(report,catalog){
    view.target?[['射程与运动应用系数',metricText(r.factor)],['换弹折算系数',metricText(r.reloadFactor)],['包含目标抗性','是']]:[],conditions)
  ]);
  function detail(key,title,unit,terms){
-  return {...scenarioDetail(title,metricText(a[key],unit),a[key],comparison(key),terms,conditions,metricText(b[key],unit)),...(key==='total'?{chart:view.curves||{status:'unavailable',reason:'曲线数据尚未就绪。'}}:{})};
+  return {...scenarioDetail(title,metricText(a[key],unit),a[key],comparison(key),terms,conditions,metricText(b[key],unit)),...(key==='total'?{chart:{...(view.curves||{status:'unavailable',reason:'曲线数据尚未就绪。'}),totalDps:b.total}}:{})};
  }
  function row(key,title,unit,terms){return `<div class="stat-row" data-workspace-metric="${key}" ${explanationAttributes(detail(key,title,unit,terms))}><span>${title}</span><b ${numberAttributes(a[key],comparison(key))}>${metricText(a[key],unit,1)}</b></div>`;}
  let html=`<div class="panel-title"><span>攻击</span><span class="attack-total" data-workspace-metric="total" ${explanationAttributes(detail('total','总 DPS','DPS',weaponTerms.concat([['无人机',metricText(a.drone,'DPS')]])))}><b ${numberAttributes(a.total,comparison('total'))}>${metricText(a.total,'DPS',1)}</b></span></div><div class="stat-block">`;

@@ -400,3 +400,5 @@ html[lang=en] body{font-family:'Segoe UI',sans-serif}html[lang=ja] body{font-fam
 .compact-explanation .explain-result{padding:6px 10px}
 .value-only .explain-heading{border:0;background:transparent}
 .value-only .explain-heading>b{color:var(--accent);font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
+
+.dps-function-plot .dps-probe-percent{font-size:10px;fill:var(--text);paint-order:stroke;stroke:var(--panel);stroke-width:3px;stroke-linejoin:round;pointer-events:none}

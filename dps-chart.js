@@ -25,7 +25,7 @@ export function mountDpsChart(root,data,{mode='distance',onMode=()=>{}}={}){
   for(let i=0;i<=4;i++){const value=s.min+(s.max-s.min)*i/4;grid+='<text x="'+x(value)+'" y="'+(B+19)+'" text-anchor="middle">'+metricText(s.key==='distance'?value/1000:value,'',s.key==='angular'?4:1)+'</text>';}
   const currentX=x(s.currentX),currentY=y(s.currentY);
   const currentMarkup=data.ideal?'': '<line class="dps-current-line" x1="'+currentX+'" x2="'+currentX+'" y1="'+T+'" y2="'+B+'"/><circle class="dps-current-point" cx="'+currentX+'" cy="'+currentY+'" r="4"/>';
-  root.insertAdjacentHTML('beforeend','<div class="dps-chart-current">'+(data.ideal?'<span>理想条件</span><b>峰值 '+escapeHtml(metricText(Math.max(...s.points.map(p=>p[1])),'DPS'))+'</b>':'<span>当前 '+escapeHtml(fmtX(s.currentX,s))+'</span><b>'+escapeHtml(metricText(s.currentY,'DPS'))+'</b>')+'</div><svg class="dps-function-plot" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="DPS 随'+s.label+'变化"><text x="'+L+'" y="11">DPS</text>'+grid+'<path class="dps-curve" d="'+path+'"/>'+currentMarkup+'<g class="dps-probe" visibility="hidden"><line y1="'+T+'" y2="'+B+'"/><circle r="3"/></g><text x="'+R+'" y="222" text-anchor="end">'+s.label+' / '+s.unit+'</text><rect class="dps-chart-hit" x="'+L+'" y="'+T+'" width="'+(R-L)+'" height="'+(B-T)+'"/></svg><div class="dps-chart-probe-value" aria-live="off">&nbsp;</div>');
+  root.insertAdjacentHTML('beforeend','<div class="dps-chart-current">'+(data.ideal?'<span>理想条件</span><b>峰值 '+escapeHtml(metricText(Math.max(...s.points.map(p=>p[1])),'DPS'))+'</b>':'<span>当前 '+escapeHtml(fmtX(s.currentX,s))+'</span><b>'+escapeHtml(metricText(s.currentY,'DPS'))+'</b>')+'</div><svg class="dps-function-plot" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="DPS 随'+s.label+'变化"><text x="'+L+'" y="11">DPS</text>'+grid+'<path class="dps-curve" d="'+path+'"/>'+currentMarkup+'<g class="dps-probe" visibility="hidden"><line y1="'+T+'" y2="'+B+'"/><circle r="3"/><text class="dps-probe-percent"/></g><text x="'+R+'" y="222" text-anchor="end">'+s.label+' / '+s.unit+'</text><rect class="dps-chart-hit" x="'+L+'" y="'+T+'" width="'+(R-L)+'" height="'+(B-T)+'"/></svg><div class="dps-chart-probe-value" aria-live="off">&nbsp;</div>');
   const t=data.target||{},fixed=[['distance','距离',t.distance/1000,'km'],['signature','信号半径',t.signature,'m'],['angular','角速度',t.angular,'rad/s']].filter(([key])=>key!==s.key).map(([key,label,value,unit])=>label+' '+metricText(value,unit,key==='angular'?5:2));
   fixed.push('相对速度 '+metricText(t.speed,'m/s'));
   const note=document.createElement('div');note.className='dps-chart-fixed';note.textContent=data.ideal?s.fixed:fixed.join(' · ');root.append(note);
@@ -37,6 +37,11 @@ export function mountDpsChart(root,data,{mode='distance',onMode=()=>{}}={}){
    readout.textContent='采样 '+fmtX(sample[0],s)+' · '+metricText(sample[1],'DPS');
    if(!Number.isFinite(sample[1])){probe.setAttribute('visibility','hidden');return;}
    probe.setAttribute('visibility','visible');const line=probe.querySelector('line'),dot=probe.querySelector('circle');line.setAttribute('x1',x(sample[0]));line.setAttribute('x2',x(sample[0]));dot.setAttribute('cx',x(sample[0]));dot.setAttribute('cy',y(sample[1]));
+   const label=probe.querySelector('.dps-probe-percent'),px=x(sample[0]),py=y(sample[1]),flip=px>R-75;
+   label.textContent=Number.isFinite(data.totalDps)&&data.totalDps>0?metricText(sample[1]/data.totalDps*100,'%',1):'';
+   label.setAttribute('text-anchor',flip?'end':'start');
+   label.setAttribute('x',px+(flip?-8:8));
+   label.setAttribute('y',py<T+18?py+16:py-9);
   };
   hit.onpointerleave=()=>{probe.setAttribute('visibility','hidden');readout.innerHTML='&nbsp;'};
  }
