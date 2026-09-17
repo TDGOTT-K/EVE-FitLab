@@ -458,3 +458,7 @@ html[lang=en] body{font-family:'Segoe UI',sans-serif}html[lang=ja] body{font-fam
 .install-preview-active .preview-changed,#slots .preview-changed{outline:0;background:color-mix(in srgb,var(--hot) 7%,transparent)}
 .install-preview-active .panel-title>span:first-child{flex-shrink:0}
 .install-preview-active .attack-total{white-space:nowrap}
+
+.browser.unload-drop-target{outline:1px dashed var(--hot);outline-offset:-3px}
+.installed-drag-source{opacity:.45}
+.slot .module[draggable="true"],.slot .ammo[draggable="true"]{cursor:grab}
