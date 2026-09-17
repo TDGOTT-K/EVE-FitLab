@@ -46,7 +46,7 @@ export function installLoadoutManager(host,{api}){
   }).join('')||'<p class="pilot-empty">没有匹配方案</p>';tree.scrollTop=scroll;
   tree.querySelectorAll('summary').forEach(b=>{const folder=groups[Number(b.dataset.folderIndex)];b.onclick=e=>{e.preventDefault();activeFolder=folder;const open=!b.parentElement.open;b.parentElement.open=open;if(open)folderOpen.add(folder);else folderOpen.delete(folder);tree.querySelectorAll('summary').forEach(x=>x.classList.toggle('active-folder',x===b));};
    b.ondragover=e=>{if(planDrag){e.preventDefault();e.dataTransfer.dropEffect='move';b.classList.add('folder-drop')}};b.ondragleave=()=>b.classList.remove('folder-drop');b.ondrop=e=>{e.preventDefault();b.classList.remove('folder-drop');if(planDrag){const id=planDrag;planDrag=null;run(async()=>{await movePlan(id,folder);folderOpen.add(folder);drawList();message('方案已移入“'+(folder||'未分组')+'”');notify()});}};
-   b.oncontextmenu=e=>{if(!folder)return;e.preventDefault();folderMenu(b,folder)};b.onkeydown=e=>{if(folder&&(e.key==='ContextMenu'||e.shiftKey&&e.key==='F10')){e.preventDefault();folderMenu(b,folder)}};
+   b.oncontextmenu=e=>{if(!folder)return;e.preventDefault();folderMenu(b,folder,e)};b.onkeydown=e=>{if(folder&&(e.key==='ContextMenu'||e.shiftKey&&e.key==='F10')){e.preventDefault();folderMenu(b,folder,e)}};
   });
   tree.querySelectorAll('[data-plan]').forEach(b=>{b.onclick=async()=>{if(busy||!await guard())return;draft=structuredClone(plans.find(p=>p.id===b.dataset.plan));activeFolder=draft.folder||'';dirty=false;message('');draw();$('.plan-list').focus({preventScroll:true});};b.ondragstart=e=>{planDrag=b.dataset.plan;e.dataTransfer.setData('text/plain',planDrag);e.dataTransfer.effectAllowed='move'};b.ondragend=()=>{planDrag=null;host.querySelectorAll('.folder-drop').forEach(x=>x.classList.remove('folder-drop'))};});
  }
@@ -62,10 +62,10 @@ export function installLoadoutManager(host,{api}){
    await run(async()=>{if(previous){for(const p of plans.filter(p=>p.folder===previous))await movePlan(p.id,name);extraFolders=extraFolders.filter(f=>f!==previous);}extraFolders.push(name);storeFolders();activeFolder=name;folderOpen.add(name);drawList();notify();});};
   input.onkeydown=e=>{if(e.isComposing)return;if(e.key==='Enter'||e.key==='Escape'){e.preventDefault();e.stopPropagation();finish(e.key==='Enter')}};input.onblur=()=>finish(true);
  }
- function folderMenu(anchor,name){
+ function folderMenu(anchor,name,event){
   document.querySelector('.plan-folder-menu')?.remove();const menu=document.createElement('div');menu.className='plan-folder-menu scenario-quick-menu';menu.setAttribute('popover','auto');menu.setAttribute('role','menu');
   for(const [label,fn] of [['重命名分组',()=>editFolder(name)],['解散分组',async()=>{if(!await confirm('解散“'+name+'”？其中的方案会移到未分组。'))return;run(async()=>{for(const p of plans.filter(p=>p.folder===name))await movePlan(p.id,'');extraFolders=extraFolders.filter(f=>f!==name);storeFolders();activeFolder='';drawList();notify();});}]]){const b=document.createElement('button');b.role='menuitem';b.textContent=label;b.onclick=()=>{menu.hidePopover();menu.remove();fn()};menu.append(b)}
-  menu.addEventListener('toggle',e=>{if(e.newState==='closed')menu.remove()});document.body.append(menu);menu.showPopover();const r=anchor.getBoundingClientRect();menu.style.left=Math.min(r.right,innerWidth-menu.offsetWidth-8)+'px';menu.style.top=Math.min(r.top,innerHeight-menu.offsetHeight-8)+'px';menu.querySelector('button').focus();
+  menu.addEventListener('toggle',e=>{if(e.newState==='closed')menu.remove()});document.body.append(menu);menu.showPopover();const r=anchor.getBoundingClientRect(),pointer=event?.type==='contextmenu'&&(event.clientX!==0||event.clientY!==0),x=pointer?event.clientX:r.left,y=pointer?event.clientY:r.bottom;menu.style.left=Math.max(8,Math.min(x,innerWidth-menu.offsetWidth-8))+'px';menu.style.top=Math.max(8,Math.min(y,innerHeight-menu.offsetHeight-8))+'px';menu.querySelector('button').focus();
  }
  $('[data-new-group]').onclick=()=>editFolder();
  function openPlanActions(){
