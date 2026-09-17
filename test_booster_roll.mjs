@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {rollBoosterSideEffects} from './booster-roll.js';
+import {boosterCatalog} from './booster-catalog.js';
+const blue=boosterCatalog.find(t=>t.en==='Standard Blue Pill Booster');assert.equal(blue.sideEffects.length,4);assert(blue.sideEffects.every(e=>e.chance===.2));
+const entries=[{typeId:blue.id,slot:blue.slot,enabledSideEffects:[blue.sideEffects[0].id]}];
+assert.equal(rollBoosterSideEffects(entries,boosterCatalog,()=>0)[0].enabledSideEffects.length,4);
+assert.equal(rollBoosterSideEffects(entries,boosterCatalog,()=>.99)[0].enabledSideEffects.length,0);
+let i=0;const draws=[.1,.3,.15,.8];assert.deepEqual(rollBoosterSideEffects(entries,boosterCatalog,()=>draws[i++])[0].enabledSideEffects,[blue.sideEffects[0].id,blue.sideEffects[2].id]);assert.equal(i,4);assert.equal(entries[0].enabledSideEffects.length,1);
+assert.throws(()=>rollBoosterSideEffects(entries,[{...blue,sideEffects:[{id:1,chance:null}]}]));
+console.log('Independent booster trials, overwrite and input preservation passed');
