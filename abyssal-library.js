@@ -5,9 +5,15 @@ export function installAbyssalLibrary({host,catalog,api,render,onLocate,onInfo})
  const eligible=t=>t&&['high','mid','low'].includes(t.kind)&&groups.has(t.group)&&!t.en.includes('Abyssal');
  let active=false,records=[],loaded=false,loading=false,error='',located=null;const open=new Set(),views={normal:{query:'',scroll:0},abyss:{query:'',scroll:0}};
  const heading=host.querySelector('.panel-title'),count=heading.querySelector('#count'),title=document.createElement('span'),switchButton=document.createElement('button');
- title.className='equipment-browser-name';title.textContent='装备浏览器';switchButton.className='equipment-browser-switch';switchButton.type='button';switchButton.innerHTML='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M3 6h13m-3-3 3 3-3 3M17 14H4m3-3-3 3 3 3"/></svg>';switchButton.setAttribute('aria-label','切换到深渊装备库');switchButton.title='切换到深渊装备库';heading.classList.add('equipment-browser-heading');heading.replaceChildren(title,switchButton,count);
+ title.className='equipment-browser-name';title.textContent='装备浏览器';switchButton.className='equipment-browser-switch';switchButton.type='button';updateSwitch();heading.classList.add('equipment-browser-heading');heading.replaceChildren(title,switchButton,count);
+ function updateSwitch(){
+  const label=active?'返回装备':'进入深渊';
+  const glyph=active?'<path d="M10 6 4 12l6 6M4 12h15"/>':'<path d="m12 2 7 5 2 7-7 8-9-5-2-7Z" opacity=".5"/><path d="m12 4-4 6 5 2-3 8 7-9-5-2 2-5Z" fill="currentColor" stroke="none"/>';
+  switchButton.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">'+glyph+'</svg><span>'+label+'</span>';
+  switchButton.setAttribute('aria-label',label);switchButton.title=label;switchButton.classList.toggle('enter-abyss',!active);
+ }
  async function load(){if(loading)return;loading=true;error='';try{records=await api('abyssal-instances');loaded=true}catch(e){error=e.message}finally{loading=false;if(active)render()}}
- function switchTo(value){if(active===value)return;views[active?'abyss':'normal']={query:search.value,scroll:root.scrollTop};active=value;footer.textContent=active?'点击编辑实例 · 右键管理':normalHint;const view=views[active?'abyss':'normal'];search.value=view.query;title.textContent=active?'深渊装备库':'装备浏览器';switchButton.setAttribute('aria-label',active?'切换到装备浏览器':'切换到深渊装备库');switchButton.title=active?'切换到装备浏览器':'切换到深渊装备库';render();root.scrollTop=view.scroll;if(active)load();}
+ function switchTo(value){if(active===value)return;views[active?'abyss':'normal']={query:search.value,scroll:root.scrollTop};active=value;footer.textContent=active?'点击编辑实例 · 右键管理':normalHint;const view=views[active?'abyss':'normal'];search.value=view.query;title.textContent=active?'深渊装备库':'装备浏览器';updateSwitch();render();root.scrollTop=view.scroll;if(active)load();}
  switchButton.onclick=()=>switchTo(!active);
  const path=t=>[...t.path,t.meta||'科技 I'];
  function reveal(t){let key='';for(const part of path(t)){key+='/'+part;open.add(key)}open.add('base/'+t.id);located=t.id;}
