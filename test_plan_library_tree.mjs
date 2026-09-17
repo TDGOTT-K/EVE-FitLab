@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {normalizeLayout,relocateLibrary} from './plan-library-tree.js';
+const plans=[{id:'1',folder:'A',revision:1},{id:'2',folder:'A/B',revision:1},{id:'3',folder:'C',revision:1}];
+const layout=normalizeLayout({revision:0,folders:['A','A/B','C'],order:[]},plans);
+assert.throws(()=>relocateLibrary(layout,plans,'f:A','f:A/B','inside'));
+assert.throws(()=>relocateLibrary(layout,plans,'f:A','f:A','inside'));
+const nested=relocateLibrary(layout,plans,'f:A','f:C','inside');assert.deepEqual(nested.plans.map(p=>p.folder),['C/A','C/A/B','C']);
+const sorted=relocateLibrary(layout,plans,'f:C','f:A','before');assert.equal(sorted.layout.order[0],'f:C');assert.equal(sorted.plans[0].folder,'A');
+const moved=relocateLibrary(layout,plans,'p:1','p:3','after');assert.equal(moved.plans[0].folder,'C');assert.equal(moved.layout.order.indexOf('p:1'),moved.layout.order.indexOf('p:3')+1);
+const root=relocateLibrary(nested.layout,nested.plans,'f:C/A',null,'inside');assert.equal(root.plans[1].folder,'A/B');
+console.log('tree model checks passed');

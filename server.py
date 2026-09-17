@@ -1,4 +1,4 @@
-from loadout_plans import save_plan
+from loadout_plans import save_plan, save_layout
 from workspace_view import attach_workspace_view
 from scenario_presets import validate_presets
 from linked_scenario import resolve_fit_scenario
@@ -179,6 +179,7 @@ class Handler(SimpleHTTPRequestHandler):
     manifest=ROOT/('app-version.json' if (ROOT/'app-version.json').exists() else 'package.json')
     return self.reply({'version':json.loads(manifest.read_text(encoding='utf-8'))['version']})
    if self.path=='/api/storage':return self.reply({'directory':str(STATE.resolve())})
+   if self.path=='/api/loadout-layout':return self.reply(read_library().get('loadoutLayout',{'revision':0,'folders':[],'order':[]}))
    if self.path=='/api/loadout-plans':return self.reply(read_library().get('loadoutPlans',[]))
    if self.path=='/api/library':return self.reply(read_library()['fits'])
    if self.path=='/api/prices':return self.reply(prices())
@@ -230,6 +231,8 @@ class Handler(SimpleHTTPRequestHandler):
      fields=validate_presets(body)
      f=dict(previous,**fields);f['revision']=previous['revision']+1;f['updatedAt']=now()
      lib['fits']=[f if x['id']==f['id'] else x for x in lib['fits']];write_library(lib);return self.reply(f)
+    if self.path=='/api/loadout-layout':
+     result=save_layout(body,lib,now());write_library(lib);return self.reply(result)
     if self.path=='/api/loadout-plan':
      plan=save_plan(body,lib,now());write_library(lib);return self.reply(plan)
     if self.path=='/api/loadout-plan/delete':

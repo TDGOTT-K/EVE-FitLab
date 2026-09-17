@@ -1,3 +1,4 @@
+import {parentFolder,folderName,normalizeLayout,relocateLibrary,installLibraryDrag} from './plan-library-tree.js';
 import {installPlanResize} from './plan-resize.js';
 import {installPlanBrowser} from './plan-browser.js';
 import {implantCatalog} from './implant-catalog.js';
@@ -11,7 +12,7 @@ export function installLoadoutManager(host,{api}){
  let plans=[],draft=null,dirty=false,busy=false,drag=null,returnToFit=false;
  host.innerHTML='<div class="plan-workspace"><aside class="plan-library"><div class="plan-library-head"><button data-toggle-library aria-expanded="true" aria-controls="plan-library-body"><span class="plan-library-chevron">▾</span> 方案库</button><span class="plan-library-current"></span></div><div id="plan-library-body"><input class="plan-search" aria-label="搜索方案" placeholder="搜索方案或分组"><div class="plan-list plan-folder-list" tabindex="0" aria-label="脑插与增效剂方案列表"></div><div class="plan-library-blank" tabindex="0" aria-label="方案库空白区域" title="右键新建分组"></div><small>Ctrl+C / V 复制粘贴</small></div></aside><aside class="plan-browser"></aside><section class="plan-editor"><div class="plan-toolbar"></div><p class="plan-message" role="status"></p><div class="plan-content"></div></section></div>';
  const $=s=>host.querySelector(s),message=text=>$('.plan-message').textContent=text;
- const folderOpen=new Set(['']);let activeFolder=null,planDrag=null,extraFolders=[];try{extraFolders=JSON.parse(localStorage.getItem('fitlab-plan-folders')||'[]').filter(x=>typeof x==='string')}catch{}
+ let layout={revision:0,folders:[],order:[]};const folderOpen=new Set(['']);let activeFolder=null,extraFolders=[];try{extraFolders=JSON.parse(localStorage.getItem('fitlab-plan-folders')||'[]').filter(x=>typeof x==='string')}catch{}
  const storeFolders=()=>localStorage.setItem('fitlab-plan-folders',JSON.stringify(extraFolders));
  let libraryCollapsed=false;try{libraryCollapsed=localStorage.getItem('fitlab-plan-library-collapsed')==='true'}catch{}
  function updateLibraryFold(){
@@ -41,32 +42,54 @@ export function installLoadoutManager(host,{api}){
  function changed(){dirty=true;$('.plan-library-current').textContent=draft?.name||'';cache();$('.plan-dirty').textContent='未保存';}
  function drawList(){
   $('.plan-library-current').textContent=draft?.name||'';
-  const tree=$('.plan-list'),scroll=tree.scrollTop,q=$('.plan-search').value.trim().toLowerCase(),groups=['',...[...new Set([...extraFolders,...plans.map(p=>p.folder).filter(Boolean)])].sort()];
-  tree.innerHTML=groups.map((folder,i)=>{
-   const all=plans.filter(p=>(p.folder||'')===folder),rows=all.filter(p=>!q||(p.name+' '+folder).toLowerCase().includes(q));if(q&&!rows.length)return '';
-   return '<details class="plan-tree-group" data-folder="'+i+'" '+(q||folderOpen.has(folder)?'open':'')+'><summary data-folder-index="'+i+'" '+(activeFolder===folder?'class="active-folder"':'')+'><span>'+esc(folder||'未分组')+'</span><small>'+rows.length+'</small></summary><div class="plan-tree-children">'+(rows.map(p=>'<button class="plan-entry" draggable="true" data-plan="'+p.id+'" aria-pressed="'+(draft?.id===p.id)+'"><span>'+esc(p.name)+'</span><small>脑插 '+p.implants.length+' · 药剂 '+p.boosters.length+'</small></button>').join('')||'<span class="plan-tree-empty">拖入方案</span>')+'</div></details>';
-  }).join('')||'<p class="pilot-empty">没有匹配方案</p>';tree.scrollTop=scroll;
-  tree.querySelectorAll('summary').forEach(b=>{const folder=groups[Number(b.dataset.folderIndex)];b.onclick=e=>{e.preventDefault();activeFolder=folder;const open=!b.parentElement.open;b.parentElement.open=open;if(open)folderOpen.add(folder);else folderOpen.delete(folder);tree.querySelectorAll('summary').forEach(x=>x.classList.toggle('active-folder',x===b));};
-   b.ondragover=e=>{if(planDrag){e.preventDefault();e.dataTransfer.dropEffect='move';b.classList.add('folder-drop')}};b.ondragleave=()=>b.classList.remove('folder-drop');b.ondrop=e=>{e.preventDefault();b.classList.remove('folder-drop');if(planDrag){const id=planDrag;planDrag=null;run(async()=>{await movePlan(id,folder);folderOpen.add(folder);drawList();message('方案已移入“'+(folder||'未分组')+'”');notify()});}};
+  layout=normalizeLayout(layout,plans,extraFolders);
+  const tree=$('.plan-list'),scroll=tree.scrollTop,q=$('.plan-search').value.trim().toLowerCase();
+  const ordered=keys=>keys.sort((a,b)=>layout.order.indexOf(a)-layout.order.indexOf(b));
+  const matches=p=>!q||(p.name+' '+(p.folder||'')).toLowerCase().includes(q);
+  const planRow=p=>'<button class="plan-entry" draggable="true" data-library-key="p:'+p.id+'" data-plan="'+p.id+'" aria-pressed="'+(draft?.id===p.id)+'"><span>'+esc(p.name)+'</span><small>脑插 '+p.implants.length+' · 药剂 '+p.boosters.length+'</small></button>';
+  function folderRow(folder){
+   const nested=layout.folders.filter(f=>parentFolder(f)===folder),direct=plans.filter(p=>(p.folder||'')===folder),rows=ordered([...nested.map(f=>'f:'+f),...direct.filter(matches).map(p=>'p:'+p.id)]);
+   const content=rows.map(k=>k.startsWith('f:')?folderRow(k.slice(2)):planRow(direct.find(p=>p.id===k.slice(2)))).join('');
+   if(q&&!content&&!folder.toLowerCase().includes(q))return '';
+   return '<details class="plan-tree-group" '+(q||folderOpen.has(folder)?'open':'')+'><summary draggable="'+Boolean(folder)+'" data-library-key="f:'+esc(folder)+'" data-folder-path="'+esc(folder)+'" '+(activeFolder===folder?'class="active-folder"':'')+'><span>'+esc(folderName(folder)||'未分组')+'</span><small>'+plans.filter(p=>p.folder===folder||folder&&p.folder?.startsWith(folder+'/')).length+'</small></summary><div class="plan-tree-children">'+(content||'<span class="plan-tree-empty">空分组</span>')+'</div></details>';
+  }
+  // The ungrouped bucket contains only root plans; root folders remain its siblings.
+  const roots=ordered(layout.folders.filter(f=>!parentFolder(f)).map(f=>'f:'+f));
+  const ungrouped=plans.filter(p=>!p.folder&&matches(p));
+  tree.innerHTML='<details class="plan-tree-group" '+(q||folderOpen.has('')?'open':'')+'><summary data-library-key="f:" data-folder-path=""><span>未分组</span><small>'+ungrouped.length+'</small></summary><div class="plan-tree-children">'+ordered(ungrouped.map(p=>'p:'+p.id)).map(k=>planRow(ungrouped.find(p=>p.id===k.slice(2)))).join('')+'</div></details>'+roots.map(k=>folderRow(k.slice(2))).join('');tree.scrollTop=scroll;
+  tree.querySelectorAll('summary').forEach(b=>{const folder=b.dataset.folderPath;b.onclick=e=>{e.preventDefault();activeFolder=folder;const open=!b.parentElement.open;b.parentElement.open=open;if(open)folderOpen.add(folder);else folderOpen.delete(folder);tree.querySelectorAll('summary').forEach(x=>x.classList.toggle('active-folder',x===b));};
    b.oncontextmenu=e=>{e.preventDefault();e.stopPropagation();folderMenu(b,folder,e)};b.onkeydown=e=>{if(e.key==='ContextMenu'||e.shiftKey&&e.key==='F10'){e.preventDefault();e.stopPropagation();folderMenu(b,folder,e)}};
   });
-  tree.querySelectorAll('[data-plan]').forEach(b=>{b.onclick=async()=>{if(busy||!await guard())return;draft=structuredClone(plans.find(p=>p.id===b.dataset.plan));activeFolder=draft.folder||'';dirty=false;message('');draw();$('.plan-list').focus({preventScroll:true});};b.ondragstart=e=>{planDrag=b.dataset.plan;e.dataTransfer.setData('text/plain',planDrag);e.dataTransfer.effectAllowed='move'};b.ondragend=()=>{planDrag=null;host.querySelectorAll('.folder-drop').forEach(x=>x.classList.remove('folder-drop'))};});
+  tree.querySelectorAll('[data-plan]').forEach(b=>b.onclick=async()=>{if(busy||!await guard())return;draft=structuredClone(plans.find(p=>p.id===b.dataset.plan));activeFolder=draft.folder||'';dirty=false;message('');draw();$('.plan-list').focus({preventScroll:true});});
  }
- async function movePlan(id,folder){
-  const current=plans.find(p=>p.id===id);if(!current||current.folder===folder)return;
-  const saved=await api('loadout-plan',{...current,folder});plans=plans.map(p=>p.id===saved.id?saved:p);
-  if(draft?.id===saved.id){draft.folder=folder;draft.revision=saved.revision;draft.updatedAt=saved.updatedAt;cache();}
+ async function commitLayout(next,nextPlans=plans){
+  next=normalizeLayout(next,nextPlans);
+  const result=await api('loadout-layout',{...next,plans:nextPlans.map(p=>({id:p.id,revision:p.revision,folder:p.folder||''}))});
+  plans=result.plans;layout=result.layout;extraFolders=layout.folders.slice();storeFolders();
+  if(draft?.id){const saved=plans.find(p=>p.id===draft.id);if(saved){draft.folder=saved.folder;draft.revision=saved.revision;draft.updatedAt=saved.updatedAt;cache();}}
+  drawList();notify();
  }
- function editFolder(previous=null){
+ installLibraryDrag($('.plan-list'),$('.plan-library-blank'),{
+  canStart:()=>{if($('.plan-search').value.trim()){message('清除搜索后可拖动排序');return false;}return !busy;},
+  validate:(source,target,mode)=>{if(source==='f:'||source?.startsWith('f:')&&target==='f:')throw Error('请选择分组或根空白处');return relocateLibrary(layout,plans,source,target,mode)},
+  onDrop:async(source,target,mode)=>run(async()=>{const result=relocateLibrary(layout,plans,source,target,mode);await commitLayout(result.layout,result.plans);activeFolder=result.destination;folderOpen.add(result.destination);if(result.moved.startsWith('f:'))folderOpen.add(result.moved.slice(2));drawList();message(mode==='inside'?'已移入目标分组':'已调整顺序');}),onError:e=>message(e.message)
+ });
+ function editFolder(previous=null,parent=''){
   libraryCollapsed=false;updateLibraryFold();$('.plan-folder-editor')?.remove();
-  const input=document.createElement('input');input.className='plan-folder-editor';input.setAttribute('aria-label',previous?'重命名分组':'新分组名称');input.placeholder='分组名称 · Enter 确认';input.maxLength=40;input.value=previous||'';$('.plan-folder-list').prepend(input);input.focus();input.select();let done=false;
-  const finish=async commit=>{if(done)return;done=true;const name=input.value.trim();input.remove();if(!commit||!name||name===previous)return;if(name==='未分组'||name==='全部方案'||extraFolders.includes(name)||plans.some(p=>p.folder===name)){message('此分组名称已存在');return;}
-   await run(async()=>{if(previous){for(const p of plans.filter(p=>p.folder===previous))await movePlan(p.id,name);extraFolders=extraFolders.filter(f=>f!==previous);}extraFolders.push(name);storeFolders();activeFolder=name;folderOpen.add(name);drawList();notify();});};
+  const input=document.createElement('input');input.className='plan-folder-editor';input.setAttribute('aria-label',previous?'重命名分组':'新分组名称');input.placeholder='分组名称 · Enter 确认';input.maxLength=40;input.value=previous?folderName(previous):'';
+  const anchor=[...$('.plan-list').querySelectorAll('summary')].find(x=>x.dataset.folderPath===(previous||parent));if(anchor&&parent){anchor.parentElement.open=true;anchor.after(input)}else $('.plan-list').prepend(input);input.focus();input.select();let done=false;
+  const finish=async commit=>{if(done)return;done=true;const name=input.value.trim();input.remove();if(!commit||!name)return;
+   const targetParent=previous?parentFolder(previous):parent,path=(targetParent?targetParent+'/':'')+name;
+   if(path===previous)return;if(name.includes('/')||name==='未分组'||layout.folders.includes(path)||path.split('/').length>16){message('分组名称重复、含有斜杠或层级过深');return;}
+   await run(async()=>{let next=structuredClone(layout),copies=structuredClone(plans);if(previous){const rewrite=f=>f===previous?path:f.startsWith(previous+'/')?path+f.slice(previous.length):f;next.folders=next.folders.map(rewrite);next.order=next.order.map(k=>k.startsWith('f:')?'f:'+rewrite(k.slice(2)):k);copies.forEach(p=>p.folder=rewrite(p.folder||''));}else next.folders.push(path);await commitLayout(next,copies);activeFolder=path;folderOpen.add(targetParent);folderOpen.add(path);drawList();});};
   input.onkeydown=e=>{if(e.isComposing)return;if(e.key==='Enter'||e.key==='Escape'){e.preventDefault();e.stopPropagation();finish(e.key==='Enter')}};input.onblur=()=>finish(true);
  }
  function folderMenu(anchor,name,event){
   document.querySelector('.plan-folder-menu')?.remove();const menu=document.createElement('div');menu.className='plan-folder-menu scenario-quick-menu';menu.setAttribute('popover','auto');menu.setAttribute('role','menu');
-  const actions=name===null?[['新建分组',()=>editFolder()]]:[['新建方案',()=>newPlan(name)],...(name?[['重命名分组',()=>editFolder(name)],['解散分组',async()=>{if(!await confirm('解散“'+name+'”？其中的方案会移到未分组。'))return;run(async()=>{for(const p of plans.filter(p=>p.folder===name))await movePlan(p.id,'');extraFolders=extraFolders.filter(f=>f!==name);storeFolders();activeFolder='';drawList();notify();});}]]:[])];
+  const actions=name===null?[['新建分组',()=>editFolder()]]:[['新建方案',()=>newPlan(name)],...(name?[['新建子分组',()=>editFolder(null,name)],['重命名分组',()=>editFolder(name)],['解散分组',async()=>{if(!await confirm('解散“'+folderName(name)+'”？子分组及方案会移到上一级。'))return;run(async()=>{
+   const parent=parentFolder(name),rewrite=f=>f===name?parent:f.startsWith(name+'/')?(parent?parent+'/':'')+f.slice(name.length+1):f;
+   const next=structuredClone(layout);next.folders=next.folders.filter(f=>f!==name).map(rewrite);if(new Set(next.folders).size!==next.folders.length)throw Error('上一级存在同名分组，请先改名');next.order=next.order.filter(k=>k!=='f:'+name).map(k=>k.startsWith('f:')?'f:'+rewrite(k.slice(2)):k);const copies=plans.map(p=>({...p,folder:rewrite(p.folder||'')}));await commitLayout(next,copies);activeFolder=parent;folderOpen.add(parent);drawList();
+  });}]]:[])];
   for(const [label,fn] of actions){const b=document.createElement('button');b.role='menuitem';b.textContent=label;b.onclick=()=>{menu.hidePopover();menu.remove();fn()};menu.append(b)}
   menu.addEventListener('toggle',e=>{if(e.newState==='closed')menu.remove()});document.body.append(menu);menu.showPopover();const r=anchor.getBoundingClientRect(),pointer=event?.type==='contextmenu'&&(event.clientX!==0||event.clientY!==0),x=pointer?event.clientX:r.left,y=pointer?event.clientY:r.bottom;menu.style.left=Math.max(8,Math.min(x,innerWidth-menu.offsetWidth-8))+'px';menu.style.top=Math.max(8,Math.min(y,innerHeight-menu.offsetHeight-8))+'px';menu.querySelector('button').focus();
  }
@@ -145,7 +168,7 @@ export function installLoadoutManager(host,{api}){
   }
   if(!await guard())return;draft=structuredClone(p);duplicate();
  });
- return {async show({id,initial,fromFit=false}={}){host.hidden=false;returnToFit=fromFit;try{plans=await api('loadout-plans');if(initial&&(!id||!plans.some(p=>p.id===id))&&await guard()){draft=structuredClone(initial);delete draft.id;delete draft.revision;dirty=true;id=null;}if(id&&(!draft||draft.id!==id)&&await guard()){draft=structuredClone(plans.find(p=>p.id===id)||null);dirty=false;}if(!draft&&plans.length)draft=structuredClone(plans[0]);draw();}catch(e){message(e.message);}},hide(){host.hidden=true;}};
+ return {async show({id,initial,fromFit=false}={}){host.hidden=false;returnToFit=fromFit;try{[plans,layout]=await Promise.all([api('loadout-plans'),api('loadout-layout')]);if(layout.revision>0)extraFolders=layout.folders.slice();if(initial&&(!id||!plans.some(p=>p.id===id))&&await guard()){draft=structuredClone(initial);delete draft.id;delete draft.revision;dirty=true;id=null;}if(id&&(!draft||draft.id!==id)&&await guard()){draft=structuredClone(plans.find(p=>p.id===id)||null);dirty=false;}if(!draft&&plans.length)draft=structuredClone(plans[0]);draw();}catch(e){message(e.message);}},hide(){host.hidden=true;}};
 }
 
 export async function openLoadoutPicker(anchor,{api,snapshot,onSelect,onManage}){
@@ -155,7 +178,7 @@ export async function openLoadoutPicker(anchor,{api,snapshot,onSelect,onManage})
  menu.addEventListener('toggle',e=>{if(e.newState==='closed')menu.remove()});
  const close=()=>{menu.hidePopover();menu.remove()};
  try{
-  const plans=await api('loadout-plans');if(!menu.isConnected)return;menu.innerHTML='<input class="loadout-search" aria-label="搜索可用方案" placeholder="搜索方案">';
+  const [plans,layout]=await Promise.all([api('loadout-plans'),api('loadout-layout')]);if(layout.revision>0)extraFolders=layout.folders.slice();if(!menu.isConnected)return;menu.innerHTML='<input class="loadout-search" aria-label="搜索可用方案" placeholder="搜索方案">';
   const add=(label,fn)=>{const b=document.createElement('button');b.role='menuitem';b.textContent=label;b.onclick=()=>{close();fn()};menu.append(b);return b;};
   add('不使用方案',()=>onSelect(null));
   for(const p of plans){const b=add((snapshot?.id===p.id?'✓ ':'')+p.name+(snapshot?.id===p.id?(snapshot.customized?' · 已自定义':snapshot.revision!==p.revision?' · 有更新':''):''),()=>onSelect(p));b.dataset.search=(p.name+' '+(p.folder||'')).toLowerCase();}
