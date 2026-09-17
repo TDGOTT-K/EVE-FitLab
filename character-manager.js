@@ -1,4 +1,4 @@
-import {matchesName} from './i18n.js';
+import {matchesName,getLocale} from './i18n.js';
 import {readPilotFolders,writePilotFolders,onPilotFoldersChanged} from './pilot-folders.js';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const portrait='<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><circle cx="16" cy="11" r="6"/><path d="M5 30v-4c0-8 22-8 22 0v4"/></svg>';
@@ -9,6 +9,16 @@ export function installCharacterManager({api,catalog,onReturn}){
  const contextMenu=document.createElement('div');contextMenu.className='character-context-menu';contextMenu.role='menu';contextMenu.hidden=true;document.body.append(contextMenu);
  const $=s=>root.querySelector(s),skills=catalog.filter(t=>t.kind==='skill').sort((a,b)=>a.name.localeCompare(b.name,'zh-CN'));
  const group=t=>t.path?.at(-1)||'其他技能';
+ const skillRanks=new Map(skills.map(t=>[t.id,t.attrs?.[275]]));
+ const skillPointTotal=c=>{
+  let total=0;
+  for(const skill of c.skills){if(skill.level<=0)continue;const rank=skillRanks.get(skill.skillTypeId);if(!Number.isFinite(rank)||rank<=0)return null;total+=Math.ceil(250*rank*2**(2.5*(skill.level-1)));}
+  return total;
+ };
+ const pointText=c=>{const total=skillPointTotal(c);return total===null?'—':total.toLocaleString(getLocale());};
+ const pointNote='按已学等级计算，不含未完成等级的训练进度';
+ function updateSkillSummary(){const c=current();if(!c)return;$('#character-skill-count').textContent=c.skills.filter(s=>s.level>0).length+' 项已学技能';$('#character-skill-points strong').textContent=pointText(c);}
+
  let people=[],selected=null,draft=null,dirty=false,loaded=false,generation=0;
  let folders=readPilotFolders(),activeFolder='',draggedPerson=null;const skillOpen=new Set();
  const status=message=>$('#character-status').textContent=message;
@@ -47,7 +57,7 @@ export function installCharacterManager({api,catalog,onReturn}){
  const addEntries=()=>[['新建自定义角色',newCharacter],['新建文件夹',()=>editFolder()],['从 EVE 官网导入',login]];
  function drawList(){
   const q=$('#character-search').value.trim().toLowerCase();
-  const row=c=>'<button class="character-person" draggable="true" data-character="'+esc(c.id)+'" aria-pressed="'+(selected?.id===c.id)+'">'+icon(c)+'<span>'+esc(c.name)+'<small>'+esc(c.source)+' · '+c.skills.filter(s=>s.level>0).length+' 项技能</small></span></button>';
+  const row=c=>'<button class="character-person" draggable="true" data-character="'+esc(c.id)+'" aria-pressed="'+(selected?.id===c.id)+'">'+icon(c)+'<span>'+esc(c.name)+'<small>'+esc(c.source)+' · '+c.skills.filter(s=>s.level>0).length+' 项技能</small><small class="character-row-sp" title="'+pointNote+'">'+pointText(c)+' SP</small></span></button>';
   $('#character-list').innerHTML=folders.folders.map(f=>{const rows=people.filter(c=>folderOf(c)===f.id),matches=rows.filter(c=>c.name.toLowerCase().includes(q)||f.name.toLowerCase().includes(q));if(q&&!matches.length&&!f.name.toLowerCase().includes(q))return '';return '<details class="character-folder" data-folder="'+esc(f.id)+'" '+((q||f.open!==false)?'open':'')+'><summary>'+folderIcon+'<span>'+esc(f.name)+'</span><small>'+rows.length+'</small></summary>'+matches.map(row).join('')+(!matches.length?'<div class="pilot-empty">拖入角色</div>':'')+'</details>'}).join('')+'<div class="character-root" data-folder=""><div class="character-root-label">未分组</div>'+people.filter(c=>!folderOf(c)&&c.name.toLowerCase().includes(q)).map(row).join('')+'</div>';
   $('#character-list').querySelectorAll('[data-character]').forEach(b=>{
    const c=people.find(c=>String(c.id)===b.dataset.character);
@@ -70,7 +80,7 @@ export function installCharacterManager({api,catalog,onReturn}){
   const q=$('#skill-search').value.trim().toLowerCase(),learned=$('#skills-learned').checked;
   const levels=new Map(c.skills.map(s=>[s.skillTypeId,s.level]));
   const rows=skills.filter(t=>(!q||matchesName(t,q))&&(!learned||q||(levels.get(t.id)||0)>0));
-  $('#character-skill-count').textContent=c.skills.filter(s=>s.level>0).length+' 项已学技能';
+  updateSkillSummary();
   const skillRow=t=>{const level=levels.get(t.id)||0;return '<div class="character-skill"><span>'+esc(t.name)+'<small>'+esc(group(t))+'</small></span><div class="skill-level-boxes" role="group" aria-label="'+esc(t.name)+'等级" data-skill="'+t.id+'" data-level="'+level+'">'+[1,2,3,4,5].map(n=>'<button type="button" class="skill-level-box '+(n<=level?'lit':'')+'" data-level="'+n+'" aria-label="'+esc(t.name)+' '+n+' 级" aria-pressed="'+(n<=level)+'" title="'+n+' 级 · 再次点击当前等级可清零" '+(!draft?'disabled':'')+'></button>').join('')+'</div></div>'};
   $('#character-skills').innerHTML=[...new Set(rows.map(group))].map(g=>{const entries=rows.filter(t=>group(t)===g);return '<details class="character-skill-group" data-group="'+esc(g)+'" '+((q||skillOpen.has(g))?'open':'')+'><summary><span>'+esc(g)+'</span><small>'+entries.length+' 项</small></summary>'+entries.map(skillRow).join('')+'</details>'}).join('')||'<p class="pilot-empty">暂无已学技能。取消“仅已学习”或搜索技能以添加。</p>';
   $('#character-skills').querySelectorAll('details').forEach(el=>el.ontoggle=()=>{if(!el.isConnected||q )return;if(el.open)skillOpen.add(el.dataset.group);else skillOpen.delete(el.dataset.group)});
@@ -78,13 +88,13 @@ export function installCharacterManager({api,catalog,onReturn}){
    if(!draft)return;const id=Number(el.dataset.skill),n=Number(button.dataset.level),level=Number(el.dataset.level)===n?0:n;
    draft.skills=draft.skills.filter(s=>s.skillTypeId!==id);if(level)draft.skills.push({skillTypeId:id,level});el.dataset.level=level;
    el.querySelectorAll('button').forEach(b=>{const lit=Number(b.dataset.level)<=level;b.classList.toggle('lit',lit);b.setAttribute('aria-pressed',String(lit))});
-   markDirty();$('#character-skill-count').textContent=draft.skills.length+' 项已学技能';
+   markDirty();updateSkillSummary();
   }));
  }
  function markDirty(){dirty=true;cacheDraft();status('有未保存的修改');}
  function drawDetail(){
   const c=current();if(!c){$('#character-detail').innerHTML='<div class="character-empty">选择一个角色查看技能，或新建自定义角色。</div>';return}
-  $('#character-detail').innerHTML='<div class="character-skill-toolbar"><b id="character-skill-count"></b>'+(draft?'<button id="skills-zero">全部未学习</button><button id="skills-five">全部 V</button>':'')+'</div><div class="character-skill-filters"><input id="skill-search" aria-label="搜索技能" placeholder="搜索技能"><label><input id="skills-learned" type="checkbox" '+(!draft?'checked':'')+'>仅已学习</label></div><div id="character-skills"></div>'+(draft?'<div class="character-edit-footer"><span>正在编辑 · '+esc(c.name)+'</span><button id="character-discard">结束编辑</button><button id="character-save">保存修改</button></div>':'');
+  $('#character-detail').innerHTML='<div class="character-skill-toolbar"><b id="character-skill-count"></b>'+(draft?'<button id="skills-zero">全部未学习</button><button id="skills-five">全部 V</button>':'')+'<span id="character-skill-points" title="'+pointNote+'"><span>总技能点</span><strong>'+pointText(c)+'</strong><small>SP</small></span></div><div class="character-skill-filters"><input id="skill-search" aria-label="搜索技能" placeholder="搜索技能"><label><input id="skills-learned" type="checkbox" '+(!draft?'checked':'')+'>仅已学习</label></div><div id="character-skills"></div>'+(draft?'<div class="character-edit-footer"><span>正在编辑 · '+esc(c.name)+'</span><button id="character-discard">结束编辑</button><button id="character-save">保存修改</button></div>':'');
   $('#skill-search').oninput=drawSkills;$('#skills-learned').onchange=drawSkills;
   if(draft){$('#skills-zero').onclick=()=>{draft.skills=[];markDirty();drawSkills()};$('#skills-five').onclick=()=>{draft.skills=skills.map(t=>({skillTypeId:t.id,level:5}));markDirty();drawSkills()};$('#character-discard').onclick=async()=>{if(!await guard())return;draft=null;drawDetail();status('')};$('#character-save').onclick=async()=>{const button=$('#character-save');button.disabled=true;try{const c=await api('character',draft);people=people.filter(p=>p.id!==c.id).concat(c);if(!draft.id&&activeFolder)movePerson(c.id,activeFolder);selected=c;draft=null;dirty=false;cacheDraft();drawList();drawDetail();status('角色已保存')}catch(e){status(e.message)}finally{if(button.isConnected)button.disabled=false}}}
 
