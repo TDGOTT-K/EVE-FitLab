@@ -462,3 +462,17 @@ html[lang=en] body{font-family:'Segoe UI',sans-serif}html[lang=ja] body{font-fam
 .browser.unload-drop-target{outline:1px dashed var(--hot);outline-offset:-3px}
 .installed-drag-source{opacity:.45}
 .slot .module[draggable="true"],.slot .ammo[draggable="true"]{cursor:grab}
+
+/* Shared checkbox treatment for character filters and image export options. */
+input[type="checkbox"]{appearance:none;-webkit-appearance:none;display:inline-grid;place-content:center;vertical-align:middle;flex:0 0 15px;width:15px;height:15px;min-width:15px;margin:0;padding:0;border:1px solid var(--muted);border-radius:3px;background:var(--bg);color:var(--bg);cursor:pointer;transition:background .12s,border-color .12s,box-shadow .12s}
+input[type="checkbox"]::before{content:"";width:9px;height:7px;background:currentColor;clip-path:polygon(0 43%,18% 24%,39% 53%,82% 0,100% 17%,39% 100%);transform:scale(0)}
+input[type="checkbox"]:checked{background:var(--accent);border-color:var(--accent)}
+input[type="checkbox"]:checked::before{transform:scale(1)}
+input[type="checkbox"]:indeterminate{background:var(--accent);border-color:var(--accent)}
+input[type="checkbox"]:indeterminate::before{clip-path:none;width:8px;height:2px;transform:scale(1)}
+label:has(>input[type="checkbox"]){display:inline-flex;align-items:center;gap:7px;min-height:26px;cursor:pointer}
+label:has(>input[type="checkbox"]):hover input:not(:disabled){border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 9%,transparent)}
+input[type="checkbox"]:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+input[type="checkbox"]:disabled{opacity:.4;cursor:default}
+label:has(>input[type="checkbox"]:disabled){cursor:default;color:var(--muted)}
+@media(forced-colors:active){input[type="checkbox"]{appearance:auto;-webkit-appearance:auto}input[type="checkbox"]::before{display:none}}
