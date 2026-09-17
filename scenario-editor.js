@@ -36,9 +36,22 @@ export function openScenarioEditor({fit,fits,shipName,calculate,onSave}){
  select.onchange=()=>{capture();state.activeScenarioId=select.value||null;changed();draw()};
  $('[data-new]').onclick=()=>{capture();const item={id:crypto.randomUUID(),name:'情景 '+(state.scenarios.length+1),value:{}};state.scenarios.push(item);state.activeScenarioId=item.id;changed();draw();$('[data-rename]').click()};
  $('[data-copy]').onclick=()=>{capture();const source=state.scenarios.find(s=>s.id===state.activeScenarioId);if(!source)return;const item={...structuredClone(source),id:crypto.randomUUID(),name:(source.name+' 副本').slice(0,80)};state.scenarios.push(item);state.activeScenarioId=item.id;changed();draw()};
- $('[data-delete]').onclick=()=>{const item=state.scenarios.find(s=>s.id===state.activeScenarioId);if(!item||!confirm('删除情景“'+item.name+'”？'))return;state.scenarios=state.scenarios.filter(s=>s.id!==item.id);state.activeScenarioId=null;changed();draw()};
- function close(){if(busy)return;if(dirty&&!confirm('放弃尚未保存的情景修改？'))return;dialog.close()}
+ let confirmation=null;
+ function ask({title,message,actions}){
+  if(confirmation||busy)return;
+  const previous=document.activeElement,overlay=document.createElement('div');overlay.className='scenario-confirm-overlay';
+  overlay.innerHTML='<section class="scenario-confirm" role="alertdialog" aria-modal="true" aria-labelledby="scenario-confirm-title" aria-describedby="scenario-confirm-message"><h2 id="scenario-confirm-title"></h2><p id="scenario-confirm-message"></p><div class="scenario-confirm-actions"></div></section>';
+  overlay.querySelector('h2').textContent=title;overlay.querySelector('p').textContent=message;
+  const regions=[...dialog.children];regions.forEach(el=>el.inert=true);
+  const dismiss=()=>{if(confirmation!==overlay)return;confirmation=null;overlay.remove();regions.forEach(el=>el.inert=false);if(previous?.isConnected)previous.focus()};
+  for(const action of actions){const button=document.createElement('button');button.type='button';button.textContent=action.label;if(action.kind)button.className=action.kind;button.onclick=()=>{dismiss();action.run?.()};overlay.querySelector('.scenario-confirm-actions').append(button)}
+  overlay.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();dismiss()}else if(e.key==='Tab'){const buttons=[...overlay.querySelectorAll('button')],index=buttons.indexOf(document.activeElement);e.preventDefault();buttons[(index+(e.shiftKey?-1:1)+buttons.length)%buttons.length].focus()}};
+  confirmation=overlay;dialog.append(overlay);overlay.querySelector('button').focus();
+ }
+ $('[data-delete]').onclick=()=>{capture();const item=state.scenarios.find(s=>s.id===state.activeScenarioId);if(!item)return;ask({title:'删除情景',message:'删除“'+item.name+'”？其他情景和装配不受影响。',actions:[{label:'保留情景'},{label:'删除情景',kind:'danger',run:()=>{state.scenarios=state.scenarios.filter(s=>s.id!==item.id);state.activeScenarioId=null;changed();draw()}}]})};
+ function close(){if(busy||confirmation)return;if(!dirty){dialog.close();return}ask({title:'情景尚未保存',message:'关闭前，要如何处理这次修改？',actions:[{label:'继续编辑'},{label:'放弃修改',kind:'danger',run:()=>dialog.close()},{label:'保存并关闭',kind:'primary',run:()=>saveScenario()}]})}
  $('[data-close]').onclick=close;dialog.oncancel=e=>{e.preventDefault();close()};dialog.onclose=()=>{revision++;plane?.destroy();dialog.remove()};
- $('[data-save]').onclick=async()=>{capture();busy=true;$('[data-save]').disabled=true;$('.scenario-error').textContent='';try{await onSave(scenarioFields(state));dirty=false;dialog.close()}catch(e){$('.scenario-error').textContent=e.message}finally{busy=false;if(dialog.isConnected)$('[data-save]').disabled=false}};
+ async function saveScenario(){capture();busy=true;$('[data-save]').disabled=true;$('.scenario-error').textContent='';try{await onSave(scenarioFields(state));dirty=false;dialog.close()}catch(e){$('.scenario-error').textContent=e.message}finally{busy=false;if(dialog.isConnected)$('[data-save]').disabled=false}};
+ $('[data-save]').onclick=saveScenario;
  dialog.showModal();draw();
 }
