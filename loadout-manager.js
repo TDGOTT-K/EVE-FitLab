@@ -70,7 +70,7 @@ export function installLoadoutManager(host,{api}){
   for(const [label,fn] of actions){const b=document.createElement('button');b.role='menuitem';b.textContent=label;b.onclick=()=>{menu.hidePopover();menu.remove();fn()};menu.append(b)}
   menu.addEventListener('toggle',e=>{if(e.newState==='closed')menu.remove()});document.body.append(menu);menu.showPopover();const r=anchor.getBoundingClientRect(),pointer=event?.type==='contextmenu'&&(event.clientX!==0||event.clientY!==0),x=pointer?event.clientX:r.left,y=pointer?event.clientY:r.bottom;menu.style.left=Math.max(8,Math.min(x,innerWidth-menu.offsetWidth-8))+'px';menu.style.top=Math.max(8,Math.min(y,innerHeight-menu.offsetHeight-8))+'px';menu.querySelector('button').focus();
  }
- const blank=$('.plan-library-blank');blank.oncontextmenu=e=>{e.preventDefault();folderMenu(blank,null,e)};blank.onkeydown=e=>{if(e.key==='ContextMenu'||e.shiftKey&&e.key==='F10'){e.preventDefault();folderMenu(blank,null,e)}};
+ const libraryBody=$('#plan-library-body');const blankMenu=e=>{if(e.target.closest('button,input,textarea,summary,.plan-tree-group'))return;e.preventDefault();e.stopPropagation();folderMenu(e.target.closest('[tabindex]')||libraryBody,null,e)};libraryBody.oncontextmenu=blankMenu;libraryBody.onkeydown=e=>{if(e.key==='ContextMenu'||e.shiftKey&&e.key==='F10')blankMenu(e)};
  function openPlanActions(){
   if(!draft||busy)return;document.querySelector('.plan-actions-menu')?.remove();
   const menu=document.createElement('div');menu.className='plan-actions-menu scenario-quick-menu';menu.setAttribute('popover','auto');menu.setAttribute('role','menu');document.body.append(menu);
