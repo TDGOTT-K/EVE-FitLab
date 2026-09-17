@@ -34,7 +34,7 @@ export function installLibraryDrag(tree,blank,{canStart,validate,onDrop,onError}
  const positionHold=e=>{holdCursor.style.left=(e.clientX+14)+'px';holdCursor.style.top=(e.clientY+14)+'px'};
  function clearHold(){cancelAnimationFrame(holdFrame);holdFrame=0;holdCursor.hidden=true;document.body.classList.remove('plan-drag-ready');}
  function releasePress(){press=null;clearHold()}
- function tickHold(){if(!press)return;const elapsed=performance.now()-press.at,progress=Math.min(1,elapsed/200);holdCursor.hidden=elapsed<80;holdCursor.querySelector('.hold-progress').style.strokeDashoffset=String(56.55*(1-progress));holdCursor.classList.toggle('ready',progress===1);if(progress===1){document.body.classList.add('plan-drag-ready');return;}holdFrame=requestAnimationFrame(tickHold);}
+ function tickHold(){if(!press)return;const elapsed=performance.now()-press.at,progress=Math.min(1,elapsed/200);holdCursor.hidden=elapsed<120;holdCursor.querySelector('.hold-progress').style.strokeDashoffset=String(56.55*(1-progress));holdCursor.classList.toggle('ready',progress===1);if(progress===1){document.body.classList.add('plan-drag-ready');return;}holdFrame=requestAnimationFrame(tickHold);}
  tree.addEventListener('pointerdown',e=>{
   releasePress();const row=e.target.closest('[data-library-key]');
   if(e.button!==0||!row||row.dataset.libraryKey==='f:'||!canStart())return;
