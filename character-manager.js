@@ -1,3 +1,4 @@
+import {createSkillPointDisplay,skillPointNote as pointNote} from './skill-points.js';
 import {matchesName,getLocale} from './i18n.js';
 import {readPilotFolders,writePilotFolders,onPilotFoldersChanged} from './pilot-folders.js';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -9,14 +10,7 @@ export function installCharacterManager({api,catalog,onReturn}){
  const contextMenu=document.createElement('div');contextMenu.className='character-context-menu';contextMenu.role='menu';contextMenu.hidden=true;document.body.append(contextMenu);
  const $=s=>root.querySelector(s),skills=catalog.filter(t=>t.kind==='skill').sort((a,b)=>a.name.localeCompare(b.name,'zh-CN'));
  const group=t=>t.path?.at(-1)||'其他技能';
- const skillRanks=new Map(skills.map(t=>[t.id,t.attrs?.[275]]));
- const skillPointTotal=c=>{
-  let total=0;
-  for(const skill of c.skills){if(skill.level<=0)continue;const rank=skillRanks.get(skill.skillTypeId);if(!Number.isFinite(rank)||rank<=0)return null;total+=Math.ceil(250*rank*2**(2.5*(skill.level-1)));}
-  return total;
- };
- const pointText=c=>{const total=skillPointTotal(c);return total===null?'—':total.toLocaleString(getLocale());};
- const pointNote='按已学等级计算，不含未完成等级的训练进度';
+ const pointText=createSkillPointDisplay(catalog);
  function updateSkillSummary(){const c=current();if(!c)return;$('#character-skill-count').textContent=c.skills.filter(s=>s.level>0).length+' 项已学技能';$('#character-skill-points strong').textContent=pointText(c);}
 
  let people=[],selected=null,draft=null,dirty=false,loaded=false,generation=0;

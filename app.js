@@ -281,7 +281,7 @@ $('#new-fit').onclick=()=>{
  $('#create-fit-form').onsubmit=e=>{e.preventDefault();const name=$('#create-fit-name').value.trim();if(!name){$('#flow-error').textContent='请输入装配名称';return}const tags=[...new Set($('#create-fit-tags').value.split(/[,，]/).map(t=>t.trim()).filter(Boolean))];restoreFit({name,tags,shipId:hull.id,skills:[],characterName:'无技能 · 基础对照',slots:[]});flow.close();location.hash='fitting'};
 };
 
-installPilotPicker($('#pilot'),{api,current:()=>fitRecord.characterName,select:c=>{fitRecord.skills=structuredClone(c.skills);fitRecord.characterName=c.name;updateShip();save()}});
+installPilotPicker($('#pilot'),{api,catalog,current:()=>fitRecord.characterName,select:c=>{fitRecord.skills=structuredClone(c.skills);fitRecord.characterName=c.name;updateShip();save()}});
 
 $('#rename-fit').onclick=()=>{
  const heading=$('.title h1'),button=$('#rename-fit');

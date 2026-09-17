@@ -482,3 +482,5 @@ label:has(>input[type="checkbox"]:disabled){cursor:default;color:var(--muted)}
 #character-skill-points>span,#character-skill-points>small{font-size:10px;color:var(--muted)}
 #character-skill-points>strong{font-size:18px;font-weight:500;color:var(--accent)}
 .character-skill-toolbar{flex-wrap:wrap}
+
+.pilot-tree-person small.pilot-person-sp{color:var(--accent);font-variant-numeric:tabular-nums;margin-top:2px}
