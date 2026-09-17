@@ -9,22 +9,23 @@ export function numberAttributes(value,baseline){
  const cls=deltaClass(value,baseline);return `class="${cls}"`+(Number.isFinite(value)?` data-value="${value}"`:'')+(Number.isFinite(baseline)?` data-baseline="${baseline}"`:'')+(cls?` title="${escapeHtml('无情景 '+metricText(baseline)+' → 当前 '+metricText(value))}"`:'');
 }
 export function scenarioDetail(title,result,value,baseline,terms=[],conditions=[],baselineText){
- return {title,result,resultClass:deltaClass(value,baseline),terms:[['无情景基准',baselineText??metricText(baseline)],...terms],conditions};
+ return {title,result,resultClass:deltaClass(value,baseline),terms:[...(baseline!==undefined?[['无情景基准',baselineText??metricText(baseline)]]:[]),...terms],conditions};
 }
 export const explanationAttributes=detail=>`tabindex="0" data-explain="${escapeHtml(JSON.stringify(detail))}"`;
 
 export function renderWorkspaceAttack(report,catalog){
  const view=report.workspace,a=view.attack,b=view.baseline.attack;
  const comparison=key=>view.active?b[key]:undefined;
+ const conditions=view.active?view.conditions:[];
  const name=id=>catalog.find(t=>t.id===id)?.name;
  const weaponTerms=report.scenarioAnalysis.weapons.map(r=>[
   (name(r.typeId)||r.name)+(r.chargeTypeId?' · '+(name(r.chargeTypeId)||r.chargeTypeId):''),
   metricText(view.target?r.appliedDpsWithoutReload:r.baseDps,'DPS'),null,
   scenarioDetail(name(r.typeId)||r.name,metricText(view.target?r.appliedDpsWithoutReload:r.baseDps,'DPS'),view.target?r.appliedDpsWithoutReload:r.baseDps,view.active?r.baseDps:undefined,
-   view.target?[['射程与运动应用系数',metricText(r.factor)],['换弹折算系数',metricText(r.reloadFactor)],['包含目标抗性','是']]:[],view.conditions)
+   view.target?[['射程与运动应用系数',metricText(r.factor)],['换弹折算系数',metricText(r.reloadFactor)],['包含目标抗性','是']]:[],conditions)
  ]);
  function detail(key,title,unit,terms){
-  return {...scenarioDetail(title,metricText(a[key],unit),a[key],comparison(key),terms,view.conditions,metricText(b[key],unit)),...(key==='total'?{chart:view.curves||{status:'unavailable',reason:'曲线数据尚未就绪。'}}:{})};
+  return {...scenarioDetail(title,metricText(a[key],unit),a[key],comparison(key),terms,conditions,metricText(b[key],unit)),...(key==='total'?{chart:view.curves||{status:'unavailable',reason:'曲线数据尚未就绪。'}}:{})};
  }
  function row(key,title,unit,terms){return `<div class="stat-row" data-workspace-metric="${key}" ${explanationAttributes(detail(key,title,unit,terms))}><span>${title}</span><b ${numberAttributes(a[key],comparison(key))}>${metricText(a[key],unit,1)}</b></div>`;}
  let html=`<div class="panel-title"><span>攻击</span><span class="attack-total" data-workspace-metric="total" ${explanationAttributes(detail('total','总 DPS','DPS',weaponTerms.concat([['无人机',metricText(a.drone,'DPS')]])))}><b ${numberAttributes(a.total,comparison('total'))}>${metricText(a.total,'DPS',1)}</b></span></div><div class="stat-block">`;
