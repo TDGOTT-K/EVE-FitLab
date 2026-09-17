@@ -4,7 +4,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const portrait='<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><circle cx="16" cy="11" r="6"/><path d="M5 30v-4c0-8 22-8 22 0v4"/></svg>';
 export function installCharacterManager({api,catalog,onReturn}){
  const root=document.createElement('main');root.id='characters-page';root.hidden=true;
- root.innerHTML='<div class="character-heading"><div><small>CHARACTER ROSTER / 角色管理</small><h1>角色管理</h1></div></div><div class="character-workspace"><aside class="character-roster"><div class="character-tree-title"><span>角色</span><button id="character-add" aria-label="新增角色或文件夹" title="新增角色或文件夹">＋</button></div><div id="character-folder-editor" hidden></div><input id="character-search" aria-label="搜索角色" placeholder="搜索角色或文件夹"><div id="character-list"></div><div class="character-tree-footer">拖入文件夹 · 右键管理</div></aside><section class="character-editor"><div id="character-status" role="status"></div><div id="character-detail"></div></section></div>';
+ root.innerHTML='<div class="character-heading"><div><small>CHARACTER ROSTER / 角色管理</small><h1>角色管理</h1></div></div><div class="character-workspace"><aside class="character-roster"><div class="character-tree-title"><span>角色</span><button id="character-add" aria-label="新增角色或文件夹" title="新增角色或文件夹">＋</button></div><div id="character-folder-editor" hidden></div><input id="character-search" aria-label="搜索角色" placeholder="搜索角色或文件夹"><div id="character-list" tabindex="0" aria-label="角色列表"></div><div class="character-tree-footer">Ctrl+C / V 复制粘贴 · 右键管理</div></aside><section class="character-editor"><div id="character-status" role="status"></div><div id="character-detail"></div></section></div>';
  document.querySelector('header').after(root);
  const contextMenu=document.createElement('div');contextMenu.className='character-context-menu';contextMenu.role='menu';contextMenu.hidden=true;document.body.append(contextMenu);
  const $=s=>root.querySelector(s),skills=catalog.filter(t=>t.kind==='skill').sort((a,b)=>a.name.localeCompare(b.name,'zh-CN'));
@@ -51,7 +51,7 @@ export function installCharacterManager({api,catalog,onReturn}){
   $('#character-list').innerHTML=folders.folders.map(f=>{const rows=people.filter(c=>folderOf(c)===f.id),matches=rows.filter(c=>c.name.toLowerCase().includes(q)||f.name.toLowerCase().includes(q));if(q&&!matches.length&&!f.name.toLowerCase().includes(q))return '';return '<details class="character-folder" data-folder="'+esc(f.id)+'" '+((q||f.open!==false)?'open':'')+'><summary>'+folderIcon+'<span>'+esc(f.name)+'</span><small>'+rows.length+'</small></summary>'+matches.map(row).join('')+(!matches.length?'<div class="pilot-empty">拖入角色</div>':'')+'</details>'}).join('')+'<div class="character-root" data-folder=""><div class="character-root-label">未分组</div>'+people.filter(c=>!folderOf(c)&&c.name.toLowerCase().includes(q)).map(row).join('')+'</div>';
   $('#character-list').querySelectorAll('[data-character]').forEach(b=>{
    const c=people.find(c=>String(c.id)===b.dataset.character);
-   b.onclick=async()=>{if(!await guard())return;selected=c;activeFolder=folderOf(c);draft=null;dirty=false;status('');drawList();drawDetail()};
+   b.onclick=async()=>{if(!await guard())return;selected=c;activeFolder=folderOf(c);draft=null;dirty=false;status('');drawList();drawDetail();$('#character-list').focus({preventScroll:true})};
    const open=e=>menu(e,[['修改名称',()=>renameCharacter(c),editable(c)],['复制角色',()=>copyCharacter(c)],['编辑角色',()=>editCharacter(c),editable(c)],['删除角色',()=>deleteCharacter(c),!['内置','EdenOS 已保存快照'].includes(c.source)],...(c.source==='EVE 官网'?[['重新授权更新',login]]:[]),['移到未分组',()=>movePerson(c.id,'')],...folders.folders.map(f=>['移到 '+f.name,()=>movePerson(c.id,f.id)])]);
    b.oncontextmenu=open;b.onkeydown=e=>{if(e.key==='ContextMenu'||e.shiftKey&&e.key==='F10')open(e)};
    b.ondragstart=e=>{draggedPerson=c.id;e.dataTransfer.setData('text/plain',String(c.id));e.dataTransfer.effectAllowed='move'};b.ondragend=()=>{draggedPerson=null;root.querySelectorAll('.drop-target').forEach(e=>e.classList.remove('drop-target'))};
@@ -96,6 +96,30 @@ export function installCharacterManager({api,catalog,onReturn}){
  onPilotFoldersChanged(()=>{folders=readPilotFolders();if(!root.hidden)drawList()});
  document.addEventListener('pointerdown',e=>{if(!contextMenu.contains(e.target))contextMenu.hidden=true});
  document.addEventListener('keydown',e=>{if(e.key==='Escape')contextMenu.hidden=true});
+ let pasting=false;
+ const clipboardScope=e=>!root.hidden&&!document.querySelector('dialog[open]')&&!e.target.closest?.('input,textarea,select,[contenteditable="true"]')&&!!e.target.closest?.('.character-roster');
+ document.addEventListener('copy',e=>{
+  if(!clipboardScope(e)||!selected||!e.clipboardData||window.getSelection()?.toString())return;
+  const payload={format:'fitlab-character',version:1,name:selected.name,skills:structuredClone(selected.skills)};
+  e.clipboardData.setData('text/plain',JSON.stringify(payload));e.preventDefault();status('已复制「'+selected.name+'」 · Ctrl+V 粘贴为新角色');
+ });
+ document.addEventListener('paste',async e=>{
+  if(!clipboardScope(e)||!e.clipboardData)return;
+  let payload;try{payload=JSON.parse(e.clipboardData.getData('text/plain'))}catch{return;}
+  if(payload?.format!=='fitlab-character'||payload.version!==1)return;
+  e.preventDefault();if(pasting)return;
+  if(typeof payload.name!=='string'||!payload.name.trim()||!Array.isArray(payload.skills)||payload.skills.length>2000||payload.skills.some(s=>!s||!skills.some(t=>t.id===s.skillTypeId)||!Number.isInteger(s.level)||s.level<0||s.level>5)||new Set(payload.skills.map(s=>s.skillTypeId)).size!==payload.skills.length){status('角色剪贴板内容无效');return;}
+  pasting=true;
+  try{
+   if(!await guard())return;
+   const folder=activeFolder,names=new Set(people.map(c=>c.name));let index=1,name;
+   do{const suffix=' · 副本'+(index>1?' '+index:'');name=payload.name.slice(0,80-suffix.length)+suffix;index++;}while(names.has(name));
+   const saved=await api('character',{name,skills:structuredClone(payload.skills),source:'自定义角色'});
+   people.push(saved);if(folder)movePerson(saved.id,folder);
+   selected=saved;draft=null;dirty=false;cacheDraft();$('#character-search').value='';drawList();drawDetail();status('已粘贴「'+name+'」');
+   $('#character-list').focus({preventScroll:true});$('#character-list').querySelector('[data-character="'+CSS.escape(String(saved.id))+'"]')?.scrollIntoView({block:'nearest'});
+  }catch(error){status('粘贴失败：'+error.message)}finally{pasting=false;}
+ });
  $('#character-search').oninput=drawList;
  document.querySelector('#nav-library').addEventListener('click',async e=>{if(root.hidden)return;e.preventDefault();if(await guard()){dirty=false;if(onReturn)onReturn();else location.hash='library'}});
 
