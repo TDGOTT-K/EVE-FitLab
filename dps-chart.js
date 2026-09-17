@@ -35,6 +35,10 @@ export function mountDpsChart(root,data,{mode='distance',onMode=()=>{}}={}){
    const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(svg.getScreenCTM().inverse()),value=s.min+(p.x-L)/(R-L)*(s.max-s.min);
    const sample=s.points.reduce((best,row)=>Math.abs(row[0]-value)<Math.abs(best[0]-value)?row:best,s.points[0]);
    readout.textContent='采样 '+fmtX(sample[0],s)+' · '+metricText(sample[1],'DPS');
+   if(s.key==='angular'){
+    const speed=document.createElement('span');speed.className='dps-angular-speed';
+    speed.textContent='10 km 处横向速度 '+metricText(sample[0]*10000,'m/s',0);readout.append(speed);
+   }
    if(!Number.isFinite(sample[1])){probe.setAttribute('visibility','hidden');return;}
    probe.setAttribute('visibility','visible');const line=probe.querySelector('line'),dot=probe.querySelector('circle');line.setAttribute('x1',x(sample[0]));line.setAttribute('x2',x(sample[0]));dot.setAttribute('cx',x(sample[0]));dot.setAttribute('cy',y(sample[1]));
    const label=probe.querySelector('.dps-probe-percent'),px=x(sample[0]),py=y(sample[1]),flip=px>R-75;
