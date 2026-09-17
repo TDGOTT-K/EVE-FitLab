@@ -1,3 +1,4 @@
+import {applyImplantSet,implantSetChanges} from './implant-sets.js';
 import {parentFolder,folderName,normalizeLayout,relocateLibrary,installLibraryDrag} from './plan-library-tree.js';
 import {installPlanResize} from './plan-resize.js';
 import {installPlanBrowser} from './plan-browser.js';
@@ -29,8 +30,14 @@ export function installLoadoutManager(host,{api}){
   if(draft[kind].some(x=>x.typeId===t.id))return;
   draft[kind]=draft[kind].filter(x=>x.slot!==t.slot).concat({typeId:t.id,slot:t.slot,...(kind==='boosters'?{enabledSideEffects:[]}:{})});changed();drawSlots();
  }
+ function installSet(set,fillOnly){
+  if(busy)return;const current=draft?.implants||[],changes=implantSetChanges(current,set.items,fillOnly);
+  if(!changes.length){message(fillOnly?'没有需要补齐的空槽':'此套装已完整安装');return;}
+  if(!draft){draft={name:'新方案',folder:activeFolder||'',implants:[],boosters:[]};dirty=true;draw();}
+  draft.implants=applyImplantSet(draft.implants,set.items,fillOnly);changed();drawSlots();message((fillOnly?'已补齐 ':'已安装 ')+set.name+' · '+changes.length+' 件');
+ }
  function unload(event){if(!drag||drag.source!=='installed'||!draft||busy)return false;if(event){draft[drag.kind]=draft[drag.kind].filter(x=>x.typeId!==drag.id);drag=null;changed();drawSlots();}return true;}
- const browser=installPlanBrowser($('.plan-browser'),{catalogs,onInstall:installItem,onDrag:value=>{drag=value;host.classList.add('plan-dragging');host.querySelectorAll('.plan-slot').forEach(el=>{const t=find(value.kind,value.id);el.classList.toggle('drop-compatible',el.dataset.kind===value.kind&&Number(el.dataset.slot)===t?.slot);});},onDragEnd:clearDrag,onUnload:unload,isInstalled:(kind,id)=>draft?.[kind].some(x=>x.typeId===id)});
+ const browser=installPlanBrowser($('.plan-browser'),{catalogs,onInstall:installItem,onInstallSet:installSet,getImplants:()=>draft?.implants||[],onDrag:value=>{drag=value;host.classList.add('plan-dragging');host.querySelectorAll('.plan-slot').forEach(el=>{const t=find(value.kind,value.id);el.classList.toggle('drop-compatible',el.dataset.kind===value.kind&&Number(el.dataset.slot)===t?.slot);});},onDragEnd:clearDrag,onUnload:unload,isInstalled:(kind,id)=>draft?.[kind].some(x=>x.typeId===id)});
  function clearDrag(){drag=null;host.classList.remove('plan-dragging');host.querySelectorAll('.drop-compatible,.drop-unload').forEach(el=>el.classList.remove('drop-compatible','drop-unload'));}
  $('.plan-content').ondragover=e=>{if(drag?.source==='browser'&&!e.target.closest('.plan-slot')){e.preventDefault();e.dataTransfer.dropEffect='copy'}};
  $('.plan-content').ondrop=e=>{if(drag?.source==='browser'&&!e.target.closest('.plan-slot')){e.preventDefault();const t=find(drag.kind,drag.id);if(t)installItem(drag.kind,t);clearDrag();}};

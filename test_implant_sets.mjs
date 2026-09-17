@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {implantCatalog} from './implant-catalog.js';
+import {buildImplantSets,implantSetChanges,applyImplantSet,implantSetPreview} from './implant-sets.js';
+const {sets,byItem}=buildImplantSets(implantCatalog);
+const nirvana=sets.get('High-grade Nirvana'),snake=sets.get('High-grade Snake');assert(nirvana&&snake);
+assert.equal(nirvana.name,'高级极乐');
+const original=[{slot:1,typeId:snake.items[0].id},{slot:8,typeId:999}];
+const filled=applyImplantSet(original,nirvana.items,true);assert.equal(filled.find(x=>x.slot===1).typeId,original[0].typeId);assert.equal(filled.length,7);
+const replaced=applyImplantSet(original,nirvana.items);assert.equal(replaced.find(x=>x.slot===1).typeId,nirvana.items[0].id);assert.equal(replaced.find(x=>x.slot===8).typeId,999);
+assert.equal(implantSetChanges(replaced,nirvana.items).length,0);assert.equal(original.length,2);
+assert(implantSetPreview(original,nirvana,implantCatalog).includes(snake.items[0].name));
+assert(!buildImplantSets(implantCatalog.filter(t=>t.id!==nirvana.items[5].id)).sets.has(nirvana.key));
+assert(!byItem.has(9941));console.log('Set checks passed:',sets.size,'complete sets');

@@ -1,6 +1,8 @@
+import {buildImplantSets,implantSetChanges,implantSetPreview} from './implant-sets.js';
 import {escapeHtml as esc} from './scenario-display.js';
 
-export function installPlanBrowser(host,{catalogs,onInstall,onDrag,onDragEnd,onUnload,isInstalled}){
+export function installPlanBrowser(host,{catalogs,onInstall,onInstallSet,getImplants,onDrag,onDragEnd,onUnload,isInstalled}){
+ const {sets,byItem}=buildImplantSets(catalogs.implants);
  let kind='implants',slot=null,expanded=new Set();const views=new Map();
  host.innerHTML='<div class="plan-browser-title"><b>物品浏览器</b><small class="plan-browser-count"></small></div><div class="plan-browser-tabs"><button data-kind="implants" aria-pressed="true">脑插</button><button data-kind="boosters" aria-pressed="false">增效剂</button></div><input class="plan-item-search" aria-label="搜索脑插或增效剂" placeholder="搜索名称、分类、型号"><div class="plan-browser-filter"></div><div class="plan-item-tree"></div><small class="plan-browser-hint">点击或拖入安装 · 拖回此处卸下</small>';
  const $=s=>host.querySelector(s);
@@ -12,6 +14,7 @@ export function installPlanBrowser(host,{catalogs,onInstall,onDrag,onDragEnd,onU
 
  const order=['火力','防御','电容与装配','机动','锁定与电子','扫描与探索','采集与工业','指挥与后勤','白板','增效剂使用','增效剂持续时间','其他特殊效果','属性与技能训练','声望与社交','技能注入'];
  const aliases={'回电':'电容回充','跑得快':'速度','血量':'容量','回盾':'护盾回充'};
+ function setActions(set){return [false,true].map(fillOnly=>{const current=getImplants(),changes=implantSetChanges(current,set.items,fillOnly),replaced=changes.filter(x=>x.previous).length;return [fillOnly?'仅补齐空槽':'安装整套',()=>onInstallSet(set,fillOnly),{disabled:!changes.length,title:set.name+' · 槽位 1–6\n'+implantSetPreview(current,set,catalogs.implants,fillOnly),description:changes.length?[replaced?'替换 '+replaced+' 件':'',changes.length>replaced?'装入 '+(changes.length-replaced)+' 件':''].filter(Boolean).join(' · '):fillOnly?'没有空槽':'已完整安装'}];});}
  function render(restoreScroll){
   const tree=$('.plan-item-tree'),scroll=typeof restoreScroll==='number'?restoreScroll:(tree.clientHeight?tree.scrollTop:views.get(viewKey())?.scroll||0),q=$('.plan-item-search').value.trim().toLowerCase();
   host.querySelectorAll('[data-kind]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.kind===kind)));
@@ -23,11 +26,21 @@ export function installPlanBrowser(host,{catalogs,onInstall,onDrag,onDragEnd,onU
   $('.plan-browser-count').textContent=items.length+' 件';
   const groups=new Map();for(const t of items)for(const [parent,leaf] of t.benefitPaths||[['其他特殊效果','其他特殊效果']]){const benefit=leaf,category=parent==='训练与其他'?benefit:parent;if(!groups.has(category))groups.set(category,new Map());const leaves=groups.get(category);if(!leaves.has(benefit))leaves.set(benefit,[]);leaves.get(benefit).push(t);}
   const row=(t,benefit)=>{const labels=t.benefitLabels||[],summary=benefit&&benefit!=='白板'?benefit:labels.join(' · ');return '<button class="plan-browser-item" draggable="true" data-id="'+t.id+'" title="'+esc(t.benefitTooltip||labels.join(' · '))+'" aria-label="安装 '+esc(t.name)+'"><img loading="lazy" draggable="false" src="https://images.evetech.net/types/'+t.id+'/icon?size=64" alt=""><span>'+esc(t.name)+'<em class="plan-benefit">'+esc(summary)+'</em></span><small>'+ (isInstalled(kind,t.id)?'已装':'槽 '+t.slot)+'</small></button>';};
-  tree.innerHTML=q?items.map(t=>row(t)).join(''):[...groups].sort(([a],[b])=>order.indexOf(a)-order.indexOf(b)).map(([group,leaves])=>{const key=kind+'/'+group,open=expanded.has(key);return '<details data-key="'+esc(key)+'" '+(open?'open':'')+'><summary>'+esc(group)+' <small>'+new Set([...leaves.values()].flat().map(t=>t.id)).size+'</small></summary>'+(open?[...leaves].map(([benefit,rows])=>{const sub=key+'/'+benefit,show=expanded.has(sub);if(benefit===group)return rows.map(t=>row(t,benefit)).join('');return '<details data-key="'+esc(sub)+'" '+(show?'open':'')+'><summary>'+esc(benefit)+' <small>'+rows.length+'</small></summary>'+(show?rows.sort((a,b)=>a.name.localeCompare(b.name,'zh-CN')).map(t=>row(t,benefit)).join(''):'')+'</details>';}).join(''):'')+'</details>';}).join('');
+  const renderRows=(rows,benefit,prefix)=>{
+   if(kind!=='implants'||slot)return rows.map(t=>row(t,benefit)).join('');
+   const grouped=new Map();for(const t of rows){const set=byItem.get(t.id);if(set){if(!grouped.has(set.key))grouped.set(set.key,[]);grouped.get(set.key).push(t);}}
+   const done=new Set();return rows.map(t=>{const set=byItem.get(t.id),members=set&&grouped.get(set.key);if(!set||members.length<2)return row(t,benefit);if(done.has(set.key))return '';done.add(set.key);
+    const key=prefix+'/set/'+set.key,open=q||expanded.has(key),installed=set.items.filter(t=>isInstalled('implants',t.id)).length;
+    const preview='安装整套（槽位 1–6）：\n'+implantSetPreview(getImplants(),set,catalogs.implants)+'\n\n仅补齐空槽：\n'+implantSetPreview(getImplants(),set,catalogs.implants,true);
+    return '<details class="implant-set" data-key="'+esc(key)+'" '+(open?'open':'')+'><summary data-implant-set="'+esc(set.key)+'" title="'+esc(preview)+'">'+esc(set.name)+'<small>'+installed+'/6</small></summary>'+(open?members.sort((a,b)=>a.slot-b.slot).map(t=>row(t,benefit)).join(''):'')+'</details>';
+   }).join('');
+  };
+  tree.innerHTML=q?renderRows(items,null,'search'):[...groups].sort(([a],[b])=>order.indexOf(a)-order.indexOf(b)).map(([group,leaves])=>{const key=kind+'/'+group,open=expanded.has(key);return '<details data-key="'+esc(key)+'" '+(open?'open':'')+'><summary>'+esc(group)+' <small>'+new Set([...leaves.values()].flat().map(t=>t.id)).size+'</small></summary>'+(open?[...leaves].map(([benefit,rows])=>{const sub=key+'/'+benefit,show=expanded.has(sub);if(benefit===group)return renderRows(rows,benefit,sub);return '<details data-key="'+esc(sub)+'" '+(show?'open':'')+'><summary>'+esc(benefit)+' <small>'+rows.length+'</small></summary>'+(show?renderRows(rows.sort((a,b)=>a.name.localeCompare(b.name,'zh-CN')),benefit,sub):'')+'</details>';}).join(''):'')+'</details>';}).join('');
   if(!items.length)tree.innerHTML='<p class="pilot-empty">没有匹配物品</p>';
   tree.scrollTop=scroll;
   tree.querySelectorAll('summary').forEach(s=>s.onclick=e=>{e.preventDefault();const d=s.parentElement,key=d.dataset.key;if(expanded.has(key))expanded.delete(key);else expanded.add(key);render();remember();});
-  tree.querySelectorAll('[data-id]').forEach(b=>{const t=catalogs[kind].find(t=>t.id===Number(b.dataset.id));b.onclick=()=>onInstall(kind,t);const context=e=>{e.preventDefault();e.stopPropagation();document.dispatchEvent(new CustomEvent('fitlab-loadout-menu',{detail:{event:e,item:t,origin:b,entries:[['安装到对应槽位',()=>onInstall(kind,t)]]}}));};b.oncontextmenu=context;b.onkeydown=e=>{if(e.key==='ContextMenu'||e.shiftKey&&e.key==='F10')context(e)};b.ondragstart=e=>{onDrag({kind,id:t.id,source:'browser'});e.dataTransfer.setData('text/plain',String(t.id));e.dataTransfer.effectAllowed='copy';};b.ondragend=onDragEnd;});
+  tree.querySelectorAll('[data-implant-set]').forEach(b=>{const context=e=>{e.preventDefault();e.stopPropagation();const set=sets.get(b.dataset.implantSet);document.dispatchEvent(new CustomEvent('fitlab-loadout-menu',{detail:{event:e,item:{name:set.name+' · 六件套'},origin:b,entries:setActions(set),showDetails:false}}));};b.oncontextmenu=context;b.onkeydown=e=>{if(e.key==='ContextMenu'||e.shiftKey&&e.key==='F10')context(e)};});
+  tree.querySelectorAll('[data-id]').forEach(b=>{const t=catalogs[kind].find(t=>t.id===Number(b.dataset.id));b.onclick=()=>onInstall(kind,t);const context=e=>{e.preventDefault();e.stopPropagation();document.dispatchEvent(new CustomEvent('fitlab-loadout-menu',{detail:{event:e,item:t,origin:b,entries:[['安装到对应槽位',()=>onInstall(kind,t)],...(kind==='implants'&&byItem.has(t.id)?setActions(byItem.get(t.id)):[])]}}));};b.oncontextmenu=context;b.onkeydown=e=>{if(e.key==='ContextMenu'||e.shiftKey&&e.key==='F10')context(e)};b.ondragstart=e=>{onDrag({kind,id:t.id,source:'browser'});e.dataTransfer.setData('text/plain',String(t.id));e.dataTransfer.effectAllowed='copy';};b.ondragend=onDragEnd;});
  }
  host.querySelectorAll('[data-kind]').forEach(b=>b.onclick=()=>switchView(b.dataset.kind,null));
  $('.plan-item-search').oninput=()=>{render(0);remember()};
