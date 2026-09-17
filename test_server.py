@@ -48,4 +48,13 @@ class PersistenceTests(unittest.TestCase):
   self.assertEqual(disabled['scenario'],{});self.assertEqual(len(disabled['scenarios']),2)
   with self.assertRaises(urllib.error.HTTPError):self.call('fit/scenarios',dict(body,revision=disabled['revision'],activeScenarioId='missing'))
   self.assertEqual(next(f for f in self.call('library') if f['id']==first['id']),disabled)
+ def test_new_fit_and_first_scenario_are_saved_together(self):
+  draft=dict(self.sample(),scenarios=[{'id':'first','name':'首个情景','value':{'distance':12000}}],activeScenarioId='first')
+  with self.assertRaises(urllib.error.HTTPError):self.call('save',dict(draft,activeScenarioId='missing'))
+  self.assertEqual(self.call('library'),[])
+  saved=self.call('save',draft)
+  self.assertTrue(saved['id']);self.assertEqual(saved['revision'],1)
+  self.assertEqual(saved['scenario']['distance'],12000)
+  self.assertEqual(saved['slots'],draft['slots'])
+  self.assertEqual(self.call('library'),[saved])
 if __name__=='__main__':unittest.main()

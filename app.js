@@ -415,12 +415,13 @@ function renderScenario(){
  $('#ship-stats').insertAdjacentHTML('beforeend','<section id="scenario-controls"><div class="panel-title scenario-heading"><span>情景设置</span><button id="edit-scenario">设置</button></div><div class="scenario-inline"><select id="active-scenario" aria-label="应用情景"><option value="">不应用情景</option>'+state.scenarios.map(s=>'<option value="'+esc(s.id)+'">'+esc(s.name)+'</option>').join('')+'</select><small>仅本地 · 静态估算</small></div></section>');
  $('#active-scenario').value=state.activeScenarioId||'';
  async function commit(fields){
-  if(!fitRecord.id)throw Error('请先保存装配，再保存本地情景。');
-  const id=fitRecord.id,saved=await api('fit/scenarios',{id,revision:fitRecord.revision,...fields});
-  if(fitRecord.id!==id)return;
-  Object.assign(fitRecord,fields,{revision:saved.revision,updatedAt:saved.updatedAt});
-  const index=libraryFits.findIndex(f=>f.id===id);if(index>=0)libraryFits[index]=saved;
-  storeWorkingDraft();scheduleAnalysis();renderScenario();say('情景已保存并应用 · 装配修改仍独立保存');
+  const owner=fitRecord,isNew=!owner.id;
+  const saved=await api(isNew?'save':'fit/scenarios',isNew?{...currentFit(),...fields}:{id:owner.id,revision:owner.revision,...fields});
+  if(fitRecord!==owner)return;
+  Object.assign(fitRecord,fields,{id:saved.id,revision:saved.revision,updatedAt:saved.updatedAt});
+  const index=libraryFits.findIndex(f=>f.id===saved.id);if(index>=0)libraryFits[index]=saved;else libraryFits.unshift(saved);
+  storeWorkingDraft();if(isNew)$('#save').textContent='装配与情景已保存';
+  scheduleAnalysis();renderScenario();say(isNew?'已保存新装配与情景':'情景已保存并应用 · 装配修改仍独立保存');
  }
  $('#active-scenario').onchange=async e=>{const input=e.target;input.disabled=true;try{await commit(scenarioFields({...state,activeScenarioId:input.value||null}))}catch(error){say(error.message);input.value=state.activeScenarioId||'';input.disabled=false}};
  $('#edit-scenario').onclick=async()=>{try{
