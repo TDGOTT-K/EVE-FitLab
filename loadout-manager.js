@@ -135,14 +135,13 @@ export function installLoadoutManager(host,{api}){
   cache();drawList();browser.refresh();
   if(!draft){$('.plan-toolbar').innerHTML=returnToFit?'<button data-back>返回装配</button>':'';$('.plan-content').innerHTML='<div class="character-empty">创建一套可跨装配调用的脑插与增效剂方案。</div>';host.querySelector('[data-back]')?.addEventListener('click',()=>location.hash='fitting');return;}
   $('.plan-toolbar').innerHTML='<div class="plan-name-row fit-name-row"><h2>'+esc(draft.name)+'</h2><button class="edit-name-icon" data-rename aria-label="编辑方案名称" title="编辑名称"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15Z"/></svg></button></div><span class="plan-dirty">'+(dirty?'未保存':'已保存')+'</span><button data-save>保存方案</button><button data-more aria-haspopup="menu" aria-label="更多方案操作">更多 ···</button>'+(returnToFit?'<button data-use>应用到装配</button><button data-back>返回装配</button>':'');
-  $('.plan-content').innerHTML='<div class="plan-meta"><small>交互原型 · 加成与技能校验待接入</small></div><div class="plan-section-head"><b>脑插</b><span>'+draft.implants.length+' / 10</span></div><div class="plan-slots"></div><div class="plan-section-head"><b>增效剂</b><button data-roll-boosters title="每种副作用独立抽取；使用基础概率，未计技能修正">⚄ 随机服用一次</button></div><div class="plan-boosters"></div><p class="plan-scope">随机采用基础概率 · 未计技能修正</p><div class="plan-unload">拖到这里卸下</div>';
+  $('.plan-content').innerHTML='<div class="plan-meta"><small>交互原型 · 加成与技能校验待接入</small></div><div class="plan-section-head"><b>脑插</b><span>'+draft.implants.length+' / 10</span></div><div class="plan-slots"></div><div class="plan-section-head"><b>增效剂</b><button data-roll-boosters title="每种副作用独立抽取；使用基础概率，未计技能修正">⚄ 随机服用一次</button></div><div class="plan-boosters"></div><p class="plan-scope">随机采用基础概率 · 未计技能修正</p>';
    $('[data-rename]').onclick=rename;$('.plan-name-row h2').onclick=rename;
   $('[data-save]').onclick=save;$('[data-more]').onclick=openPlanActions;
   $('[data-use]')?.addEventListener('click',()=>{document.dispatchEvent(new CustomEvent('fitlab-use-loadout',{detail:{...structuredClone(draft),customized:dirty}}));location.hash='fitting';});
   $('[data-back]')?.addEventListener('click',()=>location.hash='fitting');
   $('[data-roll-boosters]').onclick=()=>rollBoosters();
   drawSlots();
-  const unloadArea=$('.plan-unload');unloadArea.ondragover=e=>{if(unload(null)){e.preventDefault();e.dataTransfer.dropEffect='move'}};unloadArea.ondrop=e=>{if(drag?.source==='installed'){e.preventDefault();draft[drag.kind]=draft[drag.kind].filter(x=>x.typeId!==drag.id);clearDrag();changed();drawSlots();}};
  }
  function toggleEffect(typeId,effectId){
   if(busy)return;const entry=draft.boosters.find(b=>b.typeId===typeId);if(!entry)return;const active=entry.enabledSideEffects||[];entry.enabledSideEffects=active.includes(effectId)?active.filter(id=>id!==effectId):[...active,effectId];changed();drawSlots();
