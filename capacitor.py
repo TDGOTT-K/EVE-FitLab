@@ -38,7 +38,7 @@ def calculate_capacitor(report,types,external=None):
   if loss or gain:
    p=max(1,round(cycle*1000));periods.append(p);heapq.heappush(events,(p,-1-i,p,0,gain-loss,1,1,0))
  peak=2.5*c/tau if tau>0 else 0
- result={'events':[],'capacity':c,'rechargeSeconds':tau,'usagePerSecond':usage,'peakRechargePerSecond':peak,'includesBoosters':boosted,'nosferatuPerSecond':nos_income,'injectionPerSecond':injection_income,'netUsagePerSecond':usage-nos_income-injection_income,'nosferatuSources':income_sources,'incomingNeutPerSecond':neut/incoming_cycle,'incomingTransferPerSecond':transfer/incoming_cycle,'energyWarfareResonance':resistance}
+ result={'events':[],'capacity':c,'rechargeSeconds':tau,'usagePerSecond':usage,'peakRechargePerSecond':peak,'includesBoosters':boosted,'nosferatuPerSecond':nos_income,'injectionPerSecond':injection_income,'netUsagePerSecond':usage-nos_income-injection_income+neut-transfer,'nosferatuSources':income_sources,'incomingNeutPerSecond':neut/incoming_cycle,'incomingTransferPerSecond':transfer/incoming_cycle,'energyWarfareResonance':resistance}
  if not events:return dict(result,status='stable',lowPercent=100,highPercent=100)
  period=1
  for p in periods:

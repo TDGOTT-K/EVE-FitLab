@@ -9,7 +9,7 @@ export function installExplanations(){
  function show(anchor){const owner=anchor.closest('.stat-explanation'),depth=owner?Number(owner.dataset.depth)+1:0;if(owner&&!chain[depth-1]?.locked)return;if(chain[depth]?.anchor===anchor)return;clearTimeout(leaveTimer);closeFrom(depth);let detail;try{detail=JSON.parse(anchor.dataset.explain)}catch{return}
   const panel=document.createElement('section'),bridge=document.createElement('div');panel.className='stat-explanation';panel.id=depth?'stat-explanation-'+depth:'stat-explanation';panel.dataset.depth=depth;panel.role='tooltip';panel.setAttribute('aria-label',detail.title);panel.style.zIndex=150+depth*2;bridge.className='explain-bridge';bridge.style.zIndex=149+depth*2;
   const lines=rows=>(rows||[]).map(([label,value,kind,child])=>`<div class="explain-line ${kind==='source'?'explain-source':''} ${child?'has-detail':''}" ${child?`tabindex="0" data-explain="${esc(JSON.stringify(child))}"`:''}><span>${esc(label)}</span><b>${esc(value)}${child?' <span class="detail-arrow">›</span>':''}</b></div>`).join('');
-  panel.innerHTML=`<div class="explain-heading"><span>${esc(detail.title)}</span></div><div class="explain-lock">停留以锁定</div><div class="explain-terms">${lines(detail.terms?.length?detail.terms:[['贡献项','0']])}</div><div class="explain-result"><span>结果</span><b>${esc(detail.result)}</b></div><div class="explain-conditions">${lines(detail.conditions)}</div>`;
+  panel.innerHTML=`<div class="explain-heading"><span>${esc(detail.title)}</span></div><div class="explain-lock">停留以锁定</div><div class="explain-terms">${lines(detail.terms?.length?detail.terms:[['贡献项','0']])}</div><div class="explain-result"><span>结果</span><b class="${['scenario-increased','scenario-decreased'].includes(detail.resultClass)?detail.resultClass:''}">${esc(detail.result)}</b></div><div class="explain-conditions">${lines(detail.conditions)}</div>`;
   const node={panel,bridge,anchor,locked:false,frame:null,aura:null};chain.push(node);document.body.append(bridge,panel);anchor.setAttribute('aria-describedby',panel.id);place(node);animateLock(node);
  }
  function inChain(target){return target instanceof Node&&chain.some(n=>n.anchor.contains(target)||n.panel.contains(target)||n.bridge.contains(target))}
@@ -28,6 +28,7 @@ export function installExplanations(){
   }node.frame=requestAnimationFrame(frame);
  }
  function track(target){clearTimeout(leaveTimer);let keep=0;for(let i=0;i<chain.length;i++){const n=chain[i];if(target instanceof Node&&(n.anchor.contains(target)||n.panel.contains(target)||n.bridge.contains(target)))keep=i+1}if(keep<chain.length)leaveTimer=setTimeout(()=>closeFrom(keep),120)}
+ document.addEventListener('fitlab-calculation-invalidated',()=>closeFrom(0));
  document.addEventListener('pointerover',e=>{track(e.target);const anchor=e.target.closest('[data-explain]');if(anchor)show(anchor)});
  document.addEventListener('pointerout',e=>track(e.relatedTarget));
  document.addEventListener('focusin',e=>{const anchor=e.target.closest('[data-explain]');if(anchor){show(anchor);const node=chain.find(n=>n.anchor===anchor);if(node){cancelAnimationFrame(node.frame);lock(node)}}});

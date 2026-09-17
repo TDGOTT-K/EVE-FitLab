@@ -1,3 +1,4 @@
+from workspace_view import attach_workspace_view
 from scenario_presets import validate_presets
 from linked_scenario import resolve_fit_scenario
 from sustained_tank import sustained_tank
@@ -122,9 +123,11 @@ def analyze(f,resolve_links=True):
  snapshot['cargo']=[{'typeId':'type:'+str(e['item']),'dogmaTypeId':e['item'],'name':TYPES[e['item']]['en'],'quantity':e['quantity']} for e in f.get('cargo',[])]
  # Preserve the user's selected module state; EFT imports otherwise activate everything.
  queues={k:[s for s in fitted if s['kind']==k] for k in ['high','mid','low','rig','subsystem']}
+ slot_keys={}
  for m in snapshot['modules']:
-  k=m['slotKind'].lower();s=queues[k].pop(0);m['state']=module_state(s)
+  k=m['slotKind'].lower();s=queues[k].pop(0);m['state']=module_state(s);slot_keys[m['slotId']]=s['key']
  result=engine('actions/ValidateFit',{'snapshot':snapshot,'simulationMode':'SingleShip'})
+ for m in result['snapshot']['modules']:m['workspaceSlotKey']=slot_keys.get(m['slotId'])
  result['skillCount']=len(snapshot['skills'])
  # Projected module repair describes its output; classify remote output separately.
  a=result['attributes']
@@ -152,6 +155,7 @@ def analyze(f,resolve_links=True):
    result['isValid']=False;result['issues'].append({'message':'请先选齐核心、防御、攻击、推进四类子系统'})
   for slot in result['attributes'].get('slotUsage',[]):
    if slot['kind']=='Subsystem':slot['available']=4
+ if resolve_links:attach_workspace_view(result,f,TYPES)
  return result
 class Handler(SimpleHTTPRequestHandler):
  def __init__(self,*args,**kw):super().__init__(*args,directory=str(ROOT),**kw)

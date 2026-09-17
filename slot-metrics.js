@@ -16,9 +16,10 @@ export const SLOT_METRIC_PRIORITY=[
 export function selectSlotMetrics(type,computed,state,group='details'){
  if(!type)return [];
  return SLOT_METRIC_PRIORITY.filter(metric=>(group==='resources'?['cpu','power'].includes(metric.id):!['cpu','power'].includes(metric.id))&&metric.available(type)).sort((a,b)=>a.priority-b.priority).slice(0,SLOT_METRIC_LIMIT).map(metric=>{
-  let value=computed?metric.value(computed,state):null,unit=metric.unit;
+  const scenario=metric.id==='dps'?computed?.scenarioMetrics?.damagePerSecond:null;
+  let value=scenario?scenario.value:computed?metric.value(computed,state):null,unit=metric.unit;
   if(!Number.isFinite(value))value=null;
   if(unit==='m'&&value>1000){value/=1000;unit='km'}
-  return {id:metric.id,label:metric.label,title:metric.title,unit,value};
+  return {id:metric.id,label:metric.label,title:metric.title,unit,value,baseline:scenario?.baseline,conditions:computed?.scenarioMetrics?.conditions};
  });
 }

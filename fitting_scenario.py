@@ -30,7 +30,7 @@ def missile_factor(signature,speed,radius,velocity,exponent):
 def calculate_scenario(report,scenario,types):
  target=validate_scenario(scenario or {})
  rows=[];effects=[];base_total=reload_total=applied_total=max_total=0
- for m in report['snapshot']['modules']:
+ for module_index,m in enumerate(report['snapshot']['modules']):
   if m['state'] not in ['Active','Overload']:continue
   t=types.get(m['dogmaTypeId'],{});charge=m.get('charge') or {}
   cycle=m.get('cycleTimeSeconds',0);base=m.get('damagePerSecond',0)+charge.get('damagePerSecondBonus',0)
@@ -50,7 +50,7 @@ def calculate_scenario(report,scenario,types):
     if target['distance']>m.get('optimalRangeMeters',0):factor=0
    resisted=sum(profile[k]*(1-target['resistances'][i]/100) for i,k in enumerate(DAMAGE))
    applied=resisted*multiplier*reload_factor*factor if factor is not None else None
-   rows.append({'name':m['name'],'baseDps':base,'spooledDps':base*multiplier,'maxDps':base*top,'reloadDps':base*multiplier*reload_factor,'appliedDps':applied,'factor':factor,'spoolTime':math.ceil(maximum/bonus)*cycle if bonus>0 else 0,'flightTime':target['distance']/trace_value(charge,'maxVelocity') if trace_value(charge,'maxVelocity')>0 else None})
+   rows.append({'moduleIndex':module_index,'slotKey':m.get('workspaceSlotKey'),'typeId':m.get('dogmaTypeId'),'chargeTypeId':charge.get('dogmaTypeId'),'baseVolley':m.get('volleyDamage',0)+charge.get('volleyDamageBonus',0),'baseProfile':profile,'appliedDpsWithoutReload':resisted*multiplier*factor if factor is not None else None,'appliedVolley':(m.get('volleyDamage',0)+charge.get('volleyDamageBonus',0))*multiplier*factor*resisted/base if factor is not None else None,'appliedProfile':{k:profile[k]*(1-target['resistances'][i]/100)*multiplier*factor for i,k in enumerate(DAMAGE)} if factor is not None else None,'reloadFactor':reload_factor,'name':m['name'],'baseDps':base,'spooledDps':base*multiplier,'maxDps':base*top,'reloadDps':base*multiplier*reload_factor,'appliedDps':applied,'factor':factor,'spoolTime':math.ceil(maximum/bonus)*cycle if bonus>0 else 0,'flightTime':target['distance']/trace_value(charge,'maxVelocity') if trace_value(charge,'maxVelocity')>0 else None})
    base_total+=base;reload_total+=base*multiplier*reload_factor;max_total+=base*top
    if applied is not None:applied_total+=applied
   # Range falloff for probabilistic EWAR; webs/scrams without falloff are hard range limited.
