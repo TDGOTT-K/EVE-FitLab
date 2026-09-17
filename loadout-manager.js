@@ -8,7 +8,7 @@ const icon=t=>t?'<img loading="lazy" draggable="false" src="https://images.evete
 
 export function installLoadoutManager(host,{api}){
  let plans=[],draft=null,dirty=false,busy=false,drag=null,returnToFit=false;
- host.innerHTML='<div class="plan-workspace"><aside class="plan-library"><div class="plan-library-head"><button data-toggle-library aria-expanded="true" aria-controls="plan-library-body"><span class="plan-library-chevron">▾</span> 方案库</button><span class="plan-library-current"></span><button data-new>＋ 新建</button></div><div id="plan-library-body"><input class="plan-search" aria-label="搜索方案" placeholder="搜索方案或分组"><div class="plan-list" tabindex="0" aria-label="脑插与增效剂方案列表"></div><small>Ctrl+C / V 复制粘贴</small></div></aside><aside class="plan-browser"></aside><section class="plan-editor"><div class="plan-toolbar"></div><p class="plan-message" role="status"></p><div class="plan-content"></div></section></div>';
+ host.innerHTML='<div class="plan-workspace"><aside class="plan-library"><div class="plan-library-head"><button data-toggle-library aria-expanded="true" aria-controls="plan-library-body"><span class="plan-library-chevron">▾</span> 方案库</button><span class="plan-library-current"></span><button data-group-current disabled>分组</button><button data-new>＋ 新建</button></div><div id="plan-library-body"><input class="plan-search" aria-label="搜索方案" placeholder="搜索方案或分组"><div class="plan-list" tabindex="0" aria-label="脑插与增效剂方案列表"></div><small>Ctrl+C / V 复制粘贴</small></div></aside><aside class="plan-browser"></aside><section class="plan-editor"><div class="plan-toolbar"></div><p class="plan-message" role="status"></p><div class="plan-content"></div></section></div>';
  const $=s=>host.querySelector(s),message=text=>$('.plan-message').textContent=text;
  let libraryCollapsed=false;try{libraryCollapsed=localStorage.getItem('fitlab-plan-library-collapsed')==='true'}catch{}
  function updateLibraryFold(){
@@ -36,17 +36,35 @@ export function installLoadoutManager(host,{api}){
  const guard=async()=>!dirty||await confirm('当前方案有未保存的修改，放弃这些修改？');
  function changed(){dirty=true;$('.plan-library-current').textContent=draft?.name||'';cache();$('.plan-dirty').textContent='未保存';}
  function drawList(){
-  $('.plan-library-current').textContent=draft?.name||'';
+  $('.plan-library-current').textContent=draft?.name||'';$('[data-group-current]').disabled=!draft;
   const q=$('.plan-search').value.trim().toLowerCase(),groups=[...new Set(plans.map(p=>p.folder||''))].sort();
   $('.plan-list').innerHTML=groups.map(folder=>{const rows=plans.filter(p=>(p.folder||'')===folder&&(p.name+' '+folder).toLowerCase().includes(q));return rows.length?'<div class="plan-group"><small>'+esc(folder||'未分组')+'</small>'+rows.map(p=>'<button class="plan-entry" data-plan="'+p.id+'" aria-pressed="'+(draft?.id===p.id)+'"><span>'+esc(p.name)+'</span><small>脑插 '+p.implants.length+' · 增效剂 '+p.boosters.length+'</small></button>').join('')+'</div>':'';}).join('')||'<p class="pilot-empty">'+(plans.length?'没有匹配方案':'还没有方案，点击“新建”开始')+'</p>';
-  $('.plan-list').querySelectorAll('[data-plan]').forEach(b=>b.onclick=async()=>{if(busy||!await guard())return;draft=structuredClone(plans.find(p=>p.id===b.dataset.plan));dirty=false;message('');draw();$('.plan-list').focus({preventScroll:true});});
+  $('.plan-list').querySelectorAll('[data-plan]').forEach(b=>{
+   b.onclick=async()=>{if(busy||!await guard())return;draft=structuredClone(plans.find(p=>p.id===b.dataset.plan));dirty=false;message('');draw();$('.plan-list').focus({preventScroll:true});};
+   const menu=e=>{e.preventDefault();e.stopPropagation();openGroupMenu(b,plans.find(p=>p.id===b.dataset.plan));};b.oncontextmenu=menu;b.onkeydown=e=>{if(e.key==='ContextMenu'||e.shiftKey&&e.key==='F10')menu(e)};
+  });
  }
+
+ function openGroupMenu(anchor,plan){
+  if(!plan||busy)return;document.querySelector('.plan-group-menu')?.remove();
+  const menu=document.createElement('div');menu.className='plan-group-menu scenario-quick-menu';menu.setAttribute('popover','auto');menu.innerHTML='<div class="scenario-quick-title">移动到分组</div><div class="plan-group-options"></div><form><input aria-label="新分组名称" maxlength="40" placeholder="新分组名称" required><button type="submit">新建并移入</button></form><p role="status"></p>';document.body.append(menu);
+  const close=()=>{menu.hidePopover();menu.remove()};
+  async function move(folder){
+   if(busy)return;
+   if(!plan.id){draft.folder=folder;changed();drawList();close();return;}
+   await run(async()=>{const current=plans.find(p=>p.id===plan.id);if(!current)throw Error('方案已删除');const saved=await api('loadout-plan',{...current,folder});plans=plans.map(p=>p.id===saved.id?saved:p);if(draft?.id===saved.id){draft.folder=folder;draft.revision=saved.revision;draft.updatedAt=saved.updatedAt;cache();}drawList();message('已移入“'+(folder||'未分组')+'”');notify();close();});
+  }
+  for(const folder of [...new Set(['',...plans.map(p=>p.folder||''),draft?.folder||''])]){const b=document.createElement('button');b.type='button';b.textContent=(plan.folder===folder||!plan.folder&&!folder?'✓ ':'')+(folder||'未分组');b.onclick=()=>move(folder);menu.querySelector('.plan-group-options').append(b);}
+  menu.querySelector('form').onsubmit=e=>{e.preventDefault();const name=menu.querySelector('input').value.trim();if(name)move(name);};
+  menu.addEventListener('toggle',e=>{if(e.newState==='closed')menu.remove()});menu.showPopover();const r=anchor.getBoundingClientRect();menu.style.left=Math.max(8,Math.min(r.left,innerWidth-menu.offsetWidth-8))+'px';menu.style.top=Math.max(8,Math.min(r.bottom+4,innerHeight-menu.offsetHeight-8))+'px';menu.querySelector('button').focus();
+ }
+ $('[data-group-current]').onclick=()=>openGroupMenu($('[data-group-current]'),draft);
  function draw(){
   cache();drawList();browser.refresh();
   if(!draft){$('.plan-toolbar').innerHTML=returnToFit?'<button data-back>返回装配</button>':'';$('.plan-content').innerHTML='<div class="character-empty">创建一套可跨装配调用的脑插与增效剂方案。</div>';host.querySelector('[data-back]')?.addEventListener('click',()=>location.hash='fitting');return;}
   $('.plan-toolbar').innerHTML='<input class="plan-name" aria-label="方案名称" maxlength="80" value="'+esc(draft.name)+'"><span class="plan-dirty">'+(dirty?'未保存':'已保存')+'</span><button data-copy>复制</button><button data-discard>放弃修改</button><button data-delete '+(!draft.id?'disabled':'')+'>删除</button><button data-save>保存方案</button>'+(returnToFit?'<button data-use>应用到装配</button><button data-back>返回装配</button>':'');
-  $('.plan-content').innerHTML='<div class="plan-meta"><label>分组 <input aria-label="方案分组" list="plan-folders" maxlength="40" value="'+esc(draft.folder||'')+'" placeholder="未分组"></label><datalist id="plan-folders">'+[...new Set(plans.map(p=>p.folder).filter(Boolean))].map(f=>'<option value="'+esc(f)+'">').join('')+'</datalist><small>交互原型 · 加成与技能校验待接入</small></div><div class="plan-section-head"><b>脑插</b><span>'+draft.implants.length+' / 10</span></div><div class="plan-slots"></div><div class="plan-section-head"><b>增效剂</b></div><div class="plan-boosters"></div><p class="plan-scope">固定副作用方案 · 不进行随机服用或倒计时</p><div class="plan-unload">拖到这里卸下</div>';
-  $('.plan-name').oninput=e=>{draft.name=e.target.value;changed()};$('[aria-label="方案分组"]').oninput=e=>{draft.folder=e.target.value;changed()};
+  $('.plan-content').innerHTML='<div class="plan-meta"><small>交互原型 · 加成与技能校验待接入</small></div><div class="plan-section-head"><b>脑插</b><span>'+draft.implants.length+' / 10</span></div><div class="plan-slots"></div><div class="plan-section-head"><b>增效剂</b></div><div class="plan-boosters"></div><p class="plan-scope">固定副作用方案 · 不进行随机服用或倒计时</p><div class="plan-unload">拖到这里卸下</div>';
+  $('.plan-name').oninput=e=>{draft.name=e.target.value;changed()};
   $('[data-copy]').onclick=duplicate;$('[data-save]').onclick=save;$('[data-discard]').onclick=async()=>{if(!await guard())return;draft=draft.id?structuredClone(plans.find(p=>p.id===draft.id)):null;dirty=false;draw();};
   $('[data-delete]').onclick=async()=>{if(busy||!await confirm('删除“'+draft.name+'”？已有装配中的快照仍会保留。'))return;await run(async()=>{await api('loadout-plan/delete',{id:draft.id,revision:draft.revision});plans=plans.filter(p=>p.id!==draft.id);draft=null;dirty=false;draw();message('方案已删除');notify();});};
   $('[data-use]')?.addEventListener('click',()=>{document.dispatchEvent(new CustomEvent('fitlab-use-loadout',{detail:{...structuredClone(draft),customized:dirty}}));location.hash='fitting';});
