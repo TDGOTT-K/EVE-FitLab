@@ -338,13 +338,9 @@ body.resizing-workspace *{cursor:col-resize!important}
 
 .app-layout header{padding-left:16px;padding-right:0;gap:0;flex-wrap:nowrap;height:68px}
 .app-layout .brand{white-space:nowrap;flex-shrink:0}
-.web-window-controls{display:flex;align-items:center;align-self:center;flex-shrink:0;gap:3px;margin-left:12px;padding-left:12px;border-left:1px solid var(--line)}
-.web-window-controls button{display:grid;place-items:center;width:36px;height:32px;padding:0;border:1px solid transparent;border-radius:4px;background:transparent;color:var(--muted);cursor:default;transition:background .12s,color .12s,border-color .12s}
-.web-window-controls button svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.2;shape-rendering:geometricPrecision}
-.web-window-controls button:hover{color:var(--text);background:var(--row);border-color:var(--line)}
-.web-window-controls button:focus-visible{outline:1px solid var(--accent);outline-offset:2px}
-.web-window-controls button:active{background:color-mix(in srgb,var(--accent) 15%,var(--panel))}
-.web-window-controls .window-close:hover{background:#c42b1c;border-color:#d94b3d;color:white}
+.web-window-controls{display:flex;align-self:stretch;flex-shrink:0;margin-left:16px}
+.web-window-controls button{width:46px;padding:0;border:0;font:20px "Segoe UI",sans-serif;cursor:default}
+.web-window-controls .window-close:hover{background:#c42b1c;color:white}
 .desktop-app .web-window-controls{display:none}
 .desktop-app header{padding-right:154px}
 @media(max-width:700px){.app-layout header{overflow-x:auto}.app-layout .main-navigation{flex-shrink:0;margin-left:12px}}
