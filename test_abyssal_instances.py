@@ -13,4 +13,10 @@ class Instances(unittest.TestCase):
   for base in [2,3,999]:
    with self.assertRaises(ValueError):save_instance({'baseTypeId':base,'name':'x'},self.lib,self.types,'now')
   with self.assertRaises(ValueError):save_instance({'baseTypeId':1,'name':' '},self.lib,self.types,'now')
+ def test_mock_is_marked_and_isolated(self):
+  mock={'version':1,'tier':0,'roll':1,'attributes':[{'id':50,'label':'CPU','unit':'tf','highIsGood':False,'base':10,'value':11,'min':8,'max':12}]}
+  record=save_instance({'baseTypeId':1,'name':'demo','uiMock':mock},self.lib,self.types,'now')
+  self.assertEqual(record['status'],'mock');mock['attributes'][0]['value']=999
+  self.assertEqual(self.lib['abyssalInstances'][0]['uiMock']['attributes'][0]['value'],11)
+  with self.assertRaises(ValueError):save_instance({'baseTypeId':1,'name':'bad','uiMock':{'version':1,'tier':99,'roll':1}},self.lib,self.types,'now')
 if __name__=='__main__':unittest.main()
