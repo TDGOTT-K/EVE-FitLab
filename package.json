@@ -45,16 +45,8 @@
         "to": "backend"
       },
       {
-        "from": "desktop/build/engine",
-        "to": "engine"
-      },
-      {
         "from": "desktop/build/web",
         "to": "web"
-      },
-      {
-        "from": "desktop/build/sde",
-        "to": "sde"
       },
       {
         "from": "desktop/icon.ico",
@@ -63,6 +55,10 @@
       {
         "from": "desktop/licenses",
         "to": "licenses"
+      },
+      {
+        "from": "desktop/build/nengine",
+        "to": "nengine"
       }
     ],
     "win": {

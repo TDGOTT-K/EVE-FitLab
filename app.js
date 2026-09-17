@@ -1,3 +1,4 @@
+import {mountNativeStats,nativeResources,nativeSlotMetrics,nativeItemParameters} from './nengine-view.js';
 import {fighterHull,mountFighters,drawFighterBrowser} from './fighter-ui.js';
 import {installAbyssalLibrary} from './abyssal-library.js';
 import {openLoadoutPicker} from './loadout-manager.js';
@@ -24,7 +25,7 @@ import {renderItemInfo} from './item-info.js?v=ship-parameters-1';
 import {installExplanations} from './explanations.js';
 import {mountEngineStats,attributeDetail} from './engine-view.js?v=calculation-graphs-1';
 await initI18n();
-const catalog=await fetch('./data/full-catalog.json').then(r=>r.json());
+const catalog=await fetch('./api/catalog').then(r=>r.json());
 const marketIcons=await fetch('./data/market-icons.json').then(r=>r.json());
 
 const tLabel=t;
@@ -33,7 +34,7 @@ let ship=byId(587),fitRecord={name:'裂谷级 · 我的装配',shipId:587,skills
 const cachedItem=requestCache(id=>api('items/'+id),128);
 const cachedCalculation=requestCache(fit=>api('analyze',fit),4);
 let attackMode='dps';try{attackMode=localStorage.getItem('fitlab-attack-mode')==='edps'?'edps':'dps'}catch{}
-function getCalculation(fit){fit={...fit,attackMode};if(fit.activeScenarioId||Object.keys(fit.scenario||{}).length)return api('analyze',fit);return cachedCalculation(JSON.stringify({shipId:fit.shipId,slots:fit.slots,skills:fit.skills,drones:fit.drones,cargo:fit.cargo,scenario:fit.scenario,attackMode}),fit)}
+function getCalculation(fit){fit={...fit,attackMode};if(fit.activeScenarioId||Object.keys(fit.scenario||{}).length)return api('analyze',fit);return cachedCalculation(JSON.stringify(fit),fit)}
 const treeOpen=new Set(),searchCollapsed=new Set();
 let treeSearchQuery="";
 const labels={subsystem:'子系统',high:'高槽',mid:'中槽',low:'低槽',rig:'改装件'}, counts={subsystem:ship.group===963?4:0,high:ship.attrs['14']||0,mid:ship.attrs['13']||0,low:ship.attrs['12']||0,rig:ship.attrs['1137']||0};
@@ -60,13 +61,14 @@ const stateLabels={Offline:'离线',Online:'关闭',Active:'启用',Overload:'�
 function moduleState(s){return s.state||(s.online===false?'Offline':byId(s.item)?.canActivate?'Active':'Online')}
 function changeModuleState(key,state){const s=slots.find(s=>s.key===key);mutate(()=>{s.state=state;s.online=state!=='Offline'},'装备状态：'+stateLabels[state])}
 function slotMetrics(s,group='details',displayReport=report){
+ if(displayReport?.provider==='nengine')return reportVersion===analysisVersion?nativeSlotMetrics(displayReport,s,group):'';
  const siblings=slots.filter(x=>x.kind===s.kind&&x.item===s.item),index=siblings.findIndex(x=>x.key===s.key);
  const m=reportVersion===analysisVersion?(displayReport?.snapshot.modules.find(m=>m.workspaceSlotKey===s.key)||displayReport?.snapshot.modules.filter(m=>m.slotKind.toLowerCase()===s.kind&&m.dogmaTypeId===s.item)[index]):null;
  return selectSlotMetrics(byId(s.item),m,moduleState(s),group).map(({id,label,unit,title,value,baseline,conditions})=>`<span ${conditions?explanationAttributes(scenarioDetail(title,metricText(value,unit),value,baseline,[],conditions)):''} class="slot-metric" data-metric="${id}" title="${title}">${group==='resources'?`<svg class="slot-resource-icon" viewBox="0 0 24 24" aria-hidden="true">${id==='cpu'?'<rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4m6-4v4M9 18v4m6-4v4M2 9h4m-4 6h4m12-6h4m-4 6h4"/>':'<path d="m13 2-8 12h6l-1 8 9-13h-6Z"/>'}</svg>`:`<span class="slot-metric-label">${label}</span>`}<b ${numberAttributes(value,baseline)}>${value==null?'—':new Intl.NumberFormat('zh-CN',{maximumFractionDigits:2}).format(value)}</b>${unit?`<span class="slot-metric-unit">${unit}</span>`:''}</span>`).join('');
 }
 function refreshSlotMetrics(){document.querySelectorAll('[data-module-metrics]').forEach(el=>{const s=slots.find(s=>s.key===el.dataset.moduleMetrics);if(s)el.innerHTML=slotMetrics(s,el.dataset.metricGroup||'details')})}
 function renderSlots(){renderImplantEntry();renderBayConfig();const root=$('#slots'),scroll=$('.fitting').scrollTop;root.innerHTML=Object.keys(counts).filter(kind=>counts[kind]||slots.some(s=>s.kind===kind&&s.item)).map(kind=>`<div class="slot-heading"><span>${labels[kind]}</span><span class="slot-limits">${kind==='high'?hardpoints():kind==='rig'?`<span title="校准值：已使用 / 上限">校准 ${limit(slots.filter(s=>s.kind==='rig'&&s.item).reduce((n,s)=>n+(byId(s.item).attrs[1153]||0),0),ship.attrs[1132])}</span>`:''}<span title="已用槽位 / 总槽位">${limit(slots.filter(s=>s.kind===kind&&s.item).length,counts[kind])}</span></span></div>`+slots.filter(s=>s.kind===kind).map(s=>{const t=byId(s.item),a=byId(s.ammo);return `<div class="slot ${t?'filled':''} ${filter?.key===s.key&&!filter.ammo?'selected':''} ${moduleState(s)==='Offline'?'offline':''} state-${moduleState(s).toLowerCase()}" data-key="${s.key}"><div class="module" tabindex="0" role="button" aria-label="${labels[kind]} ${Number(s.key.split('-')[1])+1} ${t?esc(t.name):'空槽'}">${t?img(t):'<span class="empty-symbol">＋</span>'}<span class="name ${t?'':'empty-text'}"><span class="module-heading"><span class="module-identity">${t?esc(t.name):kind==='subsystem'?['核心子系统','防御子系统','攻击子系统','推进子系统'][Number(s.key.split('-')[1])]:labels[kind]}${t?`<small>${kind==='rig'?`校准 ${t.attrs[1153]||0} · 尺寸 ${t.attrs[1547]}`:`${moduleState(s)==='Online'&&!t.canActivate?'在线 · 被动':stateLabels[moduleState(s)]}`}</small>`:''}</span>${t&&kind!=='rig'?`<span class="slot-resources" data-module-metrics="${s.key}" data-metric-group="resources">${slotMetrics(s,'resources')}</span>`:''}</span>${t&&kind!=='rig'?`<span class="slot-metrics" data-module-metrics="${s.key}">${slotMetrics(s)}</span>`:''}</span></div>${needsAmmo(t)?`<div class="ammo ${filter?.key===s.key&&filter.ammo?'selected':''}" tabindex="0" role="button" aria-label="${esc(t.name)}的弹药槽">${a?img(a):'<span>↳</span>'}<span>${a?esc(a.name):'弹药槽 · 点击筛选 / 拖入装填'}</span>${a?`<span class="ammo-count" title="满弹夹容量：模块容量 ÷ 单发弹药体积">X ${magazine(t,a)}</span>`:''}</div>`:''}</div>`}).join('')).join('');$('.fitting').scrollTop=scroll;
- root.querySelectorAll('.slot').forEach(el=>{const key=el.dataset.key;el.querySelector('.module').onclick=e=>{selectSlot(e,key)};el.querySelector('.module').onkeydown=e=>{if(e.target!==e.currentTarget)return;if(e.key==='Enter'||e.key===' '){e.preventDefault();selectSlot(e,key)}};el.oncontextmenu=e=>{if(selectedSlots.has(key)&&selectedSlots.size>1&&!e.target.closest('.ammo'))openBatchMenu(e,[...selectedSlots],'已选 '+selectedSlots.size+' 个槽位');else openMenu(e,key,e.target.closest('.ammo')?'ammo':'slot')};el.ondragover=e=>{e.preventDefault();if(slotDrag){const valid=!!slotTransfer(key)&&(!e.target.closest('.ammo')||slotDrag.ammo);e.dataTransfer.dropEffect=valid?'move':'none';el.classList.toggle('preview-target',valid);return;}const valid=canInstall(byId(dragged),key)&&(!e.target.closest('.ammo')||byId(dragged)?.kind==='ammo');e.dataTransfer.dropEffect=valid?'copy':'none';if(valid)queueInstallPreview(key);else cancelInstallPreview()};el.ondragleave=e=>{if(slotDrag&&!el.contains(e.relatedTarget))el.classList.remove('preview-target')};el.ondrop=e=>{e.preventDefault();e.stopPropagation();if(slotDrag){if(e.target.closest('.ammo')&&!slotDrag.ammo)say('装备不能放入弹药子槽');else moveInstalled(key);clearDrag();return;}const dropped=byId(e.dataTransfer.getData('text/plain'));if(e.target.closest('.ammo')&&dropped?.kind!=='ammo')say('弹药子槽只接受兼容弹药');else install(dropped,key);clearDrag()};const ammo=el.querySelector('.ammo');if(ammo){ammo.onclick=e=>toggleFilter(key,true);ammo.onkeydown=e=>{if(e.target===e.currentTarget&&(e.key==='Enter'||e.key===' ')){e.preventDefault();toggleFilter(key,true)}}}const source=slots.find(s=>s.key===key);if(source.item)bindInstalledDrag(el.querySelector('.module'),key,false);if(source.ammo&&ammo)bindInstalledDrag(ammo,key,true);});installRackTools();mountTacticalMode(root,fitRecord,mode=>{mutate(()=>{fitRecord.tacticalModeTypeId=mode;},'舰体模式已选择 · 加成待接入');$('#tactical-mode-select')?.focus({preventScroll:true})});
+ root.querySelectorAll('.slot').forEach(el=>{const key=el.dataset.key;el.querySelector('.module').onclick=e=>{selectSlot(e,key)};el.querySelector('.module').onkeydown=e=>{if(e.target!==e.currentTarget)return;if(e.key==='Enter'||e.key===' '){e.preventDefault();selectSlot(e,key)}};el.oncontextmenu=e=>{if(selectedSlots.has(key)&&selectedSlots.size>1&&!e.target.closest('.ammo'))openBatchMenu(e,[...selectedSlots],'已选 '+selectedSlots.size+' 个槽位');else openMenu(e,key,e.target.closest('.ammo')?'ammo':'slot')};el.ondragover=e=>{e.preventDefault();if(slotDrag){const valid=!!slotTransfer(key)&&(!e.target.closest('.ammo')||slotDrag.ammo);e.dataTransfer.dropEffect=valid?'move':'none';el.classList.toggle('preview-target',valid);return;}const valid=canInstall(byId(dragged),key)&&(!e.target.closest('.ammo')||byId(dragged)?.kind==='ammo');e.dataTransfer.dropEffect=valid?'copy':'none';if(valid)queueInstallPreview(key);else cancelInstallPreview()};el.ondragleave=e=>{if(slotDrag&&!el.contains(e.relatedTarget))el.classList.remove('preview-target')};el.ondrop=e=>{e.preventDefault();e.stopPropagation();if(slotDrag){if(e.target.closest('.ammo')&&!slotDrag.ammo)say('装备不能放入弹药子槽');else moveInstalled(key);clearDrag();return;}const dropped=byId(e.dataTransfer.getData('text/plain'));if(e.target.closest('.ammo')&&dropped?.kind!=='ammo')say('弹药子槽只接受兼容弹药');else install(dropped,key);clearDrag()};const ammo=el.querySelector('.ammo');if(ammo){ammo.onclick=e=>toggleFilter(key,true);ammo.onkeydown=e=>{if(e.target===e.currentTarget&&(e.key==='Enter'||e.key===' ')){e.preventDefault();toggleFilter(key,true)}}}const source=slots.find(s=>s.key===key);if(source.item)bindInstalledDrag(el.querySelector('.module'),key,false);if(source.ammo&&ammo)bindInstalledDrag(ammo,key,true);});installRackTools();mountTacticalMode(root,fitRecord,mode=>{mutate(()=>{fitRecord.tacticalModeTypeId=mode;},'舰体模式已选择 · 等待重新计算');$('#tactical-mode-select')?.focus({preventScroll:true})});
 }
 function remove(key){const s=slots.find(s=>s.key===key);mutate(()=>{s.item=null;s.ammo=null;s.online=true;delete s.state},'已卸载装备及其弹药 · 可撤销')}
 function unload(key){mutate(()=>slots.find(s=>s.key===key).ammo=null,'已卸载弹药，装备保留')}
@@ -102,12 +104,16 @@ function installLimit(t,key){
  return installationLimitReason(t,key,slots,byId,report?.attributes);
 }
 function shipInstallTarget(t){return slots.find(s=>!s.item&&canInstall(t,s.key))?.key;}
-function install(t,key){
+async function install(t,key){
  if(!t)return;
  if(!key&&(filter?.bay||t.kind==='drone')){addToBay(t,filter?.bay||'drones');return;}
  key=key||installTarget(t);
  if(!key||!canInstall(t,key)){say(selectedSlots.size>1?'请先选择一个目标槽位，或拖到指定槽位':'无法安装：请选择兼容槽位，或检查弹药组、尺寸及空槽');return;}
  const limitReason=installLimit(t,key);if(limitReason){say('无法安装：'+limitReason);return;}
+ if(report?.provider==='nengine'){
+  const version=analysisVersion,candidate=currentFit();applyCandidate(candidate.slots.find(s=>s.key===key),t);
+  try{const checked=await getCalculation(candidate);if(version!==analysisVersion){say('装配已变化，请重新安装');return;}const blocked=checked.issues.filter(e=>['HARDPOINT_LIMIT','QUANTITY_LIMIT','ACTIVE_GROUP_LIMIT','SLOT_UNAVAILABLE','SLOT_OCCUPIED','SLOT_UNSUPPORTED'].includes(e.code));if(blocked.length){say('无法安装：'+blocked.map(e=>e.code+' · '+e.message).join('；'));return;}}catch(e){say('安装校验失败：'+e.message);return;}
+ }
  mutate(()=>applyCandidate(slots.find(s=>s.key===key),t),`已${t.kind==='ammo'?'装填':'安装'} ${t.name}`);
 }
 function loadAll(t){const target=slots.filter(s=>acceptsAmmo(byId(s.item),t));if(!target.length){say('没有可使用这种弹药的已装备模块');return}mutate(()=>target.forEach(s=>s.ammo=t.id),`已为 ${target.length} 件兼容装备装填 ${t.name}`)}
@@ -144,7 +150,7 @@ $('.browser').addEventListener('drop',e=>{
  clearDrag();
 });
 function magazine(t,a){return t.capacity!=null&&a.volume>0?Math.floor(t.capacity/a.volume+1e-8):'—'}
-function renderResources(displayReport=report,host=$('#resources')){if(!displayReport){host.innerHTML='<p class="profile-note">等待计算服务…</p>';return}const a=displayReport.attributes;
+function renderResources(displayReport=report,host=$('#resources')){if(displayReport?.provider==='nengine'){nativeResources(host,displayReport);return;}if(!displayReport){host.innerHTML='<p class="profile-note">等待计算服务…</p>';return}const a=displayReport.attributes;
  host.innerHTML=[['CPU',a.cpuUsed,a.cpuAvailable,'tf','cpuOutput','cpuUsage'],['能量栅格',a.powergridUsed,a.powergridAvailable,'MW','powerOutput','powergridUsage']].map(([name,value,max,unit,attr,field])=>{
  const contributions=displayReport.snapshot.modules.filter(m=>m.state!=='Offline'&&m[field]>0).map(m=>[byId(m.dogmaTypeId)?.name||m.name,`+ ${m[field].toFixed(2)} ${unit}`]);
  const sum=displayReport.snapshot.modules.filter(m=>m.state!=='Offline').reduce((n,m)=>n+(m[field]||0),0);
@@ -171,6 +177,7 @@ async function showInfo(t,slotKey=null,droneIndex=null){infoOrigin=document.acti
  let touched=false;const remember=()=>{touched=true};$('#info-content').querySelector('.info-tabs').addEventListener('click',remember,{once:true});
  const outcome=await settledCalculation;if(request!==infoRequest||panel.hidden)return;
  if(outcome.error){status.textContent='装配参数暂不可用：'+outcome.error.message;return}
+ if(outcome.value?.provider==='nengine'){const key=t.kind==='ship'?'ship':droneIndex!==null?'drone-'+droneIndex+'-0':selected.key;renderItemInfo($('#info-content'),t,data,nativeItemParameters(outcome.value,key),catalog,'N 号引擎 · 加成后属性');clampInfo();return;}
  const calculation=outcome.value,group=t.kind==='ship'?[]:droneIndex!==null?calculation.snapshot.droneBay.drones:selected.kind==='rig'?calculation.snapshot.rigs:calculation.snapshot.modules;
  const siblings=selected?captured.slots.filter(s=>s.kind===selected.kind&&s.item===selected.item):[],index=siblings.findIndex(s=>s.key===selected?.key);
  let computed=t.kind==='ship'?{attributeSnapshot:{...calculation.attributes.attributeSnapshot,cpuLoad:calculation.attributes.cpuUsed,powerLoad:calculation.attributes.powergridUsed,baseWarpSpeed:calculation.attributes.attributeSnapshot.warpSpeedMultiplier},attributeTraces:calculation.attributes.attributeTraces}:droneIndex!==null?group[droneIndex]:(group.find(m=>m.workspaceSlotKey===selected.key)||group.filter(m=>m.dogmaTypeId===selected.item)[index]);if(t.kind==='ammo')computed=computed?.charge||null;
@@ -240,12 +247,12 @@ function persistFit(){const task=saving.catch(()=>{}).then(writeFit);saving=task
 async function writeFit(){const input=currentFit(),saved=await api('save',input);fitRecord={...fitRecord,id:saved.id,revision:saved.revision,updatedAt:saved.updatedAt};localStorage.setItem('fitlab-working-draft',JSON.stringify(currentFit()));$('#save').textContent=JSON.stringify(input.slots)===JSON.stringify(slots)&&JSON.stringify(input.skills)===JSON.stringify(fitRecord.skills)?'已保存 · '+new Date(saved.updatedAt).toLocaleTimeString():'已保存上一版本 · 当前改动待保存';return saved}
 document.addEventListener('fitlab-attack-mode',e=>{attackMode=e.detail==='edps'?'edps':'dps';try{localStorage.setItem('fitlab-attack-mode',attackMode)}catch{}scheduleAnalysis()});
 function scheduleAnalysis(){document.dispatchEvent(new CustomEvent('fitlab-calculation-invalidated'));if(!$('#info-window').hidden)closeInfo();analysisState='pending';updateScenarioStatus();cancelInstallPreview();$('.inspector').classList.add('calculating');analysisVersion++;refreshSlotMetrics();clearTimeout(analysisTimer);$('#engine-status').textContent='计算中…';analysisTimer=setTimeout(runAnalysis,250)}
-async function runAnalysis(){const version=analysisVersion;try{const result=await getCalculation(currentFit());if(version!==analysisVersion)return;report=result;reportVersion=version;analysisState='complete';updateScenarioStatus();syncEngineSlots();refreshSlotMetrics();$('.inspector').classList.remove('calculating');$('#engine-status').textContent=`Dogma · ${result.skillCount} 项技能`;$('.notice').textContent=result.isValid?'装配校验通过':`校验提示：${result.issues.map(x=>x.message).join('；')}`;renderResources();renderShipStats()}catch(e){if(version!==analysisVersion)return;$('.inspector').classList.remove('calculating');analysisState='failed';updateScenarioStatus();$('#engine-status').textContent='计算失败 · 当前数据未更新';$('.notice').textContent=e.message;say('装配已保留，计算失败：'+e.message)}}
+async function runAnalysis(){const version=analysisVersion;try{const result=await getCalculation(currentFit());if(version!==analysisVersion)return;report=result;reportVersion=version;if(result.provider==='nengine')$('.status .source').textContent='N '+result.engineVersion+' · SDE '+result.source.buildNumber+' · 副本';analysisState='complete';updateScenarioStatus();syncEngineSlots();refreshSlotMetrics();$('.inspector').classList.remove('calculating');$('#engine-status').textContent=`${result.provider==='nengine'?'N '+result.engineVersion:'Dogma'} · ${result.skillCount} 项技能`;$('.notice').textContent=result.isValid?'装配校验通过':`校验提示：${result.issues.map(x=>x.message).join('；')}`;renderResources();renderShipStats()}catch(e){if(version!==analysisVersion)return;$('.inspector').classList.remove('calculating');analysisState='failed';updateScenarioStatus();report=null;reportVersion=-1;renderResources();renderShipStats();refreshSlotMetrics();$('#engine-status').textContent='计算失败 · 当前数据不可用';$('.notice').textContent=e.message;say('装配已保留，计算失败：'+e.message)}}
 const flow=document.createElement('dialog');flow.id='flow-dialog';document.body.append(flow);
 function openFlow(title,body){flow.innerHTML=`<div class="flow-head"><b>${esc(title)}</b><button aria-label="关闭">×</button></div><div class="flow-body">${body}</div><p id="flow-error"></p>`;flow.querySelector('.flow-head button').onclick=()=>flow.close();flow.showModal()}
 function guarded(fn){return async()=>{try{await fn()}catch(e){say(e.message);if(flow.open)$('#flow-error').textContent=e.message}}}
 $('#save-fit').onclick=guarded(persistFit);
-function exportFitImage(fit){return showShareImage(withoutScenario(fit),{calculate:getCalculation,catalog,getPrice:async f=>{marketPricePromise??=api('prices').catch(e=>{marketPricePromise=null;throw e});return estimateFitPrice(f,await marketPricePromise)}})}
+function exportFitImage(fit){if(report?.provider==='nengine'){say('N 号引擎图片分享尚待适配，暂不导出缺少新配置的图片');return;}return showShareImage(withoutScenario(fit),{calculate:async f=>{const r=await getCalculation(f);if(r.provider==='nengine')throw Error('N 号引擎图片分享尚待适配，暂不导出缺少新配置的图片');return r;},catalog,getPrice:async f=>{marketPricePromise??=api('prices').catch(e=>{marketPricePromise=null;throw e});return estimateFitPrice(f,await marketPricePromise)}})}
 $('#share-fit').onclick=()=>exportFitImage(currentFit());
 $('#import-fit-image').onclick=()=>showImageImport({catalog,calculate:getCalculation,save:fit=>api('save',fit),onSaved:record=>{libraryFits.unshift(record);refreshLibraryRows();libraryMessage('已导入新装配：'+record.name)}});
 let libraryFits=[],pageMode=null,navigationVersion=0,lastWorkPage='library',libraryLoaded=false;const pageScrollStates=new Map();let editorFitDeleted=false;let fitClipboard=null;try{fitClipboard=JSON.parse(sessionStorage.getItem('fitlab-fit-clipboard'))}catch{}
@@ -279,7 +286,7 @@ async function navigateFitPage(){
   $('#library-list').innerHTML='<div class="library-empty">正在读取装配库…</div>';
   try{const fits=await api('library');if(version!==navigationVersion)return;libraryFits=fits.sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||''));
  const draft=JSON.parse(localStorage.getItem('fitlab-working-draft')||'null');
- if(draft&&byId(draft.shipId)){const stored=libraryFits.find(f=>f.id===draft.id),fields=['name','notes','shipId','slots','tags','skills','damageProfile','damageLocks','defenseMode','drones','cargo','scenario','scenarios','activeScenarioId'];if(!stored||fields.some(k=>JSON.stringify(stored[k])!==JSON.stringify(draft[k]))){libraryFits=libraryFits.filter(f=>!draft.id||f.id!==draft.id);libraryFits.unshift({...draft,_workingDraft:true})}}
+ if(draft&&byId(draft.shipId)){const stored=libraryFits.find(f=>f.id===draft.id),fields=['name','notes','shipId','slots','tags','skills','damageProfile','damageLocks','defenseMode','tacticalModeTypeId','loadoutPlan','implantPlan','fighterLoadout','drones','cargo','scenario','scenarios','activeScenarioId'];if(!stored||fields.some(k=>JSON.stringify(stored[k])!==JSON.stringify(draft[k]))){libraryFits=libraryFits.filter(f=>!draft.id||f.id!==draft.id);libraryFits.unshift({...draft,_workingDraft:true})}}
  libraryTree.update(libraryFits);drawFitLibrary();libraryLoaded=true;restorePageScroll(next)}
   catch(e){if(version===navigationVersion)$('#library-list').textContent='读取失败：'+e.message}
  }
@@ -324,7 +331,7 @@ function renderFitTags(){
 
 try{const draft=JSON.parse(localStorage.getItem('fitlab-working-draft'));if(draft&&byId(draft.shipId))restoreFit(draft);else{updateShip();scheduleAnalysis()}}catch{updateShip();scheduleAnalysis()}
 
-function renderEngineStats(){const scroll=$('.inspector').scrollTop;mountEngineStats($('#ship-stats'),report,ship,fitRecord.characterName,fitRecord.defenseMode||'hp',mode=>{fitRecord.defenseMode=mode;storeWorkingDraft();renderEngineStats()},catalog,fitRecord.damageProfile,editDamageProfile);$('.inspector').scrollTop=scroll;renderBayConfig();renderScenario();renderFitPrice()}
+function renderEngineStats(){if(report?.provider==='nengine'){const scroll=$('.inspector').scrollTop;mountNativeStats($('#ship-stats'),report,{mode:fitRecord.defenseMode||'hp',onMode:mode=>{fitRecord.defenseMode=mode;save();renderEngineStats()},onDamageEdit:editDamageProfile,catalog});$('.inspector').scrollTop=scroll;renderBayConfig();renderScenario();renderFitPrice();return;}const scroll=$('.inspector').scrollTop;mountEngineStats($('#ship-stats'),report,ship,fitRecord.characterName,fitRecord.defenseMode||'hp',mode=>{fitRecord.defenseMode=mode;storeWorkingDraft();renderEngineStats()},catalog,fitRecord.damageProfile,editDamageProfile);$('.inspector').scrollTop=scroll;renderBayConfig();renderScenario();renderFitPrice()}
 
 function editDamageProfile(){
  let amounts=damageTenths(fitRecord.damageProfile);
@@ -383,7 +390,7 @@ function editDamageProfile(){
   bar.onkeydown=e=>{const step=e.shiftKey?10:1;const value=({ArrowLeft:amounts[i]/10-step,ArrowDown:amounts[i]/10-step,ArrowRight:amounts[i]/10+step,ArrowUp:amounts[i]/10+step,Home:0,End:100})[e.key];if(value!==undefined){e.preventDefault();set(value)}};
  });
  $('#damage-uniform').onclick=()=>{const free=amounts.map((_,i)=>i).filter(i=>!locked[i]),budget=free.reduce((sum,i)=>sum+amounts[i],0);free.forEach((i,j)=>amounts[i]=Math.floor(budget/free.length)+(j<budget%free.length?1:0));syncPoint();preview()};
- $('#damage-apply').onclick=()=>{fitRecord.damageProfile=amounts.map(v=>v/1000);fitRecord.damageLocks=[...locked];fitRecord.defenseMode='targeted';storeWorkingDraft();renderEngineStats();flow.close()};
+ $('#damage-apply').onclick=()=>{fitRecord.damageProfile=amounts.map(v=>v/1000);fitRecord.damageLocks=[...locked];fitRecord.defenseMode='targeted';storeWorkingDraft();scheduleAnalysis();renderEngineStats();flow.close()};
  preview();
 }
 
@@ -391,12 +398,12 @@ function storeWorkingDraft(){try{localStorage.setItem('fitlab-working-draft',JSO
 
 navigateFitPage();
 
-function applyLoadout(plan){mutate(()=>{fitRecord.loadoutPlan=plan?structuredClone(plan):null;fitRecord.implantPlan=plan?.implants.map(x=>({typeId:x.typeId}))||[];},'脑插与增效剂方案已应用 · 加成待接入');}
+function applyLoadout(plan){mutate(()=>{fitRecord.loadoutPlan=plan?structuredClone(plan):null;fitRecord.implantPlan=plan?.implants.map(x=>({typeId:x.typeId}))||[];},'脑插与增效剂方案已应用 · 等待重新计算');}
 document.addEventListener('fitlab-use-loadout',e=>applyLoadout(e.detail));
 function renderImplantEntry(){
  let button=$('#implant-config');if(!button){button=document.createElement('button');button.id='implant-config';button.type='button';button.setAttribute('aria-haspopup','menu');$('#pilot').after(button);}
  const snapshot=fitRecord.loadoutPlan||(fitRecord.implantPlan?.length?{name:'自定义脑插',implants:fitRecord.implantPlan.map(x=>({...x,slot:implantCatalog.find(t=>t.id===x.typeId)?.slot})),boosters:[],customized:true}:null);
- button.textContent=(snapshot?.name||'脑插与增效剂')+' ▾';button.title='选择独立方案 · 加成待接入';
+ button.textContent=(snapshot?.name||'脑插与增效剂')+' ▾';button.title='选择独立方案 · 随当前装配计算';
  button.onclick=()=>openLoadoutPicker(button,{api,snapshot,onSelect:applyLoadout,onManage:()=>{location.hash='characters?from=fitting';document.dispatchEvent(new CustomEvent('fitlab-manage-loadout',{detail:{id:snapshot?.id,initial:snapshot,fromFit:true}}));}});
 }
 function renderPilot(){renderImplantEntry();
@@ -441,7 +448,7 @@ function addToBay(t,kind){
  mutate(()=>{const entries=fitRecord[kind]??=[];const e=entries.find(e=>e.item===t.id&&(kind!=='drones'||e.quantity<5));if(e){if(e.quantity>=100000)return;e.quantity++}else entries.push({item:t.id,quantity:1,...(kind==='drones'?{active:0}:{})})},'已放入'+t.name);
 }
 function selectBay(kind){filter=filter?.bay===kind?null:{bay:kind};$('#search').value='';renderSlots();renderTree()}
-function renderBayConfig(){const previous=document.querySelector('#fighter-config'),key=JSON.stringify(fitRecord.fighterUiMock||null);const reuse=previous&&previous._fit===fitRecord&&previous._key===key;if(reuse)previous.remove();renderBayConfigBody();if(reuse){document.querySelector('#bay-config').prepend(previous);return;}mountFighters(document.querySelector('#bay-config'),{ship,fit:fitRecord,mutate,say,browse:()=>{if(abyssalLibrary.active)document.querySelector('.equipment-browser-switch').click();filter={fighters:true};document.querySelector('#search').value='';renderTree()}});const mounted=document.querySelector('#fighter-config');if(mounted){mounted._fit=fitRecord;mounted._key=key;}}
+function renderBayConfig(){const previous=document.querySelector('#fighter-config'),key=JSON.stringify([fitRecord.fighterLoadout,report?.native?.fighterBay,reportVersion]);const reuse=previous&&previous._fit===fitRecord&&previous._key===key;if(reuse)previous.remove();renderBayConfigBody();if(reuse){document.querySelector('#bay-config').prepend(previous);return;}mountFighters(document.querySelector('#bay-config'),{ship,fit:fitRecord,report,mutate,say,validate:candidate=>getCalculation({...currentFit(),fighterLoadout:candidate.fighterLoadout}),browse:()=>{if(abyssalLibrary.active)document.querySelector('.equipment-browser-switch').click();filter={fighters:true};document.querySelector('#search').value='';renderTree()}});const mounted=document.querySelector('#fighter-config');if(mounted){mounted._fit=fitRecord;mounted._key=key;}}
 function renderBayConfigBody(){
  const root=$('#bay-config');if(!root)return;
  root.innerHTML=(fighterHull(ship)?['cargo']:['drones','cargo']).map(kind=>{
@@ -493,8 +500,8 @@ function renderBayConfigBody(){
   });
  });
 }
-function editSnapshot(){return {fighterUiMock:structuredClone(fitRecord.fighterUiMock||null),loadoutPlan:structuredClone(fitRecord.loadoutPlan||null),implantPlan:structuredClone(fitRecord.implantPlan||[]),tacticalModeTypeId:fitRecord.tacticalModeTypeId??null,slots:structuredClone(slots),drones:structuredClone(fitRecord.drones||[]),cargo:structuredClone(fitRecord.cargo||[])}}
-function applyEditSnapshot(s){fitRecord.fighterUiMock=s.fighterUiMock||null;fitRecord.loadoutPlan=s.loadoutPlan||null;fitRecord.implantPlan=s.implantPlan||[];fitRecord.tacticalModeTypeId=s.tacticalModeTypeId??null;slots=s.slots;fitRecord.drones=s.drones;fitRecord.cargo=s.cargo}
+function editSnapshot(){return {fighterLoadout:structuredClone(fitRecord.fighterLoadout||null),fighterUiMock:structuredClone(fitRecord.fighterUiMock||null),loadoutPlan:structuredClone(fitRecord.loadoutPlan||null),implantPlan:structuredClone(fitRecord.implantPlan||[]),tacticalModeTypeId:fitRecord.tacticalModeTypeId??null,slots:structuredClone(slots),drones:structuredClone(fitRecord.drones||[]),cargo:structuredClone(fitRecord.cargo||[])}}
+function applyEditSnapshot(s){fitRecord.fighterLoadout=s.fighterLoadout||null;fitRecord.fighterUiMock=s.fighterUiMock||null;fitRecord.loadoutPlan=s.loadoutPlan||null;fitRecord.implantPlan=s.implantPlan||[];fitRecord.tacticalModeTypeId=s.tacticalModeTypeId??null;slots=s.slots;fitRecord.drones=s.drones;fitRecord.cargo=s.cargo}
 
 function renderShipBadge(){
  const host=$('#ship');host.querySelector('.ship-tech-badge')?.remove();
@@ -553,7 +560,7 @@ function cancelInstallPreview(){
 }
 function applyPreviewValues(result,fit){
  const stats=document.createElement('div'),resources=document.createElement('div');
- mountEngineStats(stats,result,ship,fitRecord.characterName,fitRecord.defenseMode||'hp',()=>{},catalog,fitRecord.damageProfile,()=>{});
+ if(result.provider==='nengine')mountNativeStats(stats,result,{mode:fitRecord.defenseMode||'hp'});else mountEngineStats(stats,result,ship,fitRecord.characterName,fitRecord.defenseMode||'hp',()=>{},catalog,fitRecord.damageProfile,()=>{});
  renderResources(result,resources);
  const restore=[];
  previewRestore=()=>{document.dispatchEvent(new CustomEvent('fitlab-calculation-invalidated'));restore.reverse().forEach(fn=>fn());};
@@ -654,14 +661,14 @@ async function renderLibraryPrices(){
 
 function capturePageScroll(page){const selectors=page==='editor'?['.fitting','.inspector','#tree']:page==='library'?['#library-list','.library-tree-scroll']:['#character-list','#character-skills'];pageScrollStates.set(page,{windowY:window.scrollY,positions:selectors.map(selector=>({selector,top:$(selector)?.scrollTop||0,left:$(selector)?.scrollLeft||0}))})}
 function restorePageScroll(page){const state=pageScrollStates.get(page);if(!state)return;for(const {selector,top,left} of state.positions){const el=$(selector);if(el){el.scrollTop=top;el.scrollLeft=left}}window.scrollTo(0,state.windowY)}
-function scenarioStatusMarkup(){return '<small id="scenario-calculation-status" role="status" class="scenario-calculation-status '+analysisState+'">'+(analysisState==='pending'?'计算中<span class="calculation-dots" aria-hidden="true">...</span>':analysisState==='complete'?'计算完成':'计算失败')+'</small>'}
+function scenarioStatusMarkup(){if(report?.provider==='nengine')return '<small id="scenario-calculation-status" class="scenario-calculation-status">N 引擎情景待接入</small>';return '<small id="scenario-calculation-status" role="status" class="scenario-calculation-status '+analysisState+'">'+(analysisState==='pending'?'计算中<span class="calculation-dots" aria-hidden="true">...</span>':analysisState==='complete'?'计算完成':'计算失败')+'</small>'}
 function updateScenarioStatus(){
  const status=$('#scenario-calculation-status');if(status)status.outerHTML=scenarioStatusMarkup();
  $('.workspace').dataset.analysisState=analysisState;
  let badge=$('#scenario-context');if(!badge){badge=document.createElement('button');badge.id='scenario-context';badge.className='scenario-context';badge.setAttribute('aria-haspopup','menu');badge.setAttribute('aria-expanded','false');badge.setAttribute('aria-controls','scenario-quick-menu');$('.fit-actions').append(badge)}
  const state=scenarioPresets(fitRecord),name=state.scenarios.find(s=>s.id===state.activeScenarioId)?.name||'不应用情景';
  badge.textContent=(analysisState==='pending'?'计算中 · ':analysisState==='failed'?'计算失败 · ':'')+name+' ▾';
- badge.title='快速切换情景';
+ if(report?.provider==='nengine'&&state.activeScenarioId)badge.textContent='情景未接入 · 显示基准 ▾';badge.title='快速切换情景';
 }
 
 

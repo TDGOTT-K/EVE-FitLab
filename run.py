@@ -4,6 +4,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 
 def main():
+ if os.environ.get('FITLAB_CALCULATOR','nengine')=='nengine':
+  import server
+  from nengine_adapter import bridge
+  status=bridge().discover()
+  print('NEngine '+status['engineVersion']+' / independent UI copy',flush=True)
+  port=int(os.environ.get('FITLAB_API_PORT','5208'))
+  try:server.ThreadingHTTPServer(('127.0.0.1',port),server.Handler).serve_forever()
+  finally:bridge().close()
+  return
+
  sde = Path(os.environ.get('FITLAB_SDE_ROOT', ROOT / 'sde')).resolve()
  required = ['types.jsonl','groups.jsonl','typeDogma.jsonl','dogmaAttributes.jsonl','dogmaEffects.jsonl','categories.jsonl']
  missing = [name for name in required if not (sde / name).is_file()]

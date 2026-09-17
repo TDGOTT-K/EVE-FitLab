@@ -1,5 +1,5 @@
 // UI prototype mapping from NEngine native-tactical-modes.md (SDE 3503375).
-// Selection only: the legacy calculator does not apply these mode effects.
+// NEngine applies the selected mode through its native fitting graph.
 export const tacticalModes={
  34317:[34319,34323,34321],
  34562:[34564,34566,34570],
@@ -19,7 +19,7 @@ export function mountTacticalMode(root,fit,onChange){
  const modes=tacticalModes[fit.shipId];if(!modes)return;
  const selected=modes.indexOf(fit.tacticalModeTypeId);
  const row=document.createElement('div');row.className='tactical-mode-row';
- row.innerHTML='<span class="tactical-mode-label">'+modeSvg(-1)+'舰体模式</span><div class="tactical-mode-choice"><button type="button" id="tactical-mode-select" aria-label="舰体模式" aria-haspopup="listbox" aria-expanded="false">'+modeSvg(selected)+'<span>'+ (modeNames[selected]||'请选择模式')+'</span><span class="mode-arrow" aria-hidden="true">⌄</span></button></div><small title="本轮仅预览模式选择交互；当前计算尚未应用模式加成">加成待接入</small>';
+ row.innerHTML='<span class="tactical-mode-label">'+modeSvg(-1)+'舰体模式</span><div class="tactical-mode-choice"><button type="button" id="tactical-mode-select" aria-label="舰体模式" aria-haspopup="listbox" aria-expanded="false">'+modeSvg(selected)+'<span>'+ (modeNames[selected]||'请选择模式')+'</span><span class="mode-arrow" aria-hidden="true">⌄</span></button></div><small title="已接入 N 号引擎静态配装，选择后重新计算">静态模式</small>';
  const trigger=row.querySelector('button');
  function open(){
   if(dismissModeMenu){dismissModeMenu();return;}

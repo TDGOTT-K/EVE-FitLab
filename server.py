@@ -19,7 +19,11 @@ from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 ROOT=Path(os.environ.get('FITLAB_WEB_ROOT',Path(__file__).resolve().parent))
 STATE=storage_location.read_location(Path(os.environ.get('FITLAB_DEFAULT_STATE',ROOT/'state'))); STATE.mkdir(parents=True,exist_ok=True)
+os.environ.setdefault('FITLAB_NENGINE_STATE',str(STATE/'nengine-ui'))
 CATALOG=json.loads((ROOT/'data/full-catalog.json').read_text(encoding='utf-8'))
+if os.environ.get('FITLAB_CALCULATOR','nengine')=='nengine':
+ from nengine_catalog import refresh_catalog
+ CATALOG=refresh_catalog(CATALOG)
 TYPES={t['id']:t for t in CATALOG}
 METADATA=json.loads((ROOT/'data/item-metadata.json').read_text(encoding='utf-8'))
 LOCK=threading.RLock()
@@ -113,6 +117,13 @@ def validate_fit(f):
   if s.get('skillTypeId') not in TYPES or TYPES[s['skillTypeId']]['kind']!='skill' or type(s.get('level')) is not int or not 0<=s['level']<=5:raise ValueError('技能等级或类型无效')
  return f
 def analyze(f,resolve_links=True):
+ if os.environ.get("FITLAB_CALCULATOR", "nengine")=="nengine":
+  validate_fit(f)
+  from nengine_adapter import analyze as native_analyze
+  return native_analyze(f)
+ return analyze_legacy(f,resolve_links)
+
+def analyze_legacy(f,resolve_links=True):
  validate_fit(f);h=TYPES[f['shipId']];lines=[f"[{h['en']}, FitLab]"]
  fitted=[s for s in f['slots'] if s.get('item')]
  for s in fitted:
@@ -170,9 +181,19 @@ class Handler(SimpleHTTPRequestHandler):
  def do_GET(self):
   if os.environ.get('FITLAB_API_KEY') and self.headers.get('X-FitLab-Key')!=os.environ['FITLAB_API_KEY']:return self.reply({'error':'未授权'},403)
   try:
+   if self.path=='/api/catalog':return self.reply(CATALOG)
+   if self.path=='/api/engine-status':
+    from nengine_adapter import bridge
+    return self.reply({'provider':os.environ.get('FITLAB_CALCULATOR','nengine'),'status':bridge().discover()})
+   if self.path=='/api/fighters':
+    from nengine_adapter import fighter_catalog
+    return self.reply(fighter_catalog())
    if re.fullmatch(r'/api/items/\d+',self.path):
     item=TYPES.get(int(self.path.rsplit('/',1)[1]))
     if not item:return self.reply({'error':'物品不存在'},404)
+    if os.environ.get('FITLAB_CALCULATOR','nengine')=='nengine':
+     from nengine_catalog import item_metadata
+     return self.reply(item_metadata(item))
     attrs=[dict(METADATA['attributes'].get(str(k),{}),value=v) for k,v in item['attrs'].items()]
     return self.reply({'attributes':attrs,'units':METADATA['units'],'effects':[METADATA['effects'].get(str(i),{}) for i in item['effects']],'description':METADATA['descriptions'].get(str(item['id']),{})})
    if self.path=='/api/health':return self.reply({'ready':True})
