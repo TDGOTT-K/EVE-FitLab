@@ -94,6 +94,8 @@ export function mountEngineStats(root,report,ship,pilot,mode,onToggle,catalog=[]
   }
   heading.querySelector('small')?.remove();heading.append(row);
  }
+ const capacitorHeading=root.querySelector('.section-summary[aria-label="电容续航"]')?.closest('.panel-title');
+ if(capacitorHeading){const body=capacitorHeading.nextElementSibling;root.prepend(capacitorHeading,body);}
  root.insertAdjacentHTML('beforeend',extendedStats(report,catalog));
  root.querySelectorAll('[data-attack-mode]').forEach(b=>b.onclick=()=>document.dispatchEvent(new CustomEvent('fitlab-attack-mode',{detail:b.dataset.attackMode})));
  root.querySelectorAll('[data-defense-mode]').forEach(b=>b.onclick=()=>onToggle(b.dataset.defenseMode));
