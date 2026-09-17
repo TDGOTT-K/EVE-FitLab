@@ -27,6 +27,11 @@ export function installPlanBrowser(host,{catalogs,onInstall,onInstallSet,getImpl
   const groups=new Map();for(const t of items)for(const [parent,leaf] of t.benefitPaths||[['其他特殊效果','其他特殊效果']]){const benefit=leaf,category=parent==='训练与其他'?benefit:parent;if(!groups.has(category))groups.set(category,new Map());const leaves=groups.get(category);if(!leaves.has(benefit))leaves.set(benefit,[]);leaves.get(benefit).push(t);}
   const row=(t,benefit)=>{const labels=t.benefitLabels||[],summary=benefit&&benefit!=='白板'?benefit:labels.join(' · ');return '<button class="plan-browser-item" draggable="true" data-id="'+t.id+'" title="'+esc(t.benefitTooltip||labels.join(' · '))+'" aria-label="安装 '+esc(t.name)+'"><img loading="lazy" draggable="false" src="https://images.evetech.net/types/'+t.id+'/icon?size=64" alt=""><span>'+esc(t.name)+'<em class="plan-benefit">'+esc(summary)+'</em></span><small>'+ (isInstalled(kind,t.id)?'已装':'槽 '+t.slot)+'</small></button>';};
   const renderRows=(rows,benefit,prefix)=>{
+   if(kind==='boosters')return [false,true].map(hasEffects=>{
+    const entries=rows.filter(t=>Boolean(t.sideEffects?.length)===hasEffects);if(!entries.length)return '';
+    const key=prefix+'/side-effects/'+hasEffects,open=Boolean(q)||expanded.has(key);
+    return '<details class="booster-risk-group" data-key="'+esc(key)+'" '+(open?'open':'')+'><summary>'+(hasEffects?'有副作用':'无副作用')+'<small>'+entries.length+'</small></summary>'+(open?entries.map(t=>row(t,benefit)).join(''):'')+'</details>';
+   }).join('');
    if(kind!=='implants'||slot)return rows.map(t=>row(t,benefit)).join('');
    const grouped=new Map();for(const t of rows){const set=byItem.get(t.id);if(set){if(!grouped.has(set.key))grouped.set(set.key,[]);grouped.get(set.key).push(t);}}
    const done=new Set();return rows.map(t=>{const set=byItem.get(t.id),members=set&&grouped.get(set.key);if(!set||members.length<2)return row(t,benefit);if(done.has(set.key))return '';done.add(set.key);
