@@ -427,3 +427,9 @@ html[lang=en] body{font-family:'Segoe UI',sans-serif}html[lang=ja] body{font-fam
 .cap-flow-explanation .explain-line{gap:12px;font-size:10px;padding:4px 0}
 .cap-flow-explanation .explain-line>b{max-width:65%;overflow-wrap:anywhere}
 .cap-flow-explanation .explain-conditions{padding:5px 12px 8px;border-top:1px solid var(--line)}
+
+.panel-title .section-summary{margin-left:auto;min-width:0;text-align:right;font-size:12px;font-weight:600;line-height:1.5;font-variant-numeric:tabular-nums;color:var(--accent);white-space:normal;overflow-wrap:anywhere}
+.panel-title .section-summary b{font-weight:600}
+.panel-title .section-summary .summary-unit{font-size:10px;font-weight:400;color:var(--muted);white-space:nowrap}
+.panel-title:has(.section-summary){gap:10px}
+.panel-title:has(>small>.section-summary)>small{min-width:0;text-align:right}
