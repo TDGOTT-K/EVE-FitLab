@@ -433,3 +433,13 @@ html[lang=en] body{font-family:'Segoe UI',sans-serif}html[lang=ja] body{font-fam
 .panel-title .section-summary .summary-unit{font-size:10px;font-weight:400;color:var(--muted);white-space:nowrap}
 .panel-title:has(.section-summary){gap:10px}
 .panel-title:has(>small>.section-summary)>small{min-width:0;text-align:right}
+
+.scenario-quick-menu{position:fixed;inset:auto;margin:0;padding:5px;width:240px;max-width:calc(100vw - 16px);max-height:calc(100vh - 16px);overflow:auto;background:var(--panel);color:var(--text);border:1px solid var(--line);box-shadow:0 8px 28px #0008;font-size:12px}
+.scenario-quick-title{padding:6px 9px;font-size:10px;color:var(--muted)}
+.scenario-quick-menu>button{display:flex;align-items:center;gap:8px;width:100%;padding:9px;border:0;background:transparent;text-align:left;font-size:12px;color:var(--text);white-space:normal;overflow-wrap:anywhere}
+.scenario-quick-menu>button:hover,.scenario-quick-menu>button:focus-visible{background:var(--row);outline:1px solid var(--accent);outline-offset:-1px}
+.scenario-quick-menu>button[aria-checked="true"]{color:var(--accent);background:var(--row)}
+.scenario-quick-check{width:14px;flex-shrink:0}
+.scenario-quick-menu>button.scenario-quick-edit{margin-top:5px;border-top:1px solid var(--line);color:var(--muted)}
+.scenario-quick-error{padding:6px 9px;color:#ef8585;font-size:11px}
+.scenario-quick-menu[aria-busy="true"]{opacity:.7}

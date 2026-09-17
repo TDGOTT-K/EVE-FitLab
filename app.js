@@ -1,3 +1,4 @@
+import {openScenarioQuickMenu} from './scenario-quick-menu.js';
 import {numberAttributes,scenarioDetail,explanationAttributes,metricText} from './scenario-display.js';
 import {openScenarioEditor} from './scenario-editor.js';
 import {scenarioPresets,scenarioFields,withoutScenario} from './scenario-presets.js';
@@ -412,6 +413,7 @@ function renderShipBadge(){
 }
 
 function renderScenario(){
+ updateScenarioStatus();
  $('#scenario-controls')?.remove();
  const state=scenarioPresets(fitRecord);
  $('#ship-stats').insertAdjacentHTML('beforeend','<section id="scenario-controls"><div class="panel-title scenario-heading"><span>情景设置</span><button id="edit-scenario">设置</button></div><div class="scenario-inline"><select id="active-scenario" aria-label="应用情景"><option value="">不应用情景</option>'+state.scenarios.map(s=>'<option value="'+esc(s.id)+'">'+esc(s.name)+'</option>').join('')+'</select><small>仅本地 · 静态估算</small></div></section>');
@@ -426,6 +428,7 @@ function renderScenario(){
   scheduleAnalysis();renderScenario();say(isNew?'已保存新装配与情景':'情景已保存并应用 · 装配修改仍独立保存');
  }
  $('#active-scenario').onchange=async e=>{const input=e.target;input.disabled=true;try{await commit(scenarioFields({...state,activeScenarioId:input.value||null}))}catch(error){say(error.message);input.value=state.activeScenarioId||'';input.disabled=false}};
+ $('#scenario-context').onclick=()=>openScenarioQuickMenu($('#scenario-context'),{state:scenarioPresets(fitRecord),onSelect:id=>commit(scenarioFields({...scenarioPresets(fitRecord),activeScenarioId:id})),onEdit:()=>$('#edit-scenario')?.click()});
  $('#edit-scenario').onclick=async()=>{try{
   const fits=await api('library');openScenarioEditor({fit:currentFit(),fits,shipName:id=>byId(id)?.name||'未知舰船',calculate:getCalculation,onSave:commit});
  }catch(e){say(e.message)}};
@@ -522,10 +525,10 @@ function scenarioStatusMarkup(){return '<small id="scenario-calculation-status" 
 function updateScenarioStatus(){
  const status=$('#scenario-calculation-status');if(status)status.outerHTML=scenarioStatusMarkup();
  $('.workspace').dataset.analysisState=analysisState;
- let badge=$('#scenario-context');if(!badge){badge=document.createElement('button');badge.id='scenario-context';badge.className='scenario-context';badge.onclick=()=>$('#edit-scenario')?.click();$('.fit-actions').append(badge)}
+ let badge=$('#scenario-context');if(!badge){badge=document.createElement('button');badge.id='scenario-context';badge.className='scenario-context';badge.setAttribute('aria-haspopup','menu');badge.setAttribute('aria-expanded','false');badge.setAttribute('aria-controls','scenario-quick-menu');$('.fit-actions').append(badge)}
  const state=scenarioPresets(fitRecord),name=state.scenarios.find(s=>s.id===state.activeScenarioId)?.name||'不应用情景';
- badge.textContent=(analysisState==='pending'?'计算中 · ':analysisState==='failed'?'计算失败 · ':'')+name;
- badge.title='工作区数值环境；红色表示比无情景降低，绿色表示升高';
+ badge.textContent=(analysisState==='pending'?'计算中 · ':analysisState==='failed'?'计算失败 · ':'')+name+' ▾';
+ badge.title='快速切换情景';
 }
 
 
