@@ -8,8 +8,16 @@ const icon=t=>t?'<img loading="lazy" draggable="false" src="https://images.evete
 
 export function installLoadoutManager(host,{api}){
  let plans=[],draft=null,dirty=false,busy=false,drag=null,returnToFit=false;
- host.innerHTML='<div class="plan-workspace"><div class="plan-sidebar"><aside class="plan-library"><div class="plan-library-head"><b>方案库</b><button data-new>＋ 新建</button></div><input class="plan-search" aria-label="搜索方案" placeholder="搜索方案或分组"><div class="plan-list" tabindex="0" aria-label="脑插与增效剂方案列表"></div><small>Ctrl+C / V 复制粘贴</small></aside><aside class="plan-browser"></aside></div><section class="plan-editor"><div class="plan-toolbar"></div><p class="plan-message" role="status"></p><div class="plan-content"></div></section></div>';
+ host.innerHTML='<div class="plan-workspace"><aside class="plan-library"><div class="plan-library-head"><button data-toggle-library aria-expanded="true" aria-controls="plan-library-body"><span class="plan-library-chevron">▾</span> 方案库</button><span class="plan-library-current"></span><button data-new>＋ 新建</button></div><div id="plan-library-body"><input class="plan-search" aria-label="搜索方案" placeholder="搜索方案或分组"><div class="plan-list" tabindex="0" aria-label="脑插与增效剂方案列表"></div><small>Ctrl+C / V 复制粘贴</small></div></aside><aside class="plan-browser"></aside><section class="plan-editor"><div class="plan-toolbar"></div><p class="plan-message" role="status"></p><div class="plan-content"></div></section></div>';
  const $=s=>host.querySelector(s),message=text=>$('.plan-message').textContent=text;
+ let libraryCollapsed=false;try{libraryCollapsed=localStorage.getItem('fitlab-plan-library-collapsed')==='true'}catch{}
+ function updateLibraryFold(){
+  $('#plan-library-body').hidden=libraryCollapsed;$('.plan-workspace').classList.toggle('library-collapsed',libraryCollapsed);
+  $('[data-toggle-library]').setAttribute('aria-expanded',String(!libraryCollapsed));$('.plan-library-chevron').textContent=libraryCollapsed?'▸':'▾';
+ }
+ $('[data-toggle-library]').onclick=()=>{libraryCollapsed=!libraryCollapsed;updateLibraryFold();try{localStorage.setItem('fitlab-plan-library-collapsed',String(libraryCollapsed))}catch{}};
+ updateLibraryFold();
+
  function installItem(kind,t){
   if(busy)return;
   if(!draft){draft={name:'新方案',folder:'',implants:[],boosters:[]};dirty=true;draw();}
@@ -26,8 +34,9 @@ export function installLoadoutManager(host,{api}){
  const cache=()=>{try{if(dirty&&draft)sessionStorage.setItem('fitlab-loadout-draft',JSON.stringify(draft));else sessionStorage.removeItem('fitlab-loadout-draft')}catch{}};
  try{const saved=JSON.parse(sessionStorage.getItem('fitlab-loadout-draft')||'null');if(saved?.implants&&saved?.boosters){draft=saved;dirty=true;}}catch{}
  const guard=async()=>!dirty||await confirm('当前方案有未保存的修改，放弃这些修改？');
- function changed(){dirty=true;cache();$('.plan-dirty').textContent='未保存';}
+ function changed(){dirty=true;$('.plan-library-current').textContent=draft?.name||'';cache();$('.plan-dirty').textContent='未保存';}
  function drawList(){
+  $('.plan-library-current').textContent=draft?.name||'';
   const q=$('.plan-search').value.trim().toLowerCase(),groups=[...new Set(plans.map(p=>p.folder||''))].sort();
   $('.plan-list').innerHTML=groups.map(folder=>{const rows=plans.filter(p=>(p.folder||'')===folder&&(p.name+' '+folder).toLowerCase().includes(q));return rows.length?'<div class="plan-group"><small>'+esc(folder||'未分组')+'</small>'+rows.map(p=>'<button class="plan-entry" data-plan="'+p.id+'" aria-pressed="'+(draft?.id===p.id)+'"><span>'+esc(p.name)+'</span><small>脑插 '+p.implants.length+' · 增效剂 '+p.boosters.length+'</small></button>').join('')+'</div>':'';}).join('')||'<p class="pilot-empty">'+(plans.length?'没有匹配方案':'还没有方案，点击“新建”开始')+'</p>';
   $('.plan-list').querySelectorAll('[data-plan]').forEach(b=>b.onclick=async()=>{if(busy||!await guard())return;draft=structuredClone(plans.find(p=>p.id===b.dataset.plan));dirty=false;message('');draw();$('.plan-list').focus({preventScroll:true});});
