@@ -499,3 +499,12 @@ label:has(>input[type="checkbox"]:disabled){cursor:default;color:var(--muted)}
 .tactical-mode-choice select{padding-left:34px}
 .tactical-mode-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:17px;height:17px;fill:none;stroke:var(--accent);stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
 .tactical-mode-icon[data-mode="-1"]{stroke:var(--muted)}
+
+.tactical-mode-label{display:flex;align-items:center;gap:7px;white-space:nowrap;font-size:12px}
+.tactical-mode-label svg,.tactical-mode-choice button svg,.tactical-mode-menu svg{width:17px;height:17px;flex-shrink:0;fill:none;stroke:var(--accent);stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}
+.tactical-mode-choice>button{display:flex;align-items:center;gap:8px;width:100%;padding:6px 10px;background:var(--panel);color:var(--accent);font-size:12px;text-align:left}
+.mode-arrow,.mode-check{margin-left:auto}
+.tactical-mode-menu{position:fixed;inset:auto;margin:0;padding:4px;border:1px solid var(--line);background:var(--panel);color:var(--text);box-shadow:0 8px 24px #0008;max-width:calc(100vw - 16px)}
+.tactical-mode-menu>button{display:flex;align-items:center;gap:9px;width:100%;padding:9px 10px;border:0;font-size:12px;text-align:left}
+.tactical-mode-menu>button[aria-selected="true"]{color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--panel))}
+.tactical-mode-menu>button:hover,.tactical-mode-menu>button:focus-visible{background:var(--row);outline:1px solid var(--accent);outline-offset:-1px}
