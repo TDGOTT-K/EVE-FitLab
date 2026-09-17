@@ -1,3 +1,4 @@
+import {installPlanResize} from './plan-resize.js';
 import {installPlanBrowser} from './plan-browser.js';
 import {implantCatalog} from './implant-catalog.js';
 import {boosterCatalog} from './booster-catalog.js';
@@ -19,6 +20,7 @@ export function installLoadoutManager(host,{api}){
  }
  $('[data-toggle-library]').onclick=()=>{libraryCollapsed=!libraryCollapsed;updateLibraryFold();try{localStorage.setItem('fitlab-plan-library-collapsed',String(libraryCollapsed))}catch{}};
  updateLibraryFold();
+ installPlanResize($('.plan-workspace'));
 
  function installItem(kind,t){
   if(busy)return;
