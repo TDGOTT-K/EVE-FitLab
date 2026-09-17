@@ -13,7 +13,7 @@ export function installAbyssalLibrary({host,catalog,api,render,onLocate,onInfo})
   switchButton.setAttribute('aria-label',label);switchButton.title=label;switchButton.classList.toggle('enter-abyss',!active);
  }
  async function load(){if(loading)return;loading=true;error='';try{records=await api('abyssal-instances');loaded=true}catch(e){error=e.message}finally{loading=false;if(active)render()}}
- function switchTo(value){if(active===value)return;views[active?'abyss':'normal']={query:search.value,scroll:root.scrollTop};active=value;footer.textContent=active?'点击编辑实例 · 右键管理':normalHint;const view=views[active?'abyss':'normal'];search.value=view.query;title.textContent=active?'深渊装备库':'装备浏览器';updateSwitch();render();root.scrollTop=view.scroll;if(active)load();}
+ function switchTo(value){if(active===value)return;views[active?'abyss':'normal']={query:search.value,scroll:root.scrollTop};active=value;host.classList.toggle('abyssal-skin',active);footer.textContent=active?'点击编辑实例 · 右键管理':normalHint;const view=views[active?'abyss':'normal'];search.value=view.query;title.textContent=active?'深渊装备库':'装备浏览器';updateSwitch();render();root.scrollTop=view.scroll;if(active)load();}
  switchButton.onclick=()=>switchTo(!active);
  const path=t=>[...t.path,t.meta||'科技 I'];
  function reveal(t){let key='';for(const part of path(t)){key+='/'+part;open.add(key)}open.add('base/'+t.id);located=t.id;}
