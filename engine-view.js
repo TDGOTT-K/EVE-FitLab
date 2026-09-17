@@ -86,6 +86,12 @@ export function mountEngineStats(root,report,ship,pilot,mode,onToggle,catalog=[]
   const row=heading&&[...heading.nextElementSibling.querySelectorAll('.stat-row')].find(r=>r.querySelector(':scope > span')?.textContent===label);
   if(!row)continue;
   row.className='section-summary';row.setAttribute('aria-label',label);row.querySelector(':scope > span').remove();
+  if(section==='电容'){
+   const value=row.querySelector('b');
+   value.classList.remove('scenario-increased','scenario-decreased');
+   value.classList.add(cap?.status==='stable'?'cap-stable':cap?.status==='depletes'?'cap-depletes':'cap-undetermined');
+   value.removeAttribute('title');
+  }
   heading.querySelector('small')?.remove();heading.append(row);
  }
  root.insertAdjacentHTML('beforeend',extendedStats(report,catalog));

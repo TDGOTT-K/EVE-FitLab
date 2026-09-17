@@ -443,3 +443,7 @@ html[lang=en] body{font-family:'Segoe UI',sans-serif}html[lang=ja] body{font-fam
 .scenario-quick-menu>button.scenario-quick-edit{margin-top:5px;border-top:1px solid var(--line);color:var(--muted)}
 .scenario-quick-error{padding:6px 9px;color:#ef8585;font-size:11px}
 .scenario-quick-menu[aria-busy="true"]{opacity:.7}
+
+.section-summary b.cap-stable{color:#75c99e}
+.section-summary b.cap-depletes{color:#ef8585}
+.section-summary b.cap-undetermined{color:var(--muted)}
