@@ -379,3 +379,5 @@ html[lang=en] body{font-family:'Segoe UI',sans-serif}html[lang=ja] body{font-fam
 .scenario-error{color:var(--danger);padding:8px 16px;margin:0;border-top:1px solid var(--line)}.scenario-error:empty{display:none}.scenario-inline{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px}.scenario-inline select{min-width:0;flex:1;background:var(--bg);color:var(--text);border:1px solid var(--line);padding:8px}.scenario-inline small{width:100%;color:var(--muted)}
 .scenario-source{cursor:grab;fill:var(--text)}.scenario-source text{font-size:11px;paint-order:stroke;stroke:var(--bg);stroke-width:3px}.scenario-source.support text{fill:var(--accent)}.scenario-source.hostile text{fill:var(--danger)}
 @media(max-width:640px){.scenario-commandbar{gap:2px;padding:8px}.scenario-commandbar>b{display:none}.scenario-commandbar [data-save]{padding:4px 6px;margin-left:0;font-size:11px}.scenario-commandbar button{min-width:28px;padding:3px 5px}}
+
+.canvas-scale.velocity-scale{color:var(--hot)}.canvas-scale.velocity-scale i{border-color:var(--hot)}
