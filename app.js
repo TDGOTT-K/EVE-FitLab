@@ -1,3 +1,4 @@
+import {installationLimitReason} from './installation-limits.js';
 import {openScenarioQuickMenu} from './scenario-quick-menu.js';
 import {numberAttributes,scenarioDetail,explanationAttributes,metricText} from './scenario-display.js';
 import {openScenarioEditor} from './scenario-editor.js';
@@ -88,18 +89,25 @@ function applyCandidate(slot,item){
  slot.state=item.kind==='subsystem'?'Online':replacing&&state==='Offline'?'Offline':replacing&&state==='Online'?'Online':item.canActivate?(state==='Overload'&&item.canOverload?'Overload':'Active'):'Online';
  slot.online=slot.state!=='Offline';
 }
+function installLimit(t,key){
+ if(t?.kind==='ammo')return '';
+ if(reportVersion!==analysisVersion||analysisState!=='complete')return '装配计算中，请完成后再安装';
+ return installationLimitReason(t,key,slots,byId,report?.attributes);
+}
+function shipInstallTarget(t){return slots.find(s=>!s.item&&canInstall(t,s.key))?.key;}
 function install(t,key){
  if(!t)return;
  if(!key&&(filter?.bay||t.kind==='drone')){addToBay(t,filter?.bay||'drones');return;}
  key=key||installTarget(t);
  if(!key||!canInstall(t,key)){say(selectedSlots.size>1?'请先选择一个目标槽位，或拖到指定槽位':'无法安装：请选择兼容槽位，或检查弹药组、尺寸及空槽');return;}
+ const limitReason=installLimit(t,key);if(limitReason){say('无法安装：'+limitReason);return;}
  mutate(()=>applyCandidate(slots.find(s=>s.key===key),t),`已${t.kind==='ammo'?'装填':'安装'} ${t.name}`);
 }
 function loadAll(t){const target=slots.filter(s=>acceptsAmmo(byId(s.item),t));if(!target.length){say('没有可使用这种弹药的已装备模块');return}mutate(()=>target.forEach(s=>s.ammo=t.id),`已为 ${target.length} 件兼容装备装填 ${t.name}`)}
 function renderTree(){cancelInstallPreview();const root=$('#tree'),scroll=root.scrollTop,closed=new Set();const selected=filter&&slots.find(s=>s.key===filter.key);$('#filter').innerHTML=selected?`<button aria-label="清除装备筛选">${filter.ammo?'兼容弹药 · '+esc(byId(selected.item)?.name||''):labels[selected.kind]+' · 槽位 '+(Number(selected.key.split('-')[1])+1)}　×</button>`:'';if(selected)$('#filter button').onclick=()=>{filter=null;renderSlots();renderTree()};if(filter?.bay){$('#filter').innerHTML='<button aria-label="清除装备筛选">'+(filter.bay==='drones'?'无人机库':'货舱')+' ×</button>';$('#filter button').onclick=()=>{filter=null;renderSlots();renderTree()}}const q=$('#search').value.trim().toLowerCase();if(q!==treeSearchQuery){searchCollapsed.clear();treeSearchQuery=q}const items=catalog.filter(t=>!['ship','skill'].includes(t.kind)&&(!filter?.bay||acceptsBay(t,filter.bay))&&(t.kind!=='subsystem'||t.attrs[1380]===ship.id)&&(!selected||(filter.ammo?acceptsAmmo(byId(selected.item),t):canInstall(t,selected.key)))&&(!q||(matchesName(t,q)||t.path.some(p=>tLabel(p).toLowerCase().includes(q))||t.path.join(' ').toLowerCase().includes(q))));$('#count').textContent=`${items.length} 件`;const tree={};for(const t of [...items].sort((a,b)=>(a.kind==='ammo')-(b.kind==='ammo'))){let n=tree;for(const p of [...t.path,...(t.kind==='ammo'?[]:[t.meta||'科技 I'])]){n[p]??={};n=n[p]}(n._items??=[]).push(t)}
  const branch=(n,path='')=>Object.entries(n).sort(([a],[b])=>(a==='未列入市场')-(b==='未列入市场')).map(([k,v])=>k==='_items'?v.map(t=>`<div class="item" draggable="true" tabindex="0" role="button" data-id="${t.id}" aria-label="${esc(t.name)}">${img(t)}<span>${esc(t.name)}</span><em>${t.en.endsWith(' II')?'II':''}</em></div>`).join(''):(()=>{const key=path+'/'+k,open=q?!searchCollapsed.has(key):treeOpen.has(key);return `<details data-path="${esc(key)}" ${open?'open':''}><summary>${marketIcons[key]?`<img class="tree-icon" src="${marketIcons[key]}" alt="">`:''}${esc(k)}</summary>${open?branch(v,key):''}</details>`})()).join('');root.innerHTML=items.length?branch(tree):'<div class="hint">没有匹配物品。试试清除搜索或筛选标签。</div>';root.scrollTop=scroll;
  root.querySelectorAll('summary').forEach(summary=>summary.onclick=e=>{e.preventDefault();const key=summary.parentElement.dataset.path;if(q){if(searchCollapsed.has(key))searchCollapsed.delete(key);else searchCollapsed.add(key)}else{if(treeOpen.has(key))treeOpen.delete(key);else treeOpen.add(key)}renderTree()});
- root.querySelectorAll('.item').forEach(el=>{const t=byId(el.dataset.id);el.onpointerenter=()=>{if(!dragged&&!filter?.bay&&t.kind!=='drone')queueInstallPreview(installTarget(t),t.id,'hover')};el.onpointerleave=()=>{if(!dragged)cancelInstallPreview()};el.onfocus=()=>{if(!dragged&&!filter?.bay&&t.kind!=='drone')queueInstallPreview(installTarget(t),t.id,'hover')};el.onblur=()=>{if(!dragged)cancelInstallPreview()};el.ondblclick=()=>install(t);el.onkeydown=e=>{if(e.key==='Enter')install(t)};el.oncontextmenu=e=>openMenu(e,t.id,'item');el.ondragstart=e=>{cancelInstallPreview();dragged=t.id;e.dataTransfer.setData('text/plain',String(t.id));e.dataTransfer.effectAllowed='copy';document.querySelectorAll('.slot').forEach(slot=>slot.classList.add(canInstall(t,slot.dataset.key)?'compatible':'incompatible'));const n=slots.filter(s=>acceptsAmmo(byId(s.item),t)).length;if(n){$('#ship').classList.add('compatible');say(`拖到舰船图像，为 ${n} 件兼容装备装填`)}else say('拖入高亮槽位安装；暗色槽位不兼容')};el.ondragend=clearDrag});}
+ root.querySelectorAll('.item').forEach(el=>{const t=byId(el.dataset.id);el.onpointerenter=()=>{if(!dragged&&!filter?.bay&&t.kind!=='drone')queueInstallPreview(installTarget(t),t.id,'hover')};el.onpointerleave=()=>{if(!dragged)cancelInstallPreview()};el.onfocus=()=>{if(!dragged&&!filter?.bay&&t.kind!=='drone')queueInstallPreview(installTarget(t),t.id,'hover')};el.onblur=()=>{if(!dragged)cancelInstallPreview()};el.ondblclick=()=>install(t);el.onkeydown=e=>{if(e.key==='Enter')install(t)};el.oncontextmenu=e=>openMenu(e,t.id,'item');el.ondragstart=e=>{cancelInstallPreview();dragged=t.id;e.dataTransfer.setData('text/plain',String(t.id));e.dataTransfer.effectAllowed='copy';document.querySelectorAll('.slot').forEach(slot=>slot.classList.add(canInstall(t,slot.dataset.key)?'compatible':'incompatible'));const shipKey=shipInstallTarget(t);if(shipKey&&!installLimit(t,shipKey))$('#ship').classList.add('compatible');const n=slots.filter(s=>acceptsAmmo(byId(s.item),t)).length;if(n){$('#ship').classList.add('compatible');say(`拖到舰船图像，为 ${n} 件兼容装备装填`)}else say('拖入槽位替换，或拖到舰船图片安装到空槽')};el.ondragend=clearDrag});}
 function clearDrag(){cancelInstallPreview();dragged=null;document.querySelectorAll('.compatible,.incompatible').forEach(el=>el.classList.remove('compatible','incompatible'))}
 function magazine(t,a){return t.capacity!=null&&a.volume>0?Math.floor(t.capacity/a.volume+1e-8):'—'}
 function renderResources(displayReport=report,host=$('#resources')){if(!displayReport){host.innerHTML='<p class="profile-note">等待计算服务…</p>';return}const a=displayReport.attributes;
@@ -165,14 +173,25 @@ function openMenu(e,id,type){e.preventDefault();e.stopPropagation();menuOrigin=e
 $('#menu').onkeydown=e=>{const buttons=[...$('#menu').querySelectorAll('button:not(:disabled)')];let i=buttons.indexOf(document.activeElement);if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();buttons[(i+(e.key==='ArrowDown'?1:-1)+buttons.length)%buttons.length].focus()}if(e.key==='Home'){e.preventDefault();buttons[0].focus()}if(e.key==='End'){e.preventDefault();buttons.at(-1).focus()}if(e.key==='Tab')closeMenu()};
 document.addEventListener('pointerdown',e=>{if(!e.target.closest('#menu'))closeMenu(false)});window.addEventListener('resize',()=>closeMenu(false));document.addEventListener('wheel',e=>{if(!e.target.closest('#menu'))closeMenu(false)},{passive:true});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('#menu').hidden)closeMenu();else closeInfo();clearDrag()}if((e.ctrlKey||e.metaKey)&&['z','y'].includes(e.key.toLowerCase())&&!e.target.closest('input,textarea,[contenteditable=true]')&&!$('#editor-page').hidden){e.preventDefault();if(e.key.toLowerCase()==='y'||e.shiftKey)redo();else undo()}if(e.key==='ContextMenu'||e.shiftKey&&e.key==='F10'){const item=e.target.closest('.item'),slot=e.target.closest('.slot');if(item)openMenu(e,item.dataset.id,'item');else if(slot){if(selectedSlots.has(slot.dataset.key)&&selectedSlots.size>1&&!e.target.closest('.ammo'))openBatchMenu(e,[...selectedSlots],'已选 '+selectedSlots.size+' 个槽位');else openMenu(e,slot.dataset.key,e.target.closest('.ammo')?'ammo':'slot')}else if(e.target.id==='ship')openMenu(e,null,'ship')}});
-$('#ship').oncontextmenu=e=>openMenu(e,null,'ship');$('#ship').ondragover=e=>{e.preventDefault();e.dataTransfer.dropEffect=slots.some(s=>acceptsAmmo(byId(s.item),byId(dragged)))?'copy':'none'};$('#ship').ondrop=e=>{e.preventDefault();loadAll(byId(e.dataTransfer.getData('text/plain')));clearDrag()};
+$('#ship').oncontextmenu=e=>openMenu(e,null,'ship');
+$('#ship').ondragover=e=>{
+ e.preventDefault();const item=byId(dragged),key=shipInstallTarget(item);
+ const allowed=item?.kind==='ammo'?slots.some(s=>acceptsAmmo(byId(s.item),item)):!!key&&!installLimit(item,key);
+ e.dataTransfer.dropEffect=allowed?'copy':'none';$('#ship').classList.toggle('compatible',allowed);
+};
+$('#ship').ondrop=e=>{
+ e.preventDefault();e.stopPropagation();const item=byId(e.dataTransfer.getData('text/plain'));
+ if(item?.kind==='ammo')loadAll(item);
+ else if(item){const key=shipInstallTarget(item);if(key)install(item,key);else say('无法安装：没有兼容空槽，拖到具体槽位可替换装备');}
+ clearDrag();
+};
 $('#search').oninput=renderTree;$('#theme').onclick=()=>{document.body.classList.toggle('light');$('#theme').textContent=document.body.classList.contains('light')?'☾ 夜间':'☼ 日间'};
 renderSlots();renderTree();renderResources();renderShipStats();
 
 installExplanations();
 
 async function api(path,body){const response=await fetch('/api/'+path,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await response.json();if(!response.ok)throw Error(data.error||'请求失败');return data}
-function updateShip(){ship=byId(fitRecord.shipId);counts.subsystem=ship.group===963?4:0;for(const [kind,id] of Object.entries({high:14,mid:13,low:12,rig:1137}))counts[kind]=ship.attrs[id]||0;$('.title h1').textContent=fitRecord.name;renderFitTags();$('#ship .ship-label').textContent=ship.en;renderShipBadge();$('#ship img').src=`https://images.evetech.net/types/${ship.id}/render?size=512`;$('#ship img').alt=ship.name;$('#ship .ship-caption').innerHTML=`${esc(ship.name)}<small>拖入弹药 · 装填全部兼容装备</small>`;renderPilot();}
+function updateShip(){ship=byId(fitRecord.shipId);counts.subsystem=ship.group===963?4:0;for(const [kind,id] of Object.entries({high:14,mid:13,low:12,rig:1137}))counts[kind]=ship.attrs[id]||0;$('.title h1').textContent=fitRecord.name;renderFitTags();$('#ship .ship-label').textContent=ship.en;renderShipBadge();$('#ship img').src=`https://images.evetech.net/types/${ship.id}/render?size=512`;$('#ship img').alt=ship.name;$('#ship .ship-caption').innerHTML=`${esc(ship.name)}<small>拖入装备安装 · 拖入弹药批量装填</small>`;renderPilot();}
 function restoreFit(record){editorFitDeleted=false;cancelInstallPreview();selectedSlots.clear();selectionAnchor=null;analysisVersion++;report=null;fitRecord={...structuredClone(record),...scenarioFields(scenarioPresets(record))};fitRecord.drones=splitDroneStacks(fitRecord.drones||[]);updateShip();slots=fresh().map(s=>record.slots?.find(x=>x.key===s.key)||s);for(const s of record.slots||[])if(s.item&&!slots.some(x=>x.key===s.key))slots.push(structuredClone(s));filter=ship.group===963?{key:'subsystem-0',ammo:false}:null;history=[];redoHistory=[];$('#undo').disabled=true;$('#redo').disabled=true;$('#search').value='';treeOpen.clear();renderSlots();renderTree();renderResources();renderShipStats();save()}
 let saving=Promise.resolve();
 function persistFit(){const task=saving.catch(()=>{}).then(writeFit);saving=task;return task}
@@ -531,6 +550,7 @@ function queueInstallPreview(key,id=dragged,source='drag'){
   const banner=(status)=>{host.innerHTML='<b>'+esc(title)+'</b><small>'+esc(status)+'</small>';};
   if(!slot||!canInstall(item,key)){banner(selectedSlots.size>1?'请选择单个目标槽位，或拖入指定槽位':'没有兼容目标，请先选择槽位或腾出空槽');return;}
   if(reportVersion!==version||analysisState!=='complete'){banner('等待当前装配计算完成，再悬停预览');return;}
+  const limitReason=installLimit(item,key);if(limitReason){banner('无法安装：'+limitReason);return;}
   const previousAmmo=slot.ammo;applyCandidate(slot,item);
   const ammoNote=item.kind!=='ammo'&&previousAmmo&&!slot.ammo?' · 原弹药不兼容，将卸下':'';
   banner('预览计算中…'+ammoNote);

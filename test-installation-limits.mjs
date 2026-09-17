@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {installationLimitReason as reason} from './installation-limits.js';
+const gun={id:1,kind:'high',group:10,effects:[42],attrs:{}},launcher={id:2,kind:'high',group:20,effects:[40],attrs:{}},special={id:3,kind:'low',group:30,attrs:{1544:1}},variant={...special,id:4,attrs:{}},limited={id:5,kind:'high',group:40,attrs:{2431:1}};
+const types=[gun,launcher,special,variant,limited],lookup=id=>types.find(t=>t.id===id),caps={turretHardpointsAvailable:2,launcherHardpointsAvailable:0};
+const slots=[{key:'a',item:1,state:'Offline'},{key:'b',item:1},{key:'c',item:null}];
+assert.match(reason(gun,'c',slots,lookup,caps),/炮塔/);
+assert.equal(reason(gun,'a',slots,lookup,caps),'');
+assert.match(reason(launcher,'a',slots,lookup,caps),/发射器/);
+assert.match(reason(variant,'b',[{key:'a',item:3}],lookup,caps),/同组/);
+assert.match(reason(special,'b',[{key:'a',item:4}],lookup,caps),/同组/);
+assert.equal(reason(special,'a',[{key:'a',item:3}],lookup,caps),'');
+assert.match(reason(limited,'b',[{key:'a',item:5}],lookup,caps),/同型号/);
+assert.equal(reason(gun,'c',slots,lookup,{...caps,turretHardpointsAvailable:3}),'');
+assert.equal(reason({kind:'ammo'},'a',slots,lookup,{}),'');
+console.log('Installation limit cases passed');
