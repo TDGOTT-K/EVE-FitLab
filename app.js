@@ -31,7 +31,7 @@ const treeOpen=new Set(),searchCollapsed=new Set();
 let treeSearchQuery="";
 const labels={subsystem:'子系统',high:'高槽',mid:'中槽',low:'低槽',rig:'改装件'}, counts={subsystem:ship.group===963?4:0,high:ship.attrs['14']||0,mid:ship.attrs['13']||0,low:ship.attrs['12']||0,rig:ship.attrs['1137']||0};
 const fresh=()=>Object.entries(counts).flatMap(([kind,n])=>Array.from({length:n},(_,i)=>({key:`${kind}-${i}`,kind,item:null,ammo:null,online:true})));
-const selectedSlots=new Set();let selectionAnchor=null,previewTimer=null,previewToken=0,previewKey=null;
+const selectedSlots=new Set();let selectionAnchor=null,previewTimer=null,previewToken=0,previewKey=null,previewRestore=null;
 let slots=fresh(),filter=null,dragged=null,history=[],redoHistory=[],menuOrigin=null;
 try{const saved=JSON.parse(localStorage.getItem('fitlab-prototype-v1'));if(Array.isArray(saved))slots=slots.map(s=>{const old=saved.find(v=>v.key===s.key&&v.kind===s.kind);return old&&(!old.item||byId(old.item))?{...s,...old}:s})}catch{}
 const img=t=>`<img src="https://images.evetech.net/types/${t.id}/icon?size=64" alt="" loading="lazy">`;
@@ -47,13 +47,13 @@ function redo(){cancelInstallPreview();if(!redoHistory.length)return;history.pus
 $('#redo').onclick=redo;
 
 $('#undo').onclick=undo;
-function toggleFilter(key,ammo=false){filter=filter?.key===key&&filter.ammo===ammo?null:{key,ammo};renderSlots();renderTree()}
+function toggleFilter(key,ammo=false){cancelInstallPreview();filter=filter?.key===key&&filter.ammo===ammo?null:{key,ammo};renderSlots();renderTree()}
 const stateLabels={Offline:'离线',Online:'关闭',Active:'启用',Overload:'超载'};
 function moduleState(s){return s.state||(s.online===false?'Offline':byId(s.item)?.canActivate?'Active':'Online')}
 function changeModuleState(key,state){const s=slots.find(s=>s.key===key);mutate(()=>{s.state=state;s.online=state!=='Offline'},'装备状态：'+stateLabels[state])}
-function slotMetrics(s,group='details'){
+function slotMetrics(s,group='details',displayReport=report){
  const siblings=slots.filter(x=>x.kind===s.kind&&x.item===s.item),index=siblings.findIndex(x=>x.key===s.key);
- const m=reportVersion===analysisVersion?(report?.snapshot.modules.find(m=>m.workspaceSlotKey===s.key)||report?.snapshot.modules.filter(m=>m.slotKind.toLowerCase()===s.kind&&m.dogmaTypeId===s.item)[index]):null;
+ const m=reportVersion===analysisVersion?(displayReport?.snapshot.modules.find(m=>m.workspaceSlotKey===s.key)||displayReport?.snapshot.modules.filter(m=>m.slotKind.toLowerCase()===s.kind&&m.dogmaTypeId===s.item)[index]):null;
  return selectSlotMetrics(byId(s.item),m,moduleState(s),group).map(({id,label,unit,title,value,baseline,conditions})=>`<span ${conditions?explanationAttributes(scenarioDetail(title,metricText(value,unit),value,baseline,[],conditions)):''} class="slot-metric" data-metric="${id}" title="${title}">${group==='resources'?`<svg class="slot-resource-icon" viewBox="0 0 24 24" aria-hidden="true">${id==='cpu'?'<rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4m6-4v4M9 18v4m6-4v4M2 9h4m-4 6h4m12-6h4m-4 6h4"/>':'<path d="m13 2-8 12h6l-1 8 9-13h-6Z"/>'}</svg>`:`<span class="slot-metric-label">${label}</span>`}<b ${numberAttributes(value,baseline)}>${value==null?'—':new Intl.NumberFormat('zh-CN',{maximumFractionDigits:2}).format(value)}</b>${unit?`<span class="slot-metric-unit">${unit}</span>`:''}</span>`).join('');
 }
 function refreshSlotMetrics(){document.querySelectorAll('[data-module-metrics]').forEach(el=>{const s=slots.find(s=>s.key===el.dataset.moduleMetrics);if(s)el.innerHTML=slotMetrics(s,el.dataset.metricGroup||'details')})}
@@ -73,18 +73,39 @@ function installRackTools(){
  $('#slots').querySelectorAll('.slot').forEach(el=>el.classList.toggle('multi-selected',selectedSlots.has(el.dataset.key)));
 }
 function canInstall(t,key){const s=slots.find(s=>s.key===key);return !!(t&&s&&(t.kind==='ammo'?acceptsAmmo(byId(s.item),t):t.kind===s.kind&&(t.kind!=='rig'||t.attrs[1547]===ship.attrs[1547])&&(t.kind!=='subsystem'||t.attrs[1380]===ship.id&&t.attrs[1366]===125+Number(s.key.split('-')[1]))))}
-function install(t,key){if(!t)return;if(!key&&(filter?.bay||t.kind==='drone')){addToBay(t,filter?.bay||'drones');return}if(!key){key=filter?.key;if(!key||!canInstall(t,key))key=slots.find(s=>t.kind==='ammo'?acceptsAmmo(byId(s.item),t):canInstall(t,s.key)&&!s.item)?.key}if(!key||!canInstall(t,key)){say('无法安装：槽型不匹配、没有空槽，或弹药组 / 尺寸不兼容');return}mutate(()=>{const s=slots.find(s=>s.key===key);if(t.kind==='ammo')s.ammo=t.id;else{s.item=t.id;s.ammo=null;s.online=true;s.state=t.kind==='subsystem'?'Online':t.canActivate?'Active':'Online'}},`已${t.kind==='ammo'?'装填':'安装'} ${t.name}`)}
+function installTarget(t){
+ if(filter?.bay||t?.kind==='drone')return null;
+ if(selectedSlots.size>1)return null;
+ const explicit=filter?.key||(selectedSlots.size===1?[...selectedSlots][0]:null);
+ if(explicit)return canInstall(t,explicit)?explicit:null;
+ return slots.find(s=>t?.kind==='ammo'?acceptsAmmo(byId(s.item),t):canInstall(t,s.key)&&!s.item)?.key;
+}
+function applyCandidate(slot,item){
+ if(item.kind==='ammo'){slot.ammo=item.id;return;}
+ const ammo=byId(slot.ammo),state=moduleState(slot);
+ const replacing=!!slot.item;
+ slot.item=item.id;slot.ammo=ammo&&acceptsAmmo(item,ammo)?ammo.id:null;
+ slot.state=item.kind==='subsystem'?'Online':replacing&&state==='Offline'?'Offline':replacing&&state==='Online'?'Online':item.canActivate?(state==='Overload'&&item.canOverload?'Overload':'Active'):'Online';
+ slot.online=slot.state!=='Offline';
+}
+function install(t,key){
+ if(!t)return;
+ if(!key&&(filter?.bay||t.kind==='drone')){addToBay(t,filter?.bay||'drones');return;}
+ key=key||installTarget(t);
+ if(!key||!canInstall(t,key)){say(selectedSlots.size>1?'请先选择一个目标槽位，或拖到指定槽位':'无法安装：请选择兼容槽位，或检查弹药组、尺寸及空槽');return;}
+ mutate(()=>applyCandidate(slots.find(s=>s.key===key),t),`已${t.kind==='ammo'?'装填':'安装'} ${t.name}`);
+}
 function loadAll(t){const target=slots.filter(s=>acceptsAmmo(byId(s.item),t));if(!target.length){say('没有可使用这种弹药的已装备模块');return}mutate(()=>target.forEach(s=>s.ammo=t.id),`已为 ${target.length} 件兼容装备装填 ${t.name}`)}
-function renderTree(){const root=$('#tree'),scroll=root.scrollTop,closed=new Set();const selected=filter&&slots.find(s=>s.key===filter.key);$('#filter').innerHTML=selected?`<button aria-label="清除装备筛选">${filter.ammo?'兼容弹药 · '+esc(byId(selected.item)?.name||''):labels[selected.kind]+' · 槽位 '+(Number(selected.key.split('-')[1])+1)}　×</button>`:'';if(selected)$('#filter button').onclick=()=>{filter=null;renderSlots();renderTree()};if(filter?.bay){$('#filter').innerHTML='<button aria-label="清除装备筛选">'+(filter.bay==='drones'?'无人机库':'货舱')+' ×</button>';$('#filter button').onclick=()=>{filter=null;renderSlots();renderTree()}}const q=$('#search').value.trim().toLowerCase();if(q!==treeSearchQuery){searchCollapsed.clear();treeSearchQuery=q}const items=catalog.filter(t=>!['ship','skill'].includes(t.kind)&&(!filter?.bay||acceptsBay(t,filter.bay))&&(t.kind!=='subsystem'||t.attrs[1380]===ship.id)&&(!selected||(filter.ammo?acceptsAmmo(byId(selected.item),t):canInstall(t,selected.key)))&&(!q||(matchesName(t,q)||t.path.some(p=>tLabel(p).toLowerCase().includes(q))||t.path.join(' ').toLowerCase().includes(q))));$('#count').textContent=`${items.length} 件`;const tree={};for(const t of [...items].sort((a,b)=>(a.kind==='ammo')-(b.kind==='ammo'))){let n=tree;for(const p of [...t.path,...(t.kind==='ammo'?[]:[t.meta||'科技 I'])]){n[p]??={};n=n[p]}(n._items??=[]).push(t)}
+function renderTree(){cancelInstallPreview();const root=$('#tree'),scroll=root.scrollTop,closed=new Set();const selected=filter&&slots.find(s=>s.key===filter.key);$('#filter').innerHTML=selected?`<button aria-label="清除装备筛选">${filter.ammo?'兼容弹药 · '+esc(byId(selected.item)?.name||''):labels[selected.kind]+' · 槽位 '+(Number(selected.key.split('-')[1])+1)}　×</button>`:'';if(selected)$('#filter button').onclick=()=>{filter=null;renderSlots();renderTree()};if(filter?.bay){$('#filter').innerHTML='<button aria-label="清除装备筛选">'+(filter.bay==='drones'?'无人机库':'货舱')+' ×</button>';$('#filter button').onclick=()=>{filter=null;renderSlots();renderTree()}}const q=$('#search').value.trim().toLowerCase();if(q!==treeSearchQuery){searchCollapsed.clear();treeSearchQuery=q}const items=catalog.filter(t=>!['ship','skill'].includes(t.kind)&&(!filter?.bay||acceptsBay(t,filter.bay))&&(t.kind!=='subsystem'||t.attrs[1380]===ship.id)&&(!selected||(filter.ammo?acceptsAmmo(byId(selected.item),t):canInstall(t,selected.key)))&&(!q||(matchesName(t,q)||t.path.some(p=>tLabel(p).toLowerCase().includes(q))||t.path.join(' ').toLowerCase().includes(q))));$('#count').textContent=`${items.length} 件`;const tree={};for(const t of [...items].sort((a,b)=>(a.kind==='ammo')-(b.kind==='ammo'))){let n=tree;for(const p of [...t.path,...(t.kind==='ammo'?[]:[t.meta||'科技 I'])]){n[p]??={};n=n[p]}(n._items??=[]).push(t)}
  const branch=(n,path='')=>Object.entries(n).sort(([a],[b])=>(a==='未列入市场')-(b==='未列入市场')).map(([k,v])=>k==='_items'?v.map(t=>`<div class="item" draggable="true" tabindex="0" role="button" data-id="${t.id}" aria-label="${esc(t.name)}">${img(t)}<span>${esc(t.name)}</span><em>${t.en.endsWith(' II')?'II':''}</em></div>`).join(''):(()=>{const key=path+'/'+k,open=q?!searchCollapsed.has(key):treeOpen.has(key);return `<details data-path="${esc(key)}" ${open?'open':''}><summary>${marketIcons[key]?`<img class="tree-icon" src="${marketIcons[key]}" alt="">`:''}${esc(k)}</summary>${open?branch(v,key):''}</details>`})()).join('');root.innerHTML=items.length?branch(tree):'<div class="hint">没有匹配物品。试试清除搜索或筛选标签。</div>';root.scrollTop=scroll;
  root.querySelectorAll('summary').forEach(summary=>summary.onclick=e=>{e.preventDefault();const key=summary.parentElement.dataset.path;if(q){if(searchCollapsed.has(key))searchCollapsed.delete(key);else searchCollapsed.add(key)}else{if(treeOpen.has(key))treeOpen.delete(key);else treeOpen.add(key)}renderTree()});
- root.querySelectorAll('.item').forEach(el=>{const t=byId(el.dataset.id);el.ondblclick=()=>install(t);el.onkeydown=e=>{if(e.key==='Enter')install(t)};el.oncontextmenu=e=>openMenu(e,t.id,'item');el.ondragstart=e=>{dragged=t.id;e.dataTransfer.setData('text/plain',String(t.id));e.dataTransfer.effectAllowed='copy';document.querySelectorAll('.slot').forEach(slot=>slot.classList.add(canInstall(t,slot.dataset.key)?'compatible':'incompatible'));const n=slots.filter(s=>acceptsAmmo(byId(s.item),t)).length;if(n){$('#ship').classList.add('compatible');say(`拖到舰船图像，为 ${n} 件兼容装备装填`)}else say('拖入高亮槽位安装；暗色槽位不兼容')};el.ondragend=clearDrag});}
+ root.querySelectorAll('.item').forEach(el=>{const t=byId(el.dataset.id);el.onpointerenter=()=>{if(!dragged&&!filter?.bay&&t.kind!=='drone')queueInstallPreview(installTarget(t),t.id,'hover')};el.onpointerleave=()=>{if(!dragged)cancelInstallPreview()};el.onfocus=()=>{if(!dragged&&!filter?.bay&&t.kind!=='drone')queueInstallPreview(installTarget(t),t.id,'hover')};el.onblur=()=>{if(!dragged)cancelInstallPreview()};el.ondblclick=()=>install(t);el.onkeydown=e=>{if(e.key==='Enter')install(t)};el.oncontextmenu=e=>openMenu(e,t.id,'item');el.ondragstart=e=>{cancelInstallPreview();dragged=t.id;e.dataTransfer.setData('text/plain',String(t.id));e.dataTransfer.effectAllowed='copy';document.querySelectorAll('.slot').forEach(slot=>slot.classList.add(canInstall(t,slot.dataset.key)?'compatible':'incompatible'));const n=slots.filter(s=>acceptsAmmo(byId(s.item),t)).length;if(n){$('#ship').classList.add('compatible');say(`拖到舰船图像，为 ${n} 件兼容装备装填`)}else say('拖入高亮槽位安装；暗色槽位不兼容')};el.ondragend=clearDrag});}
 function clearDrag(){cancelInstallPreview();dragged=null;document.querySelectorAll('.compatible,.incompatible').forEach(el=>el.classList.remove('compatible','incompatible'))}
 function magazine(t,a){return t.capacity!=null&&a.volume>0?Math.floor(t.capacity/a.volume+1e-8):'—'}
-function renderResources(){if(!report){$('#resources').innerHTML='<p class="profile-note">等待计算服务…</p>';return}const a=report.attributes;
- $('#resources').innerHTML=[['CPU',a.cpuUsed,a.cpuAvailable,'tf','cpuOutput','cpuUsage'],['能量栅格',a.powergridUsed,a.powergridAvailable,'MW','powerOutput','powergridUsage']].map(([name,value,max,unit,attr,field])=>{
- const contributions=report.snapshot.modules.filter(m=>m.state!=='Offline'&&m[field]>0).map(m=>[byId(m.dogmaTypeId)?.name||m.name,`+ ${m[field].toFixed(2)} ${unit}`]);
- const sum=report.snapshot.modules.filter(m=>m.state!=='Offline').reduce((n,m)=>n+(m[field]||0),0);
+function renderResources(displayReport=report,host=$('#resources')){if(!displayReport){host.innerHTML='<p class="profile-note">等待计算服务…</p>';return}const a=displayReport.attributes;
+ host.innerHTML=[['CPU',a.cpuUsed,a.cpuAvailable,'tf','cpuOutput','cpuUsage'],['能量栅格',a.powergridUsed,a.powergridAvailable,'MW','powerOutput','powergridUsage']].map(([name,value,max,unit,attr,field])=>{
+ const contributions=displayReport.snapshot.modules.filter(m=>m.state!=='Offline'&&m[field]>0).map(m=>[byId(m.dogmaTypeId)?.name||m.name,`+ ${m[field].toFixed(2)} ${unit}`]);
+ const sum=displayReport.snapshot.modules.filter(m=>m.state!=='Offline').reduce((n,m)=>n+(m[field]||0),0);
  const usage={title:name+' · 占用',result:`${value.toFixed(2)} ${unit}`,terms:Math.abs(sum-value)<0.01?(contributions.length?contributions:[['已安装在线模块','0']]):[['模块明细','当前接口未提供可核对的完整分解']],conditions:[['来源','Dogma 装配结果'],['离线模块','不占用资源']]};
  const capacity=attributeDetail(name+' · 上限',max,unit,attr,a,catalog,fitRecord.characterName),capacityChanged=Math.abs(max-(ship.attrs[attr==='cpuOutput'?48:11]||0))>0.001;
  const remaining=max-value;
@@ -434,7 +455,7 @@ function renderScenario(){
  }catch(e){say(e.message)}};
 }
 
-function selectSlot(e,key){
+function selectSlot(e,key){cancelInstallPreview();
  if(e.shiftKey){
   const order=slots.map(s=>s.key),a=order.indexOf(selectionAnchor),b=order.indexOf(key);
   if(a>=0)order.slice(Math.min(a,b),Math.max(a,b)+1).forEach(k=>selectedSlots.add(k));else{selectedSlots.add(key);selectionAnchor=key}
@@ -456,30 +477,71 @@ function openBatchMenu(e,keys,title){
 }
 function cancelInstallPreview(){
  clearTimeout(previewTimer);previewTimer=null;previewToken++;previewKey=null;
+ if(previewRestore){previewRestore();previewRestore=null;}
  document.querySelector('.fit-install-preview')?.remove();$('.inspector')?.classList.remove('install-preview-active');
  $('#slots')?.querySelectorAll('.preview-target').forEach(e=>e.classList.remove('preview-target'));
 }
-function queueInstallPreview(key){
- const id=dragged,version=analysisVersion,identity=id+':'+key+':'+version;
+function applyPreviewValues(result,fit){
+ const stats=document.createElement('div'),resources=document.createElement('div');
+ mountEngineStats(stats,result,ship,fitRecord.characterName,fitRecord.defenseMode||'hp',()=>{},catalog,fitRecord.damageProfile,()=>{});
+ renderResources(result,resources);
+ const restore=[];
+ previewRestore=()=>{document.dispatchEvent(new CustomEvent('fitlab-calculation-invalidated'));restore.reverse().forEach(fn=>fn());};
+ function patch(old,next){
+  if(!old)return;
+  if(!next){const hidden=old.hidden;old.hidden=true;restore.push(()=>old.hidden=hidden);return;}
+  const html=old.innerHTML,attributes=[...old.attributes].map(a=>[a.name,a.value]);
+  restore.push(()=>{old.innerHTML=html;for(const a of [...old.attributes])old.removeAttribute(a.name);for(const [key,value] of attributes)old.setAttribute(key,value)});
+  old.innerHTML=next.innerHTML;
+  if(old.classList.contains('meter'))old.classList.toggle('over',next.classList.contains('over'));
+  if(next.hasAttribute('data-explain'))old.setAttribute('data-explain',next.getAttribute('data-explain'));else old.removeAttribute('data-explain');
+  const previous=document.createElement('div');previous.innerHTML=html;
+  const before=previous.querySelector('b')||previous.querySelector('label>span'),after=old.querySelector('b')||old.querySelector('label>span');
+  if(before&&after&&before.textContent!==after.textContent){
+   old.classList.add('preview-changed');old.title='当前 '+before.textContent+' → 预览 '+after.textContent;
+   if(old.classList.contains('stat-row')||old.classList.contains('meter')){
+    const was=document.createElement('small');was.className='preview-old';was.textContent=(old.classList.contains('meter')?before.textContent.split(' / ')[0]:before.textContent)+' → ';after.prepend(was);
+   }
+  }
+ }
+ const pair=(root,next,selector,key)=>{
+  const pool=new Map();for(const el of next.querySelectorAll(selector)){const k=key(el);if(!pool.has(k))pool.set(k,[]);pool.get(k).push(el)}
+  for(const el of root.querySelectorAll(selector))patch(el,pool.get(key(el))?.shift());
+ };
+ pair($('#resources'),resources,'.meter',e=>e.querySelector('progress')?.getAttribute('aria-label'));
+ pair($('#ship-stats'),stats,'.stat-row',e=>e.querySelector(':scope>span')?.textContent);
+ pair($('#ship-stats'),stats,'.section-summary',e=>e.getAttribute('aria-label'));
+ pair($('#ship-stats'),stats,'.attack-total',()=> 'total');
+ pair($('#ship-stats'),stats,'.damage-bars',()=> 'bars');
+ for(const el of $('#slots').querySelectorAll('[data-module-metrics]')){
+  const slot=fit.slots.find(s=>s.key===el.dataset.moduleMetrics);if(!slot)continue;
+  const next=document.createElement('div');next.innerHTML=slotMetrics(slot,el.dataset.metricGroup||'details',result);patch(el,next);
+ }
+ // Original nodes, handlers, scroll position and scenario controls stay in place.
+}
+function queueInstallPreview(key,id=dragged,source='drag'){
+ const version=analysisVersion,identity=id+':'+key+':'+version+':'+source;
  if(previewKey===identity)return;cancelInstallPreview();previewKey=identity;const token=previewToken;
- const target=$('#slots [data-key="'+key+'"]');target?.classList.add('preview-target');
+ const target=key?$('#slots [data-key="'+key+'"]'):null;target?.classList.add('preview-target');
  previewTimer=setTimeout(async()=>{
-  const fit=currentFit(),slot=fit.slots.find(s=>s.key===key),item=byId(id);if(!slot||!item)return;
-  if(item.kind==='ammo')slot.ammo=id;else{slot.item=id;slot.ammo=null;slot.state=item.kind==='subsystem'?'Online':item.canActivate?'Active':'Online';slot.online=true}
-  const host=document.createElement('div');host.className='fit-install-preview';host.innerHTML='<div class="preview-banner">安装预览 · '+esc(item.name)+'<small>计算中…松开才安装</small></div>';$('#resources').before(host);$('.inspector').classList.add('install-preview-active');
+  const item=byId(id),fit=currentFit(),slot=fit.slots.find(s=>s.key===key);if(!item)return;
+  const host=document.createElement('div');host.className='fit-install-preview';host.setAttribute('role','status');$('.fit-actions').append(host);
+  const title=slot?labels[slot.kind]+' '+(Number(slot.key.split('-')[1])+1)+' · '+(byId(item.kind==='ammo'?slot.ammo:slot.item)?.name||'空槽')+' → '+item.name:item.name;
+  const hint=source==='drag'?'移开取消 · 松开安装':'移开恢复 · 双击或 Enter 安装';
+  const banner=(status)=>{host.innerHTML='<b>'+esc(title)+'</b><small>'+esc(status)+'</small>';};
+  if(!slot||!canInstall(item,key)){banner(selectedSlots.size>1?'请选择单个目标槽位，或拖入指定槽位':'没有兼容目标，请先选择槽位或腾出空槽');return;}
+  if(reportVersion!==version||analysisState!=='complete'){banner('等待当前装配计算完成，再悬停预览');return;}
+  const previousAmmo=slot.ammo;applyCandidate(slot,item);
+  const ammoNote=item.kind!=='ammo'&&previousAmmo&&!slot.ammo?' · 原弹药不兼容，将卸下':'';
+  banner('预览计算中…'+ammoNote);
   try{
    const result=await getCalculation(fit);
-   if(token!==previewToken||version!==analysisVersion||dragged!==id||!host.isConnected)return;
-   const a=result.attributes,base=report?.attributes;
-   const resource=(name,used,available,oldUsed,oldAvailable,unit)=>'<div class="stat-row"><span>'+name+' 剩余</span><b>'+(base?(oldAvailable-oldUsed).toFixed(1)+' → ':'')+(available-used).toFixed(1)+' / '+available+' '+unit+'</b></div>';
-   host.innerHTML='<div class="preview-banner">安装预览 · '+esc(item.name)+'<small>移开取消 · 松开安装</small></div><div class="stat-block">'+resource('CPU',a.cpuUsed,a.cpuAvailable,base?.cpuUsed,base?.cpuAvailable,'tf')+resource('能量栅格',a.powergridUsed,a.powergridAvailable,base?.powergridUsed,base?.powergridAvailable,'MW')+'</div><div class="preview-stats"></div>';
-   const stats=host.querySelector('.preview-stats');mountEngineStats(stats,result,ship,fitRecord.characterName,fitRecord.defenseMode||'hp',()=>{},catalog,fitRecord.damageProfile,()=>{});
-   const oldRows=[...$('#ship-stats').querySelectorAll('.stat-row')];
-   stats.querySelectorAll('.stat-row').forEach(row=>{const label=row.querySelector('span')?.textContent,old=oldRows.find(r=>r.querySelector('span')?.textContent===label),value=row.querySelector('b'),prev=old?.querySelector('b')?.textContent;if(value&&prev&&prev!==value.textContent){const before=document.createElement('small');before.className='preview-old';before.textContent=prev+' → ';value.prepend(before);row.classList.add('preview-changed')}});
-   const oldBars=[...$('#ship-stats').querySelectorAll('[role=progressbar]')];stats.querySelectorAll('[role=progressbar]').forEach((bar,i)=>{const old=oldBars[i],now=bar.getAttribute('aria-valuenow'),prev=old?.getAttribute('aria-valuenow');if(prev!==undefined&&prev!==now){bar.title=prev+'% → '+now+'%';bar.classList.add('preview-changed');const label=bar.querySelector('b');if(label)label.textContent=Number(prev).toFixed(0)+'→'+Number(now).toFixed(0)+'%'}});
-   if(!result.isValid)host.insertAdjacentHTML('beforeend','<p class="notice">'+esc(result.issues.map(i=>i.message).join('；'))+'</p>');
-  }catch(e){if(token===previewToken&&host.isConnected)host.innerHTML='<div class="preview-banner">安装预览暂不可用<small>'+esc(e.message)+'</small></div>'}
- },180);
+   if(token!==previewToken||version!==analysisVersion||!host.isConnected||(source==='drag'&&dragged!==id))return;
+   document.dispatchEvent(new CustomEvent('fitlab-calculation-invalidated'));
+   applyPreviewValues(result,fit);$('.inspector').classList.add('install-preview-active');
+   banner((result.isValid?hint:'装配受限：'+result.issues.map(i=>i.message).join('；'))+ammoNote);
+  }catch(e){if(token===previewToken&&host.isConnected){if(previewRestore){previewRestore();previewRestore=null;}banner('预览不可用：'+e.message);}}
+ },source==='drag'?180:350);
 }
 document.addEventListener('dragover',e=>{if(previewKey&&!e.target.closest('#slots .slot'))cancelInstallPreview()});
 document.addEventListener('dragend',cancelInstallPreview);
