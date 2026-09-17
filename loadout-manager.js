@@ -8,8 +8,10 @@ const icon=t=>t?'<img loading="lazy" draggable="false" src="https://images.evete
 
 export function installLoadoutManager(host,{api}){
  let plans=[],draft=null,dirty=false,busy=false,drag=null,returnToFit=false;
- host.innerHTML='<div class="plan-workspace"><aside class="plan-library"><div class="plan-library-head"><button data-toggle-library aria-expanded="true" aria-controls="plan-library-body"><span class="plan-library-chevron">▾</span> 方案库</button><span class="plan-library-current"></span><button data-group-current disabled>分组</button><button data-new>＋ 新建</button></div><div id="plan-library-body"><input class="plan-search" aria-label="搜索方案" placeholder="搜索方案或分组"><div class="plan-list" tabindex="0" aria-label="脑插与增效剂方案列表"></div><small>Ctrl+C / V 复制粘贴</small></div></aside><aside class="plan-browser"></aside><section class="plan-editor"><div class="plan-toolbar"></div><p class="plan-message" role="status"></p><div class="plan-content"></div></section></div>';
+ host.innerHTML='<div class="plan-workspace"><aside class="plan-library"><div class="plan-library-head"><button data-toggle-library aria-expanded="true" aria-controls="plan-library-body"><span class="plan-library-chevron">▾</span> 方案库</button><span class="plan-library-current"></span><button data-new-group>＋ 分组</button><button data-new>＋ 新建</button></div><div id="plan-library-body"><div class="plan-library-navigation"><input class="plan-search" aria-label="搜索方案" placeholder="搜索方案"><div class="plan-folder-list"></div></div><div class="plan-list" tabindex="0" aria-label="脑插与增效剂方案列表"></div><small>Ctrl+C / V 复制粘贴</small></div></aside><aside class="plan-browser"></aside><section class="plan-editor"><div class="plan-toolbar"></div><p class="plan-message" role="status"></p><div class="plan-content"></div></section></div>';
  const $=s=>host.querySelector(s),message=text=>$('.plan-message').textContent=text;
+ let activeFolder=null,planDrag=null,extraFolders=[];try{extraFolders=JSON.parse(localStorage.getItem('fitlab-plan-folders')||'[]').filter(x=>typeof x==='string')}catch{}
+ const storeFolders=()=>localStorage.setItem('fitlab-plan-folders',JSON.stringify(extraFolders));
  let libraryCollapsed=false;try{libraryCollapsed=localStorage.getItem('fitlab-plan-library-collapsed')==='true'}catch{}
  function updateLibraryFold(){
   $('#plan-library-body').hidden=libraryCollapsed;$('.plan-workspace').classList.toggle('library-collapsed',libraryCollapsed);
@@ -36,29 +38,36 @@ export function installLoadoutManager(host,{api}){
  const guard=async()=>!dirty||await confirm('当前方案有未保存的修改，放弃这些修改？');
  function changed(){dirty=true;$('.plan-library-current').textContent=draft?.name||'';cache();$('.plan-dirty').textContent='未保存';}
  function drawList(){
-  $('.plan-library-current').textContent=draft?.name||'';$('[data-group-current]').disabled=!draft;
-  const q=$('.plan-search').value.trim().toLowerCase(),groups=[...new Set(plans.map(p=>p.folder||''))].sort();
-  $('.plan-list').innerHTML=groups.map(folder=>{const rows=plans.filter(p=>(p.folder||'')===folder&&(p.name+' '+folder).toLowerCase().includes(q));return rows.length?'<div class="plan-group"><small>'+esc(folder||'未分组')+'</small>'+rows.map(p=>'<button class="plan-entry" data-plan="'+p.id+'" aria-pressed="'+(draft?.id===p.id)+'"><span>'+esc(p.name)+'</span><small>脑插 '+p.implants.length+' · 增效剂 '+p.boosters.length+'</small></button>').join('')+'</div>':'';}).join('')||'<p class="pilot-empty">'+(plans.length?'没有匹配方案':'还没有方案，点击“新建”开始')+'</p>';
-  $('.plan-list').querySelectorAll('[data-plan]').forEach(b=>{
-   b.onclick=async()=>{if(busy||!await guard())return;draft=structuredClone(plans.find(p=>p.id===b.dataset.plan));dirty=false;message('');draw();$('.plan-list').focus({preventScroll:true});};
-   const menu=e=>{e.preventDefault();e.stopPropagation();openGroupMenu(b,plans.find(p=>p.id===b.dataset.plan));};b.oncontextmenu=menu;b.onkeydown=e=>{if(e.key==='ContextMenu'||e.shiftKey&&e.key==='F10')menu(e)};
+  $('.plan-library-current').textContent=draft?.name||'';
+  const q=$('.plan-search').value.trim().toLowerCase(),groups=[...new Set([...extraFolders,...plans.map(p=>p.folder).filter(Boolean)])].sort();
+  const folders=[{name:'全部方案',value:null},{name:'未分组',value:''},...groups.map(name=>({name,value:name}))];
+  $('.plan-folder-list').innerHTML=folders.map((f,i)=>'<button data-folder-index="'+i+'" aria-pressed="'+(activeFolder===f.value)+'"><span>'+esc(f.name)+'</span><small>'+plans.filter(p=>f.value===null||(p.folder||'')===f.value).length+'</small></button>').join('');
+  $('.plan-folder-list').querySelectorAll('button').forEach(b=>{const f=folders[Number(b.dataset.folderIndex)];b.onclick=()=>{activeFolder=f.value;drawList()};
+   b.ondragover=e=>{if(planDrag&&f.value!==null){e.preventDefault();e.dataTransfer.dropEffect='move';b.classList.add('folder-drop')}};b.ondragleave=()=>b.classList.remove('folder-drop');b.ondrop=e=>{e.preventDefault();b.classList.remove('folder-drop');if(planDrag&&f.value!==null){const id=planDrag;planDrag=null;run(async()=>{await movePlan(id,f.value);drawList();message('方案已移入“'+f.name+'”');notify()});}};
+   b.oncontextmenu=e=>{if(!f.value)return;e.preventDefault();folderMenu(b,f.value)};b.onkeydown=e=>{if(f.value&&(e.key==='ContextMenu'||e.shiftKey&&e.key==='F10')){e.preventDefault();folderMenu(b,f.value)}};
   });
+  const rows=plans.filter(p=>(activeFolder===null||(p.folder||'')===activeFolder)&&(!q||(p.name+' '+(p.folder||'')).toLowerCase().includes(q)));
+  $('.plan-list').innerHTML=rows.map(p=>'<button class="plan-entry" draggable="true" data-plan="'+p.id+'" aria-pressed="'+(draft?.id===p.id)+'"><span>'+esc(p.name)+'</span><small>'+esc(p.folder||'未分组')+' · 脑插 '+p.implants.length+' · 药剂 '+p.boosters.length+'</small></button>').join('')||'<p class="pilot-empty">'+(q?'没有匹配方案':'此分组暂无方案，可从其他分组拖入')+'</p>';
+  $('.plan-list').querySelectorAll('[data-plan]').forEach(b=>{b.onclick=async()=>{if(busy||!await guard())return;draft=structuredClone(plans.find(p=>p.id===b.dataset.plan));dirty=false;message('');draw();$('.plan-list').focus({preventScroll:true});};b.ondragstart=e=>{planDrag=b.dataset.plan;e.dataTransfer.setData('text/plain',planDrag);e.dataTransfer.effectAllowed='move'};b.ondragend=()=>{planDrag=null;host.querySelectorAll('.folder-drop').forEach(x=>x.classList.remove('folder-drop'))};});
  }
-
- function openGroupMenu(anchor,plan){
-  if(!plan||busy)return;document.querySelector('.plan-group-menu')?.remove();
-  const menu=document.createElement('div');menu.className='plan-group-menu scenario-quick-menu';menu.setAttribute('popover','auto');menu.innerHTML='<div class="scenario-quick-title">移动到分组</div><div class="plan-group-options"></div><form><input aria-label="新分组名称" maxlength="40" placeholder="新分组名称" required><button type="submit">新建并移入</button></form><p role="status"></p>';document.body.append(menu);
-  const close=()=>{menu.hidePopover();menu.remove()};
-  async function move(folder){
-   if(busy)return;
-   if(!plan.id){draft.folder=folder;changed();drawList();close();return;}
-   await run(async()=>{const current=plans.find(p=>p.id===plan.id);if(!current)throw Error('方案已删除');const saved=await api('loadout-plan',{...current,folder});plans=plans.map(p=>p.id===saved.id?saved:p);if(draft?.id===saved.id){draft.folder=folder;draft.revision=saved.revision;draft.updatedAt=saved.updatedAt;cache();}drawList();message('已移入“'+(folder||'未分组')+'”');notify();close();});
-  }
-  for(const folder of [...new Set(['',...plans.map(p=>p.folder||''),draft?.folder||''])]){const b=document.createElement('button');b.type='button';b.textContent=(plan.folder===folder||!plan.folder&&!folder?'✓ ':'')+(folder||'未分组');b.onclick=()=>move(folder);menu.querySelector('.plan-group-options').append(b);}
-  menu.querySelector('form').onsubmit=e=>{e.preventDefault();const name=menu.querySelector('input').value.trim();if(name)move(name);};
-  menu.addEventListener('toggle',e=>{if(e.newState==='closed')menu.remove()});menu.showPopover();const r=anchor.getBoundingClientRect();menu.style.left=Math.max(8,Math.min(r.left,innerWidth-menu.offsetWidth-8))+'px';menu.style.top=Math.max(8,Math.min(r.bottom+4,innerHeight-menu.offsetHeight-8))+'px';menu.querySelector('button').focus();
+ async function movePlan(id,folder){
+  const current=plans.find(p=>p.id===id);if(!current||current.folder===folder)return;
+  const saved=await api('loadout-plan',{...current,folder});plans=plans.map(p=>p.id===saved.id?saved:p);
+  if(draft?.id===saved.id){draft.folder=folder;draft.revision=saved.revision;draft.updatedAt=saved.updatedAt;cache();}
  }
- $('[data-group-current]').onclick=()=>openGroupMenu($('[data-group-current]'),draft);
+ function editFolder(previous=null){
+  libraryCollapsed=false;updateLibraryFold();$('.plan-folder-editor')?.remove();
+  const input=document.createElement('input');input.className='plan-folder-editor';input.setAttribute('aria-label',previous?'重命名分组':'新分组名称');input.placeholder='分组名称 · Enter 确认';input.maxLength=40;input.value=previous||'';$('.plan-folder-list').prepend(input);input.focus();input.select();let done=false;
+  const finish=async commit=>{if(done)return;done=true;const name=input.value.trim();input.remove();if(!commit||!name||name===previous)return;if(name==='未分组'||name==='全部方案'||extraFolders.includes(name)||plans.some(p=>p.folder===name)){message('此分组名称已存在');return;}
+   await run(async()=>{if(previous){for(const p of plans.filter(p=>p.folder===previous))await movePlan(p.id,name);extraFolders=extraFolders.filter(f=>f!==previous);}extraFolders.push(name);storeFolders();activeFolder=name;drawList();notify();});};
+  input.onkeydown=e=>{if(e.isComposing)return;if(e.key==='Enter'||e.key==='Escape'){e.preventDefault();e.stopPropagation();finish(e.key==='Enter')}};input.onblur=()=>finish(true);
+ }
+ function folderMenu(anchor,name){
+  document.querySelector('.plan-folder-menu')?.remove();const menu=document.createElement('div');menu.className='plan-folder-menu scenario-quick-menu';menu.setAttribute('popover','auto');menu.setAttribute('role','menu');
+  for(const [label,fn] of [['重命名分组',()=>editFolder(name)],['解散分组',async()=>{if(!await confirm('解散“'+name+'”？其中的方案会移到未分组。'))return;run(async()=>{for(const p of plans.filter(p=>p.folder===name))await movePlan(p.id,'');extraFolders=extraFolders.filter(f=>f!==name);storeFolders();activeFolder='';drawList();notify();});}]]){const b=document.createElement('button');b.role='menuitem';b.textContent=label;b.onclick=()=>{menu.hidePopover();menu.remove();fn()};menu.append(b)}
+  menu.addEventListener('toggle',e=>{if(e.newState==='closed')menu.remove()});document.body.append(menu);menu.showPopover();const r=anchor.getBoundingClientRect();menu.style.left=Math.min(r.right,innerWidth-menu.offsetWidth-8)+'px';menu.style.top=Math.min(r.top,innerHeight-menu.offsetHeight-8)+'px';menu.querySelector('button').focus();
+ }
+ $('[data-new-group]').onclick=()=>editFolder();
  function openPlanActions(){
   if(!draft||busy)return;document.querySelector('.plan-actions-menu')?.remove();
   const menu=document.createElement('div');menu.className='plan-actions-menu scenario-quick-menu';menu.setAttribute('popover','auto');menu.setAttribute('role','menu');document.body.append(menu);
@@ -116,7 +125,7 @@ export function installLoadoutManager(host,{api}){
  async function run(fn){if(busy)return;busy=true;$('.plan-workspace').inert=true;try{await fn()}catch(e){message(e.message)}finally{busy=false;$('.plan-workspace').inert=false;}}
  async function save(){if(!draft.name.trim()){message('请填写方案名称');return;}await run(async()=>{const saved=await api('loadout-plan',draft);plans=plans.filter(p=>p.id!==saved.id).concat(saved);draft=structuredClone(saved);dirty=false;draw();message('方案已保存 · 已有装配快照不变');notify();});}
  function duplicate(){if(!draft)return;const names=new Set(plans.map(p=>p.name));let n=1,name;do{name=draft.name.slice(0,65)+' · 副本'+(n>1?' '+n:'');n++;}while(names.has(name));draft={name,folder:draft.folder||'',implants:structuredClone(draft.implants),boosters:structuredClone(draft.boosters)};dirty=true;draw();message('副本尚未保存');}
- $('[data-new]').onclick=async()=>{if(busy||!await guard())return;draft={name:'新方案',folder:'',implants:[],boosters:[]};dirty=true;draw();rename();};$('.plan-search').oninput=drawList;
+ $('[data-new]').onclick=async()=>{if(busy||!await guard())return;draft={name:'新方案',folder:activeFolder||'',implants:[],boosters:[]};dirty=true;draw();rename();};$('.plan-search').oninput=drawList;
  const scope=e=>!host.hidden&&!host.closest('[hidden]')&&!document.querySelector('dialog[open]')&&e.target.closest('.plan-library')&&!e.target.closest('input,textarea,[contenteditable]');
  document.addEventListener('copy',e=>{if(!scope(e)||!draft||!e.clipboardData)return;e.clipboardData.setData('text/plain',JSON.stringify({format:'fitlab-loadout',plan:draft}));e.preventDefault();message('方案已复制');});
  document.addEventListener('paste',async e=>{
