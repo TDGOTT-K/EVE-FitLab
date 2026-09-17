@@ -39,7 +39,27 @@ def calculate_capacitor(report,types,external=None):
    p=max(1,round(cycle*1000));periods.append(p);heapq.heappush(events,(p,-1-i,p,0,gain-loss,1,1,0))
  peak=2.5*c/tau if tau>0 else 0
  result={'events':[],'capacity':c,'rechargeSeconds':tau,'usagePerSecond':usage,'peakRechargePerSecond':peak,'includesBoosters':boosted,'nosferatuPerSecond':nos_income,'injectionPerSecond':injection_income,'netUsagePerSecond':usage-nos_income-injection_income+neut-transfer,'nosferatuSources':income_sources,'incomingNeutPerSecond':neut/incoming_cycle,'incomingTransferPerSecond':transfer/incoming_cycle,'energyWarfareResonance':resistance}
- if not events:return dict(result,status='stable',lowPercent=100,highPercent=100)
+ # Retain a bounded time series from this exact simulation, not a second
+ # average-drain model. Each sample preserves the pre/post activation jump.
+ samples=[[0,100,100]];sample_step=1.;next_sample=0.
+ def sample(time,before,after,force=False,paid=None):
+  nonlocal sample_step,next_sample
+  if force or time>=next_sample:
+   point=[time,100*before/c,100*after/c]
+   if paid is not None:point.append(100*paid/c)
+   if samples[-1][0]==time:
+    if force:point=[time,samples[-1][1],point[2],*samples[-1][3:]]
+    samples[-1]=point
+   else:samples.append(point)
+   if len(samples)>1024:
+    samples[:]=samples[::2];sample_step*=2
+    if samples[-1]!=point:samples.append(point)
+   next_sample=time+sample_step
+ def finish(**values):
+  return dict(result,**values,timeline=samples)
+ if not events:
+  samples.append([max(60,tau),100,100])
+  return finish(status='stable',lowPercent=100,highPercent=100)
  period=1
  for p in periods:
   period=math.lcm(period,p)
@@ -51,7 +71,8 @@ def calculate_capacitor(report,types,external=None):
   if period<=3600000 and boundary<=now:
    q=recharge(q,c,(boundary-last)/1000,tau);last=boundary
    if previous is not None and abs(q-previous)<max(1e-7,c*1e-8):
-    return dict(result,status='stable',lowPercent=100*low/c,highPercent=100*high/c,checkedSeconds=boundary/1000)
+    sample(boundary/1000,q,q,True)
+    return finish(status='stable',lowPercent=100*low/c,highPercent=100*high/c,checkedSeconds=boundary/1000)
    previous=q;low=q;high=q;boundary+=period;continue
   before=q;elapsed=(now-last)/1000;q=recharge(q,c,elapsed,tau);last=now;high=max(high,q)
   batch=[]
@@ -59,10 +80,16 @@ def calculate_capacitor(report,types,external=None):
   cost=sum(e[3] for e in batch)
   result['events'].append({'time':now/1000,'beforeRecharge':before,'elapsed':elapsed,'afterRecharge':q,'cost':cost,'income':sum(e[4] for e in batch),'canActivate':q+1e-8>=cost})
   result['events']=result['events'][-12:]
-  if q+1e-8<cost:return dict(result,status='depletes',seconds=now/1000,remainingPercent=100*q/c)
+  if q+1e-8<cost:
+   sample(now/1000,q,q,True)
+   return finish(status='depletes',seconds=now/1000,remainingPercent=100*q/c)
+  charged=q
   q-=cost;low=min(low,q);q=max(0,min(c,q+sum(e[4] for e in batch)));high=max(high,q)
+  low=min(low,q)
+  sample(now/1000,charged,q,paid=charged-cost)
   for _,i,p,cost,b,remaining,mag,reload in batch:
    remaining-=1
    heapq.heappush(events,(now+p+(reload if b and remaining==0 else 0),i,p,cost,b,mag if remaining==0 else remaining,mag,reload))
   count+=len(batch)
- return dict(result,status='bounded',checkedSeconds=last/1000,lowPercent=100*low/c,highPercent=100*high/c)
+ sample(last/1000,q,q,True)
+ return finish(status='bounded',checkedSeconds=last/1000,lowPercent=100*low/c,highPercent=100*high/c)

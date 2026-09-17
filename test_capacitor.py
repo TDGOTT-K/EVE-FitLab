@@ -35,4 +35,37 @@ class CapacitorTests(unittest.TestCase):
   self.assertEqual(calculate_capacitor(r,{1:{'group':68}})['nosferatuPerSecond'],0)
  def test_inactive(self):
   self.assertEqual(calculate_capacitor(report(100,100,100,1,'Online'),{})['status'],'stable')
+ def test_timeline_matches_pulses_and_failure(self):
+  out=calculate_capacitor(report(100,0,10,1),{})
+  self.assertEqual(out['timeline'][0],[0,100,90,90])
+  self.assertEqual(out['timeline'][5],[5,50,40,40])
+  self.assertEqual(out['timeline'][-1],[10,0,0])
+  self.assertEqual(out['timeline'][-1][0],out['seconds'])
+ def test_transfer_and_neut_are_in_same_timeline(self):
+  out=calculate_capacitor(report(100,0,10,1),{},
+                          {'incomingCycle':1,'incomingTransfer':8,'incomingNeut':3})
+  self.assertEqual(out['timeline'][1],[1,90,85,80])
+  self.assertEqual(out['incomingTransferPerSecond'],8)
+  self.assertEqual(out['incomingNeutPerSecond'],3)
+  self.assertEqual(out['seconds'],18)
+ def test_passive_chart_and_stable_final_sample(self):
+  passive=calculate_capacitor(report(1000,100),{})
+  self.assertEqual(passive['timeline'],[[0,100,100],[100,100,100]])
+  stable=calculate_capacitor(report(1000,100,10,1),{})
+  self.assertEqual(stable['timeline'][-1][0],stable['checkedSeconds'])
+  self.assertTrue(all(0<=v<=100 for row in stable['timeline'] for v in row[1:]))
+ def test_long_timeline_is_bounded_and_keeps_endpoints(self):
+  out=calculate_capacitor(report(100000,0,1,0.11),{})
+  self.assertEqual(out['status'],'bounded')
+  self.assertLessEqual(len(out['timeline']),1025)
+  self.assertEqual(out['timeline'][0][0],0)
+  self.assertEqual(out['timeline'][-1][0],out['checkedSeconds'])
+  self.assertEqual(sorted(row[0] for row in out['timeline']),[row[0] for row in out['timeline']])
 if __name__=='__main__':unittest.main()
+
+class ExternalCapacitorTests(unittest.TestCase):
+ def test_neut_pulse_is_in_stable_low(self):
+  out=calculate_capacitor(report(100,10),{}, {'incomingCycle':10,'incomingNeut':50})
+  self.assertEqual(out['status'],'stable')
+  self.assertLess(out['lowPercent'],51)
+  self.assertTrue(any(row[2]<51 for row in out['timeline']))

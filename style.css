@@ -405,3 +405,15 @@ html[lang=en] body{font-family:'Segoe UI',sans-serif}html[lang=ja] body{font-fam
 
 .dps-chart[data-mode="angular"] .dps-chart-probe-value{height:40px}
 .dps-angular-speed{display:block;font-size:10px;line-height:18px}
+
+.stat-explanation.has-cap-chart,#stat-explanation.has-cap-chart{width:440px;max-width:calc(100vw - 16px);border-color:var(--line)}
+.cap-chart{padding:12px 14px}
+.cap-verdict{font-size:15px;font-weight:600;color:var(--text);line-height:1.5}
+.cap-stable{color:#75c99e}.cap-depletes{color:#ef8585}
+.cap-context,.cap-notes{font-size:10px;color:var(--muted);line-height:1.7}
+.cap-context{margin-top:4px}.cap-notes{margin-top:9px}
+.cap-probe-value{height:24px;text-align:right;color:var(--muted);font-size:10px}
+.cap-flows{display:grid;grid-template-columns:1fr 1fr;gap:5px 16px;border-top:1px solid var(--line);padding-top:9px}
+.cap-flows>div{display:flex;justify-content:space-between;gap:8px;font-size:10px}
+.cap-flows span{color:var(--muted)}.cap-flows b{font-weight:500;white-space:nowrap;font-variant-numeric:tabular-nums}
+.cap-income{color:#75c99e}.cap-expense{color:#ef8585}

@@ -1,3 +1,4 @@
+import {mountCapacitorChart} from './capacitor-chart.js';
 import {mountDpsChart} from './dps-chart.js';
 import {getLocale} from './i18n.js';
 // One explanation branch; each locked panel can own a deeper explanation.
@@ -19,7 +20,12 @@ export function installExplanations(){
    const host=document.createElement('div');host.className='dps-chart';result.after(host);
    const breakdown=document.createElement('details');breakdown.className='dps-chart-breakdown';breakdown.innerHTML='<summary>输出来源与计算条件</summary>';breakdown.append(terms,conditions);breakdown.hidden=terms.hidden&&conditions.hidden;panel.append(breakdown);
   }
-  const lockable=!!panel.querySelector('[data-explain]'),interactive=!lockable&&!!detail.chart;
+  if(detail.capacitor){
+   panel.classList.add('has-cap-chart');
+   for(const selector of ['.explain-terms','.explain-conditions','.explain-result'])panel.querySelector(selector).remove();
+   const host=document.createElement('div');host.className='cap-chart';panel.append(host);mountCapacitorChart(host,detail);
+  }
+  const lockable=!!panel.querySelector('[data-explain]'),interactive=!lockable&&!!(detail.chart||detail.capacitor);
   if(!lockable){
    panel.querySelector('.explain-lock').remove();
    if(interactive){panel.inert=false;panel.classList.add('interactive');bridge.classList.add('interactive');}
