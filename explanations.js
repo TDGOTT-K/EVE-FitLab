@@ -5,7 +5,7 @@ export function installExplanations(){
  const chain=[],delay=800;let leaveTimer,lastPointer=null,chartMode='distance';
  const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function closeFrom(depth){for(const node of chain.splice(depth)){cancelAnimationFrame(node.frame);node.anchor.removeAttribute('aria-describedby');node.panel.remove();node.bridge.remove();node.aura?.remove()}}
- function lock(node){if(!node.panel.isConnected)return;node.locked=true;node.panel.inert=false;node.panel.classList.add('locked');node.bridge.classList.add('locked');node.aura.classList.add('complete');node.panel.querySelector('.explain-lock').textContent='已锁定 · 可继续查看明细';}
+ function lock(node){if(!node.lockable||!node.panel.isConnected)return;node.locked=true;node.panel.inert=false;node.panel.classList.add('locked');node.bridge.classList.add('locked');node.aura.classList.add('complete');node.panel.querySelector('.explain-lock').textContent='已锁定 · 可继续查看明细';}
  function place(node){const r=node.anchor.getBoundingClientRect(),p=node.panel,w=p.offsetWidth,h=p.offsetHeight;let x=r.left-w-10;if(x<8)x=r.right+10;if(x+w>innerWidth-8)x=Math.max(8,innerWidth-w-8);const y=Math.max(8,Math.min(r.top,innerHeight-h-8));p.style.left=x+'px';p.style.top=y+'px';const b=node.bridge,left=x+w<=r.left?x+w:r.right,right=x+w<=r.left?r.left:x;Object.assign(b.style,{left:left+'px',top:Math.max(y,r.top)+'px',width:Math.max(0,right-left)+'px',height:Math.max(0,Math.min(y+h,r.bottom)-Math.max(y,r.top))+'px'});}
  function show(anchor){const owner=anchor.closest('.stat-explanation'),depth=owner?Number(owner.dataset.depth)+1:0;if(owner&&!chain[depth-1]?.locked)return;if(chain[depth]?.anchor===anchor)return;clearTimeout(leaveTimer);closeFrom(depth);let detail;try{detail=JSON.parse(anchor.dataset.explain)}catch{return}
   const panel=document.createElement('section'),bridge=document.createElement('div');panel.className='stat-explanation';panel.inert=true;panel.id=depth?'stat-explanation-'+depth:'stat-explanation';panel.dataset.depth=depth;panel.role='tooltip';panel.setAttribute('aria-label',detail.title);panel.style.zIndex=150+depth*2;bridge.className='explain-bridge';bridge.style.zIndex=149+depth*2;
@@ -19,8 +19,23 @@ export function installExplanations(){
    const host=document.createElement('div');host.className='dps-chart';result.after(host);
    const breakdown=document.createElement('details');breakdown.className='dps-chart-breakdown';breakdown.innerHTML='<summary>输出来源与计算条件</summary>';breakdown.append(terms,conditions);breakdown.hidden=terms.hidden&&conditions.hidden;panel.append(breakdown);
   }
-  const node={panel,bridge,anchor,locked:false,frame:null,aura:null,chart:null};
-  if(detail.chart)node.chart=mountDpsChart(panel.querySelector('.dps-chart'),detail.chart,{mode:chartMode,onMode:mode=>{chartMode=mode}});chain.push(node);document.body.append(bridge,panel);anchor.setAttribute('aria-describedby',panel.id);place(node);animateLock(node);panel.querySelector('.dps-chart-breakdown')?.addEventListener('toggle',()=>{place(node);cancelAnimationFrame(node.frame);node.aura?.remove();if(node.locked){animateLock(node);cancelAnimationFrame(node.frame);lock(node)}else animateLock(node)});
+  const lockable=!!panel.querySelector('[data-explain]'),interactive=!lockable&&!!detail.chart;
+  if(!lockable){
+   panel.querySelector('.explain-lock').remove();
+   if(interactive){panel.inert=false;panel.classList.add('interactive');bridge.classList.add('interactive');}
+   else{
+    panel.classList.add('leaf-explanation');
+    const count=(detail.terms?.length||0)+(detail.conditions?.length||0);
+    if(count<=3)panel.classList.add('compact-explanation');
+    if(!count){
+     panel.classList.add('value-only');
+     const result=panel.querySelector('.explain-result');
+     panel.querySelector('.explain-heading').append(result.querySelector('b'));result.remove();
+    }
+   }
+  }
+  const node={panel,bridge,anchor,lockable,interactive,locked:false,frame:null,aura:null,chart:null};
+  if(detail.chart)node.chart=mountDpsChart(panel.querySelector('.dps-chart'),detail.chart,{mode:chartMode,onMode:mode=>{chartMode=mode}});chain.push(node);document.body.append(bridge,panel);anchor.setAttribute('aria-describedby',panel.id);place(node);if(lockable)animateLock(node);panel.querySelector('.dps-chart-breakdown')?.addEventListener('toggle',()=>{place(node);if(!node.lockable)return;cancelAnimationFrame(node.frame);node.aura?.remove();if(node.locked){animateLock(node);cancelAnimationFrame(node.frame);lock(node)}else animateLock(node)});
  }
  function inChain(target){return target instanceof Node&&chain.some(n=>n.anchor.contains(target)||n.panel.contains(target)||n.bridge.contains(target))}
  function animateLock(node){
@@ -41,11 +56,11 @@ export function installExplanations(){
   lastPointer=target;clearTimeout(leaveTimer);let keep=0;
   for(let i=0;i<chain.length;i++){
    const n=chain[i];
-   if(target instanceof Node&&(n.anchor.contains(target)||(n.locked&&(n.panel.contains(target)||n.bridge.contains(target)))))keep=i+1;
+   if(target instanceof Node&&(n.anchor.contains(target)||((n.locked||n.interactive)&&(n.panel.contains(target)||n.bridge.contains(target)))))keep=i+1;
   }
   // Preview requires uninterrupted dwell on its anchor. Only locked panels
   // receive the crossing grace period and allow interaction inside the panel.
-  const preview=chain.findIndex((n,i)=>i>=keep&&!n.locked);
+  const preview=chain.findIndex((n,i)=>i>=keep&&!n.locked&&!n.interactive);
   if(preview>=0)closeFrom(preview);
   if(keep<chain.length)leaveTimer=setTimeout(()=>closeFrom(keep),120);
  }
