@@ -80,6 +80,7 @@ export function mountEngineStats(root,report,ship,pilot,mode,onToggle,catalog=[]
  root.insertAdjacentHTML('beforeend',head('持续维修 · 周期测试')+'<div class="stat-block">'+(body||'<p class="profile-note">统计窗口内未成功维修</p>')+'<p class="profile-note">按电容可支付周期采样，非理论峰值；不计过量维修。</p></div>');
  }
  root.insertAdjacentHTML('beforeend',extendedStats(report,catalog));
+ root.querySelectorAll('[data-attack-mode]').forEach(b=>b.onclick=()=>document.dispatchEvent(new CustomEvent('fitlab-attack-mode',{detail:b.dataset.attackMode})));
  root.querySelectorAll('[data-defense-mode]').forEach(b=>b.onclick=()=>onToggle(b.dataset.defenseMode));
  const edit=root.querySelector('#edit-damage-profile');if(edit)edit.onclick=onEdit;
 }

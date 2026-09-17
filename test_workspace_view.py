@@ -25,9 +25,33 @@ def fixture(drone=0, kind='Missile'):
 
 
 class WorkspaceViewTests(unittest.TestCase):
+    def test_dps_default_ignores_resistance_but_keeps_application(self):
+        r = fixture()
+        attach_workspace_view(r, {'scenario': {'targetFitId': 'target'}}, {})
+        w = r['workspace']
+        self.assertEqual(w['attackMode'], 'dps')
+        self.assertEqual(w['attack']['total'], 20)  # 80 * 25/100; no 50% resist
+        self.assertEqual(w['attack']['profile']['em'], 20)
+        self.assertEqual(w['attack']['volley'], 40)
+        self.assertEqual(w['attack']['reload'], 10)
+        self.assertEqual(r['snapshot']['modules'][0]['scenarioMetrics']['damagePerSecond']['value'], 20)
+        for series in w['curves']['series']:
+            self.assertEqual(series['currentY'], 20)
+            self.assertEqual(dict(series['points'])[series['currentX']], 20)
+
+    def test_edps_requires_target_and_dps_handles_immunity(self):
+        r = fixture(); r['scenarioLinks'] = {}
+        attach_workspace_view(r, {'scenario': {}, 'attackMode': 'edps'}, {})
+        self.assertEqual(r['workspace']['attackMode'], 'dps')
+        for mode, expected in [('dps', 20), ('edps', 0)]:
+            r = fixture()
+            r['scenarioAnalysis'] = calculate_scenario(r, {'distance':500,'signature':25,'speed':0,'angular':0,'resistances':[100,0,0,0]}, {})
+            attach_workspace_view(r, {'scenario': {'targetFitId':'target'}, 'attackMode':mode}, {})
+            self.assertEqual(r['workspace']['attack']['total'], expected)
+
     def test_application_baseline_slot_and_inspector_agree(self):
         r = fixture(); original = copy.deepcopy(r['attributes'])
-        attach_workspace_view(r, {'scenario': {'targetFitId': 'target'}}, {})
+        attach_workspace_view(r, {'scenario': {'targetFitId': 'target'}, 'attackMode': 'edps'}, {})
         w = r['workspace']
         self.assertEqual(w['attack']['weapon'], 10)  # 80 * (25/100) * (1 - 50%)
         self.assertEqual(w['attack']['total'], 10)
@@ -46,7 +70,7 @@ class WorkspaceViewTests(unittest.TestCase):
     def test_unknown_drones_and_weapons_are_not_zero_or_partial_totals(self):
         for drone, kind in [(5, 'Missile'), (0, 'Unknown')]:
             r = fixture(drone, kind)
-            attach_workspace_view(r, {'scenario': {'targetFitId': 'target'}}, {})
+            attach_workspace_view(r, {'scenario': {'targetFitId': 'target'}, 'attackMode': 'edps'}, {})
             self.assertIsNone(r['workspace']['attack']['total'])
             self.assertIsNone(r['workspace']['attack']['reload'])
             self.assertTrue(r['workspace']['issues'])
@@ -63,7 +87,7 @@ class WorkspaceViewTests(unittest.TestCase):
         second.update(workspaceSlotKey='high-4', damagePerSecond=40, damageProfilePerSecond={'em': 40})
         r['snapshot']['modules'].append(second)
         r['scenarioAnalysis'] = calculate_scenario(r, {'signature': 25, 'distance': 500, 'speed': 0, 'resistances': [50,0,0,0]}, {})
-        attach_workspace_view(r, {'scenario': {'targetFitId': 'target'}}, {})
+        attach_workspace_view(r, {'scenario': {'targetFitId': 'target'}, 'attackMode': 'edps'}, {})
         self.assertEqual([m['scenarioMetrics']['damagePerSecond']['value'] for m in r['snapshot']['modules']], [10, 5])
         self.assertEqual(r['workspace']['attack']['total'], 15)
 

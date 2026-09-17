@@ -1,6 +1,7 @@
 import {escapeHtml,metricText} from './scenario-display.js';
 
 export function mountDpsChart(root,data,{mode='distance',onMode=()=>{}}={}){
+ const damageUnit=data.attackMode==='edps'?'EDPS':'DPS';
  const keys=['distance','signature','angular'];let index=Math.max(0,keys.indexOf(mode));
  const fmtX=(x,s)=>metricText(s.key==='distance'?x/1000:x,s.unit,s.key==='angular'?5:2);
  function render(){
@@ -25,16 +26,16 @@ export function mountDpsChart(root,data,{mode='distance',onMode=()=>{}}={}){
   for(let i=0;i<=4;i++){const value=s.min+(s.max-s.min)*i/4;grid+='<text x="'+x(value)+'" y="'+(B+19)+'" text-anchor="middle">'+metricText(s.key==='distance'?value/1000:value,'',s.key==='angular'?4:1)+'</text>';}
   const currentX=x(s.currentX),currentY=y(s.currentY);
   const currentMarkup=data.ideal?'': '<line class="dps-current-line" x1="'+currentX+'" x2="'+currentX+'" y1="'+T+'" y2="'+B+'"/><circle class="dps-current-point" cx="'+currentX+'" cy="'+currentY+'" r="4"/>';
-  root.insertAdjacentHTML('beforeend','<div class="dps-chart-current">'+(data.ideal?'<span>理想条件</span><b>峰值 '+escapeHtml(metricText(Math.max(...s.points.map(p=>p[1])),'DPS'))+'</b>':'<span>当前 '+escapeHtml(fmtX(s.currentX,s))+'</span><b>'+escapeHtml(metricText(s.currentY,'DPS'))+'</b>')+'</div><svg class="dps-function-plot" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="DPS 随'+s.label+'变化"><text x="'+L+'" y="11">DPS</text>'+grid+'<path class="dps-curve" d="'+path+'"/>'+currentMarkup+'<g class="dps-probe" visibility="hidden"><line y1="'+T+'" y2="'+B+'"/><circle r="3"/><text class="dps-probe-percent"/></g><text x="'+R+'" y="222" text-anchor="end">'+s.label+' / '+s.unit+'</text><rect class="dps-chart-hit" x="'+L+'" y="0" width="'+(R-L)+'" height="'+B+'"/></svg><div class="dps-chart-probe-value" aria-live="off">&nbsp;</div>');
+  root.insertAdjacentHTML('beforeend','<div class="dps-chart-current">'+(data.ideal?'<span>理想条件</span><b>峰值 '+escapeHtml(metricText(Math.max(...s.points.map(p=>p[1])),damageUnit))+'</b>':'<span>当前 '+escapeHtml(fmtX(s.currentX,s))+'</span><b>'+escapeHtml(metricText(s.currentY,damageUnit))+'</b>')+'</div><svg class="dps-function-plot" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+damageUnit+' 随'+s.label+'变化"><text x="'+L+'" y="11">'+damageUnit+'</text>'+grid+'<path class="dps-curve" d="'+path+'"/>'+currentMarkup+'<g class="dps-probe" visibility="hidden"><line y1="'+T+'" y2="'+B+'"/><circle r="3"/><text class="dps-probe-percent"/></g><text x="'+R+'" y="222" text-anchor="end">'+s.label+' / '+s.unit+'</text><rect class="dps-chart-hit" x="'+L+'" y="0" width="'+(R-L)+'" height="'+B+'"/></svg><div class="dps-chart-probe-value" aria-live="off">&nbsp;</div>');
   const t=data.target||{},fixed=[['distance','距离',t.distance/1000,'km'],['signature','信号半径',t.signature,'m'],['angular','角速度',t.angular,'rad/s']].filter(([key])=>key!==s.key).map(([key,label,value,unit])=>label+' '+metricText(value,unit,key==='angular'?5:2));
   fixed.push('相对速度 '+metricText(t.speed,'m/s'));
   const note=document.createElement('div');note.className='dps-chart-fixed';note.textContent=data.ideal?s.fixed:fixed.join(' · ');root.append(note);
-  const scope=document.createElement('div');scope.className='dps-chart-scope';scope.textContent=data.ideal?'按当前配装与启用状态 · 不含换弹 · 参考半径非具体舰船实值':'目标抗性后 · 不含换弹 · 其余条件固定';root.append(scope);
+  const scope=document.createElement('div');scope.className='dps-chart-scope';scope.textContent=data.ideal?'按当前配装与启用状态 · 不含换弹 · 参考半径非具体舰船实值':(data.attackMode==='edps'?'已扣目标抗性':'不扣目标抗性')+' · 不含换弹 · 其余条件固定';root.append(scope);
   const svg=root.querySelector('svg'),hit=root.querySelector('.dps-chart-hit'),probe=root.querySelector('.dps-probe'),readout=root.querySelector('.dps-chart-probe-value');
   hit.onpointermove=e=>{
    const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(svg.getScreenCTM().inverse()),value=s.min+(p.x-L)/(R-L)*(s.max-s.min);
    const sample=s.points.reduce((best,row)=>Math.abs(row[0]-value)<Math.abs(best[0]-value)?row:best,s.points[0]);
-   readout.textContent='采样 '+fmtX(sample[0],s)+' · '+metricText(sample[1],'DPS');
+   readout.textContent='采样 '+fmtX(sample[0],s)+' · '+metricText(sample[1],damageUnit);
    if(s.key==='angular'){
     const speed=document.createElement('span');speed.className='dps-angular-speed';
     speed.textContent='10 km 处横向速度 '+metricText(sample[0]*10000,'m/s',0);readout.append(speed);

@@ -54,7 +54,7 @@ class DpsCurveTests(unittest.TestCase):
             self.assertEqual(self.ideal(report)['status'], 'unavailable')
 
     def build(self, report):
-        attach_workspace_view(report, {'scenario': {'targetFitId': 'target'}}, {})
+        attach_workspace_view(report, {'scenario': {'targetFitId': 'target'}, 'attackMode': 'edps'}, {})
         return report['workspace']['curves']
 
     def test_current_points_and_missile_angular_invariance(self):

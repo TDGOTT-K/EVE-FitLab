@@ -24,7 +24,8 @@ const $=s=>document.querySelector(s), typeIndex=new Map(catalog.map(t=>[t.id,t])
 let ship=byId(587),fitRecord={name:'裂谷级 · 我的装配',shipId:587,skills:[],characterName:'无技能 · 基础对照'},report=null,reportVersion=-1,analysisVersion=0,analysisTimer,analysisState='pending';
 const cachedItem=requestCache(id=>api('items/'+id),128);
 const cachedCalculation=requestCache(fit=>api('analyze',fit),4);
-function getCalculation(fit){if(fit.activeScenarioId||Object.keys(fit.scenario||{}).length)return api('analyze',fit);return cachedCalculation(JSON.stringify({shipId:fit.shipId,slots:fit.slots,skills:fit.skills,drones:fit.drones,cargo:fit.cargo,scenario:fit.scenario}),fit)}
+let attackMode='dps';try{attackMode=localStorage.getItem('fitlab-attack-mode')==='edps'?'edps':'dps'}catch{}
+function getCalculation(fit){fit={...fit,attackMode};if(fit.activeScenarioId||Object.keys(fit.scenario||{}).length)return api('analyze',fit);return cachedCalculation(JSON.stringify({shipId:fit.shipId,slots:fit.slots,skills:fit.skills,drones:fit.drones,cargo:fit.cargo,scenario:fit.scenario,attackMode}),fit)}
 const treeOpen=new Set(),searchCollapsed=new Set();
 let treeSearchQuery="";
 const labels={subsystem:'子系统',high:'高槽',mid:'中槽',low:'低槽',rig:'改装件'}, counts={subsystem:ship.group===963?4:0,high:ship.attrs['14']||0,mid:ship.attrs['13']||0,low:ship.attrs['12']||0,rig:ship.attrs['1137']||0};
@@ -154,6 +155,7 @@ function restoreFit(record){editorFitDeleted=false;cancelInstallPreview();select
 let saving=Promise.resolve();
 function persistFit(){const task=saving.catch(()=>{}).then(writeFit);saving=task;return task}
 async function writeFit(){const input=currentFit(),saved=await api('save',input);fitRecord={...fitRecord,id:saved.id,revision:saved.revision,updatedAt:saved.updatedAt};localStorage.setItem('fitlab-working-draft',JSON.stringify(currentFit()));$('#save').textContent=JSON.stringify(input.slots)===JSON.stringify(slots)&&JSON.stringify(input.skills)===JSON.stringify(fitRecord.skills)?'已保存 · '+new Date(saved.updatedAt).toLocaleTimeString():'已保存上一版本 · 当前改动待保存';return saved}
+document.addEventListener('fitlab-attack-mode',e=>{attackMode=e.detail==='edps'?'edps':'dps';try{localStorage.setItem('fitlab-attack-mode',attackMode)}catch{}scheduleAnalysis()});
 function scheduleAnalysis(){document.dispatchEvent(new CustomEvent('fitlab-calculation-invalidated'));if(!$('#info-window').hidden)closeInfo();analysisState='pending';updateScenarioStatus();cancelInstallPreview();$('.inspector').classList.add('calculating');analysisVersion++;refreshSlotMetrics();clearTimeout(analysisTimer);$('#engine-status').textContent='计算中…';analysisTimer=setTimeout(runAnalysis,250)}
 async function runAnalysis(){const version=analysisVersion;try{const result=await getCalculation(currentFit());if(version!==analysisVersion)return;report=result;reportVersion=version;analysisState='complete';updateScenarioStatus();syncEngineSlots();refreshSlotMetrics();$('.inspector').classList.remove('calculating');$('#engine-status').textContent=`Dogma · ${result.skillCount} 项技能`;$('.notice').textContent=result.isValid?'装配校验通过':`校验提示：${result.issues.map(x=>x.message).join('；')}`;renderResources();renderShipStats()}catch(e){if(version!==analysisVersion)return;$('.inspector').classList.remove('calculating');analysisState='failed';updateScenarioStatus();$('#engine-status').textContent='计算失败 · 当前数据未更新';$('.notice').textContent=e.message;say('装配已保留，计算失败：'+e.message)}}
 const flow=document.createElement('dialog');flow.id='flow-dialog';document.body.append(flow);

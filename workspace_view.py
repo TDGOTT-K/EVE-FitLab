@@ -15,7 +15,11 @@ def attach_workspace_view(report, fit, types):
     selected = next((s for s in fit.get('scenarios', []) if s['id'] == fit.get('activeScenarioId')), {})
     name = selected.get('name', '原有情景') if active else '不应用情景'
     target = active and bool(report.get('scenarioLinks', {}).get('targetFitId'))
+    attack_mode = 'edps' if target and fit.get('attackMode') == 'edps' else 'dps'
     current = report['scenarioAnalysis']
+    if target and attack_mode == 'dps':
+        current = calculate_scenario(report, dict(current['target'], resistances=[0, 0, 0, 0]), types)
+        report['scenarioAnalysis'] = current
     neutral = calculate_scenario(report, {}, types) if active else current
     drone = report['attributes'].get('appliedDroneDamagePerSecond', 0)
 
@@ -48,7 +52,7 @@ def attach_workspace_view(report, fit, types):
             ['角速度', f"{t['angular']:.5f} rad/s"],
             ['目标信号半径', f"{t['signature']:.2f} m"],
             ['目标防御层', {'shield': '护盾', 'armor': '装甲', 'structure': '结构'}.get(t.get('targetLayer'), '护盾')],
-            ['模型', '固定几何、命中期望与目标抗性；DPS 不含换弹，持续输出另列'],
+            ['模型', '固定几何、命中期望；' + ('EDPS 已扣目标抗性' if attack_mode == 'edps' else 'DPS 不扣目标抗性') + '，不含换弹'],
             ['速度口径', '当前为相对速度近似；导弹尚未使用独立的目标绝对速度'],
         ]
     issues = []
@@ -69,13 +73,14 @@ def attach_workspace_view(report, fit, types):
                 'damagePerSecond': {'value': r['appliedDpsWithoutReload'], 'baseline': r['baseDps']},
                 'volleyDamage': {'value': r['appliedVolley'], 'baseline': r['baseVolley']},
                 'conditions': conditions,
+                'attackMode': attack_mode,
                 'profile': r['appliedProfile'],
                 'baselineProfile': r['baseProfile'],
             }
             for key in DAMAGE:
                 module['scenarioMetrics']['damageProfilePerSecond.' + key] = {'value': r['appliedProfile'][key] if r['appliedProfile'] else None, 'baseline': r['baseProfile'][key]}
     report['workspace'] = {
-        'active': active, 'name': name, 'target': target, 'conditions': conditions,
+        'active': active, 'name': name, 'target': target, 'conditions': conditions, 'attackMode': attack_mode,
         'attack': attack_view, 'issues': issues,
         'baseline': {
             'attack': baseline_attack,
@@ -85,3 +90,4 @@ def attach_workspace_view(report, fit, types):
     }
 
     report['workspace']['curves'] = build_dps_curves(report, types)
+    report['workspace']['curves']['attackMode'] = attack_mode

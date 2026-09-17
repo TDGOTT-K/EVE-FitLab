@@ -20,6 +20,6 @@ export function selectSlotMetrics(type,computed,state,group='details'){
   let value=scenario?scenario.value:computed?metric.value(computed,state):null,unit=metric.unit;
   if(!Number.isFinite(value))value=null;
   if(unit==='m'&&value>1000){value/=1000;unit='km'}
-  return {id:metric.id,label:metric.label,title:metric.title,unit,value,baseline:scenario?.baseline,conditions:computed?.scenarioMetrics?.conditions};
+  return {id:metric.id,label:metric.id==='dps'&&computed?.scenarioMetrics?.attackMode==='edps'?'EDPS':metric.label,title:metric.title,unit,value,baseline:scenario?.baseline,conditions:computed?.scenarioMetrics?.conditions};
  });
 }
