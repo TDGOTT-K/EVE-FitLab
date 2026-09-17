@@ -3,6 +3,7 @@
 Do not mutate the nominal Dogma attributes or their source graphs. Applications
 have separate fields, so missing target mechanics never masquerade as zero.
 """
+from dps_curves import build_dps_curves
 from capacitor import calculate_capacitor
 from sustained_tank import sustained_tank
 from fitting_scenario import calculate_scenario, DAMAGE
@@ -82,3 +83,5 @@ def attach_workspace_view(report, fit, types):
             'sustainedTank': sustained_tank(report, types, {}) if active else report.get('sustainedTank'),
         },
     }
+
+    report['workspace']['curves'] = build_dps_curves(report, types)
