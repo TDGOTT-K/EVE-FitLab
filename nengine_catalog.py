@@ -39,3 +39,10 @@ def item_metadata(item):
         'units':{str(k):v for k,v in data['dogmaUnits'].items()},
         'effects':[data['dogmaEffects'].get(i,{}) for i in item['effects']],
         'description':data['types'][item['id']].get('description',{})}
+
+def indexed_item(type_id):
+    data=index_metadata()
+    if type_id not in data['types']: return None
+    dogma=data['typeDogma'].get(type_id,{})
+    return {'id':type_id,'attrs':{str(x['attributeID']):x['value'] for x in dogma.get('dogmaAttributes',[])},
+        'effects':[x['effectID'] for x in dogma.get('dogmaEffects',[])]}

@@ -188,6 +188,7 @@ async function showInfo(t,slotKey=null,droneIndex=null){infoOrigin=document.acti
 }
 
 function locateItem(t){
+ if(t.kind==='fighter'){filter={fighters:true};$('#search').value=t.name;renderTree();return;}
  if(['ship','skill'].includes(t.kind)){say('此物品不属于装备浏览器');return}
  $('#search').value='';filter=null;let path='';for(const p of [...t.path,...(t.kind==='ammo'?[]:[t.meta||'科技 I'])]){path+='/'+p;treeOpen.add(path)}renderSlots();renderTree();const item=$(`#tree [data-id="${t.id}"]`);if(item){item.classList.add('located');item.scrollIntoView({block:'center'});item.focus({preventScroll:true});say('已定位：'+t.name)}
 }
@@ -448,7 +449,7 @@ function addToBay(t,kind){
  mutate(()=>{const entries=fitRecord[kind]??=[];const e=entries.find(e=>e.item===t.id&&(kind!=='drones'||e.quantity<5));if(e){if(e.quantity>=100000)return;e.quantity++}else entries.push({item:t.id,quantity:1,...(kind==='drones'?{active:0}:{})})},'已放入'+t.name);
 }
 function selectBay(kind){filter=filter?.bay===kind?null:{bay:kind};$('#search').value='';renderSlots();renderTree()}
-function renderBayConfig(){const previous=document.querySelector('#fighter-config'),key=JSON.stringify([fitRecord.fighterLoadout,report?.native?.fighterBay,reportVersion]);const reuse=previous&&previous._fit===fitRecord&&previous._key===key;if(reuse)previous.remove();renderBayConfigBody();if(reuse){document.querySelector('#bay-config').prepend(previous);return;}mountFighters(document.querySelector('#bay-config'),{ship,fit:fitRecord,report,mutate,say,validate:candidate=>getCalculation({...currentFit(),fighterLoadout:candidate.fighterLoadout}),browse:()=>{if(abyssalLibrary.active)document.querySelector('.equipment-browser-switch').click();filter={fighters:true};document.querySelector('#search').value='';renderTree()}});const mounted=document.querySelector('#fighter-config');if(mounted){mounted._fit=fitRecord;mounted._key=key;}}
+function renderBayConfig(){const previous=document.querySelector('#fighter-config'),key=JSON.stringify([fitRecord.fighterLoadout,report?.native?.fighterBay,reportVersion]);const reuse=previous&&previous._fit===fitRecord&&previous._key===key;if(reuse)previous.remove();renderBayConfigBody();if(reuse){document.querySelector('#bay-config').prepend(previous);return;}mountFighters(document.querySelector('#bay-config'),{ship,fit:fitRecord,report,mutate,say,onInfo:t=>showInfo({...t,kind:'fighter',path:['铁骑舰载机',t.kind],attrs:{},effects:[]}),validate:candidate=>getCalculation({...currentFit(),fighterLoadout:candidate.fighterLoadout}),browse:()=>{if(abyssalLibrary.active)document.querySelector('.equipment-browser-switch').click();filter={fighters:true};document.querySelector('#search').value='';renderTree()}});const mounted=document.querySelector('#fighter-config');if(mounted){mounted._fit=fitRecord;mounted._key=key;}}
 function renderBayConfigBody(){
  const root=$('#bay-config');if(!root)return;
  root.innerHTML=(fighterHull(ship)?['cargo']:['drones','cargo']).map(kind=>{

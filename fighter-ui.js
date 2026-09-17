@@ -1,18 +1,26 @@
 // Native fighter loadout presenter; server validates every change through the pinned engine.
 export const fighterHull = ship => [547,659].includes(ship.group);
-const glyphs={light:'M12 3 21 20 12 16 3 20Z',heavy:'M12 2 21 10 19 21 12 17 5 21 3 10Z',support:'M12 3 20 9 20 17 12 21 4 17 4 9ZM4 9 20 17M20 9 4 17'};
 let catalogError='';
-const types=await fetch('./api/fighters').then(r=>{if(!r.ok)throw Error('舰载机目录暂不可用');return r.json()}).then(d=>d.items.map(t=>({...t,kind:({light:'轻型',heavy:'重型',support:'支援'})[t.class],path:glyphs[t.class]}))).catch(e=>{catalogError=e.message;return []});
-const icon=t=>`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${t.path}"/></svg>`;
+const types=await fetch('./api/fighters').then(r=>{if(!r.ok)throw Error('舰载机目录暂不可用');return r.json()}).then(d=>d.items.map(t=>({...t,kind:({light:'轻型',heavy:'重型',support:'支援'})[t.class]}))).catch(e=>{catalogError=e.message;return []});
+const icon=t=>`<img class="fighter-type-icon" src="https://images.evetech.net/types/${t.id}/icon?size=64" alt="" width="32" height="32" draggable="false" loading="lazy">`;
 const type=id=>types.find(t=>t.id===Number(id));
 let drag=null,selected=null,owner=null;
-export function mountFighters(root,{ship,fit,report,mutate,browse,say,validate}){
+function menu(event,origin,item,entries){
+ event.preventDefault();event.stopPropagation();
+ origin=origin.querySelector('.fighter-pick')||origin;
+ document.dispatchEvent(new CustomEvent('fitlab-loadout-menu',{detail:{event,origin,item,entries,showDetails:false}}));
+}
+function bindMenu(element,open){
+ element.oncontextmenu=open;
+ element.addEventListener('keydown',e=>{if(e.key==='ContextMenu'||e.shiftKey&&e.key==='F10')open(e)});
+}
+export function mountFighters(root,{ship,fit,report,mutate,browse,say,validate,onInfo}){
  root.querySelector('#fighter-config')?.remove();if(owner!==fit){owner=fit;selected=null;}
  if(!fighterHull(ship))return;
  const bay=report?.native?.fighterBay;const count=bay?.maximumSquadrons||0;
  const state=fit.fighterLoadout||{tubes:Array(count).fill(null),reserve:[]};
  const change=async fn=>{if(host._busy)return;host._busy=true;const next=structuredClone(state);fn(next);say('正在校验舰载机配置…');try{const result=await validate({...fit,fighterLoadout:next});if(!host.isConnected)return;const blocking=result.issues.filter(e=>e.code==='STATIC_COVERAGE_INCOMPLETE'||e.code.startsWith('FIGHTER_')||e.code.startsWith('EVE_FIGHTER'));if(blocking.length){say('无法装载：'+blocking.map(e=>e.message).join('；'));return}mutate(()=>{fit.fighterLoadout=next},'舰载机已更新 · N 号引擎校验')}catch(e){say(e.message)}finally{host._busy=false}};
- const host=document.createElement('section');host.id='fighter-config';root.prepend(host);if(!bay||!types.length){host.innerHTML='<div class="slot-heading">铁骑舰载机</div><p class="profile-note">'+(catalogError||'等待引擎返回发射管与机库参数…')+'</p>';return;}
+ const host=document.createElement('section');host.id='fighter-config';root.prepend(host);host._catalogMenu=(e,el,t)=>menu(e,el,t,[['装入发射管',()=>{},{disabled:true,title:'等待可用的装配计算结果'}],['加入备用机库',()=>{},{disabled:true,title:'等待可用的装配计算结果'}],['详细信息',()=>onInfo(t)]]);if(!bay||!types.length){host.innerHTML='<div class="slot-heading">铁骑舰载机</div><p class="profile-note">'+(catalogError||'等待引擎返回发射管与机库参数…')+'</p>';return;}
  const row=(entry,index,reserve=false)=>{
   const t=entry&&type(entry.typeId),key=reserve?'reserve':'tubes';
   return `<div class="fighter-row ${entry?'filled':''}" data-fighter-index="${index}" data-fighter-list="${key}" ${entry?'draggable="true"':''}>
@@ -35,6 +43,15 @@ export function mountFighters(root,{ship,fit,report,mutate,browse,say,validate})
  host.querySelectorAll('.fighter-row').forEach(el=>{
   const list=el.dataset.fighterList,index=Number(el.dataset.fighterIndex),entry=state[list][index];
   el.querySelector('.fighter-pick').onclick=()=>select(list,index);
+  bindMenu(el,e=>{
+   if(!entry){menu(e,el,{name:'发射管 '+(index+1)},[['选择舰载机',()=>select(list,index)]]);return;}
+   const t=type(entry.typeId),empty=Array.from({length:count},(_,i)=>i).find(i=>!state.tubes[i]);
+   const actions=list==='tubes'?[
+    [entry.active?'设为待命':'设为参战',()=>change(s=>s.tubes[index].active=!entry.active),{disabled:host._busy}],
+    ['移入备用机库',()=>change(s=>{s.reserve.push({...s.tubes[index],active:false});s.tubes[index]=null}),{disabled:host._busy}],
+   ]:[['装入空发射管',()=>change(s=>{s.tubes[empty]={...s.reserve[index],active:true};s.reserve.splice(index,1)}),{disabled:host._busy||empty===undefined,title:empty===undefined?'没有空发射管':''}]];
+   menu(e,el,t,[...actions,['在浏览器中定位',()=>{select(list,index);document.querySelector('#search').value=t.name;document.querySelector('#search').dispatchEvent(new Event('input',{bubbles:true}))}],['卸下',()=>change(s=>{if(list==='reserve')s.reserve.splice(index,1);else s.tubes[index]=null}),{disabled:host._busy}],['详细信息',()=>onInfo(t)]]);
+  });
   el.querySelectorAll('[data-delta]').forEach(b=>b.onclick=()=>change(s=>{s[list][index].quantity=Math.max(1,Math.min(type(entry.typeId).max,entry.quantity+Number(b.dataset.delta)))}));
   const active=el.querySelector('[data-active]');if(active)active.onclick=()=>change(s=>s[list][index].active=!entry.active);
   el.ondragstart=e=>{drag={list,index};e.dataTransfer.setData('application/x-fitlab-fighter','1');e.dataTransfer.effectAllowed='move'};
@@ -50,12 +67,18 @@ export function mountFighters(root,{ship,fit,report,mutate,browse,say,validate})
  const browser=document.querySelector('.browser');
  browser.onfighterremove=()=>{if(drag?.list)change(s=>{if(drag.list==='reserve')s.reserve.splice(drag.index,1);else s.tubes[drag.index]=null});drag=null};
  host._install=t=>{drag={type:t.id};let destination=selected||{list:'tubes',index:state.tubes.findIndex(x=>!x)};if(destination.index<0){say('发射管已满，请选择替换位置或备用机库');drag=null;return}drop(destination.list,destination.index);drag=null};
+ host._catalogMenu=(e,el,t)=>{
+  const index=selected?.list==='tubes'?selected.index:Array.from({length:count},(_,i)=>i).find(i=>!state.tubes[i]);
+  const available=Number.isInteger(index)&&index>=0&&index<count;
+  const install=(list,i)=>{drag={type:t.id};drop(list,i);drag=null};
+  menu(e,el,t,[[available?(state.tubes[index]?'替换第 ':'装入第 ')+(index+1)+' 发射管':'装入发射管',()=>install('tubes',index),{disabled:host._busy||!available,title:available?'':'没有空发射管，请先选择替换位置'}],['加入备用机库',()=>install('reserve',state.reserve.length),{disabled:host._busy}],['详细信息',()=>onInfo(t)]]);
+ };
 }
 export function drawFighterBrowser(root,q){
  const host=document.querySelector('#fighter-config');if(!host)return;
  document.querySelector('#count').textContent=types.length+' 型';
  root.innerHTML=['light','heavy','support'].map(k=>{const list=types.filter(t=>t.class===k&&(!q||(t.name+' '+t.en+' '+t.id).toLowerCase().includes(q.toLowerCase())));return list.length?`<details open><summary>${({light:'轻型',heavy:'重型',support:'支援'})[k]}舰载机</summary>${list.map(t=>`<div class="item fighter-catalog" draggable="true" role="button" tabindex="0" data-fighter-type="${t.id}"><img src="https://images.evetech.net/types/${t.id}/icon?size=64" alt=""><span>${t.name}<small>完整中队 ${t.max} 架</small></span></div>`).join('')}</details>`:''}).join('');
- root.querySelectorAll('[data-fighter-type]').forEach(el=>{const t=type(el.dataset.fighterType);el.ondblclick=()=>document.querySelector('#fighter-config')._install(t);el.onkeydown=e=>{if(e.key==='Enter')document.querySelector('#fighter-config')._install(t)};el.ondragstart=e=>{drag={type:t.id};e.dataTransfer.setData('application/x-fitlab-fighter','1');e.dataTransfer.effectAllowed='copy'};el.ondragend=()=>drag=null});
+ root.querySelectorAll('[data-fighter-type]').forEach(el=>{const t=type(el.dataset.fighterType);el.ondblclick=()=>document.querySelector('#fighter-config')._install?.(t);el.onkeydown=e=>{if(e.key==='Enter')document.querySelector('#fighter-config')._install?.(t)};bindMenu(el,e=>document.querySelector('#fighter-config')._catalogMenu?.(e,el,t));el.ondragstart=e=>{drag={type:t.id};e.dataTransfer.setData('application/x-fitlab-fighter','1');e.dataTransfer.effectAllowed='copy'};el.ondragend=()=>drag=null});
 }
 document.addEventListener('dragover',e=>{if(drag?.list&&e.target.closest('.browser')){e.preventDefault();e.dataTransfer.dropEffect='move'}},true);
 document.addEventListener('drop',e=>{if(drag?.list&&e.target.closest('.browser')){e.preventDefault();e.stopImmediatePropagation();document.querySelector('.browser').onfighterremove?.()}},true);

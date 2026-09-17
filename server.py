@@ -190,6 +190,9 @@ class Handler(SimpleHTTPRequestHandler):
     return self.reply(fighter_catalog())
    if re.fullmatch(r'/api/items/\d+',self.path):
     item=TYPES.get(int(self.path.rsplit('/',1)[1]))
+    if item is None and os.environ.get('FITLAB_CALCULATOR','nengine')=='nengine':
+     from nengine_catalog import indexed_item
+     item=indexed_item(int(self.path.rsplit('/',1)[1]))
     if not item:return self.reply({'error':'物品不存在'},404)
     if os.environ.get('FITLAB_CALCULATOR','nengine')=='nengine':
      from nengine_catalog import item_metadata
