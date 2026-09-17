@@ -28,7 +28,10 @@ export function relocateLibrary(layout,plans,source,target,mode){
  return {layout:next,plans:copies,destination,moved};
 }
 export function installLibraryDrag(tree,blank,{canStart,validate,onDrop,onError}){
- let source=null,hover=null,timer=null,drop=null,cancelled=false,suppressContextUntil=0;
+ let source=null,hover=null,timer=null,drop=null,cancelled=false,suppressContextUntil=0,press=null;
+ tree.addEventListener('pointerdown',e=>{const row=e.target.closest('[data-library-key]');press=e.button===0&&row?{key:row.dataset.libraryKey,at:performance.now()}:null;},true);
+ for(const type of ['pointerup','pointercancel'])document.addEventListener(type,()=>{press=null},true);
+ window.addEventListener('blur',()=>{press=null});
  const marker=document.createElement('div');marker.className='plan-drop-marker';marker.hidden=true;document.body.append(marker);
  function clear(){clearTimeout(timer);timer=null;hover=null;drop=null;marker.hidden=true;tree.querySelectorAll('.library-drop-inside').forEach(el=>el.classList.remove('library-drop-inside'));}
  function cancelRightDrag(e){
@@ -59,7 +62,7 @@ export function installLibraryDrag(tree,blank,{canStart,validate,onDrop,onError}
   else if(!center)show(el,target,mode);
   const bounds=tree.getBoundingClientRect();if(e.clientY<bounds.top+24)tree.scrollTop-=8;else if(e.clientY>bounds.bottom-24)tree.scrollTop+=8;
  };
- tree.ondragstart=e=>{const row=e.target.closest('[data-library-key]');if(!row||row.dataset.libraryKey==='f:'||!canStart()){e.preventDefault();return}cancelled=false;suppressContextUntil=0;source=row.dataset.libraryKey;e.dataTransfer.setData('application/x-fitlab-library',source);e.dataTransfer.effectAllowed='move';};
+ tree.ondragstart=e=>{const row=e.target.closest('[data-library-key]');if(!row||row.dataset.libraryKey==='f:'||press?.key!==row.dataset.libraryKey||performance.now()-press.at<200||!canStart()){e.preventDefault();return}cancelled=false;suppressContextUntil=0;source=row.dataset.libraryKey;e.dataTransfer.setData('application/x-fitlab-library',source);e.dataTransfer.effectAllowed='move';};
  tree.ondragend=()=>{source=null;clear();if(cancelled)suppressContextUntil=Date.now()+700;cancelled=false;};
  for(const zone of [tree,blank]){zone.ondragover=over;zone.ondragleave=e=>{if(!zone.contains(e.relatedTarget))clear()};zone.ondrop=e=>{if(!source)return;e.preventDefault();e.stopPropagation();const intent=drop,s=source;source=null;clear();if(intent)Promise.resolve(onDrop(s,intent.target,intent.mode)).catch(onError)};}
  document.addEventListener('keydown',e=>{if(e.key==='Escape'){source=null;clear()}});
