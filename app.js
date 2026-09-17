@@ -1,4 +1,5 @@
-import {openImplantEditor} from './implant-editor.js';
+import {openLoadoutPicker} from './loadout-manager.js';
+import {implantCatalog} from './implant-catalog.js';
 import {mountTacticalMode} from './tactical-mode.js';
 import {transferSlots} from './slot-transfer.js';
 import {installationLimitReason} from './installation-limits.js';
@@ -379,13 +380,13 @@ function storeWorkingDraft(){try{localStorage.setItem('fitlab-working-draft',JSO
 
 navigateFitPage();
 
+function applyLoadout(plan){mutate(()=>{fitRecord.loadoutPlan=plan?structuredClone(plan):null;fitRecord.implantPlan=plan?.implants.map(x=>({typeId:x.typeId}))||[];},'脑插与增效剂方案已应用 · 加成待接入');}
+document.addEventListener('fitlab-use-loadout',e=>applyLoadout(e.detail));
 function renderImplantEntry(){
- let button=$('#implant-config');if(!button){button=document.createElement('button');button.id='implant-config';button.type='button';button.setAttribute('aria-haspopup','dialog');$('#pilot').after(button);}
- button.textContent='脑插 '+(fitRecord.implantPlan?.length||0)+'/10';button.title='配置脑插 · 加成待接入';
- button.onclick=()=>openImplantEditor({plan:fitRecord.implantPlan||[],onApply:plan=>{
-  if(JSON.stringify(plan)===JSON.stringify(fitRecord.implantPlan||[]))return;
-  mutate(()=>{fitRecord.implantPlan=plan;},'脑插方案已应用 · 加成待接入');
- }});
+ let button=$('#implant-config');if(!button){button=document.createElement('button');button.id='implant-config';button.type='button';button.setAttribute('aria-haspopup','menu');$('#pilot').after(button);}
+ const snapshot=fitRecord.loadoutPlan||(fitRecord.implantPlan?.length?{name:'自定义脑插',implants:fitRecord.implantPlan.map(x=>({...x,slot:implantCatalog.find(t=>t.id===x.typeId)?.slot})),boosters:[],customized:true}:null);
+ button.textContent=(snapshot?.name||'脑插与增效剂')+' ▾';button.title='选择独立方案 · 加成待接入';
+ button.onclick=()=>openLoadoutPicker(button,{api,snapshot,onSelect:applyLoadout,onManage:()=>{location.hash='characters?from=fitting';document.dispatchEvent(new CustomEvent('fitlab-manage-loadout',{detail:{id:snapshot?.id,initial:snapshot,fromFit:true}}));}});
 }
 function renderPilot(){renderImplantEntry();
  const full=fitRecord.characterName||'选择角色技能',name=full==='全技能 V · 模拟角色'?'全技能 V':full;
@@ -480,8 +481,8 @@ function renderBayConfig(){
   });
  });
 }
-function editSnapshot(){return {implantPlan:structuredClone(fitRecord.implantPlan||[]),tacticalModeTypeId:fitRecord.tacticalModeTypeId??null,slots:structuredClone(slots),drones:structuredClone(fitRecord.drones||[]),cargo:structuredClone(fitRecord.cargo||[])}}
-function applyEditSnapshot(s){fitRecord.implantPlan=s.implantPlan||[];fitRecord.tacticalModeTypeId=s.tacticalModeTypeId??null;slots=s.slots;fitRecord.drones=s.drones;fitRecord.cargo=s.cargo}
+function editSnapshot(){return {loadoutPlan:structuredClone(fitRecord.loadoutPlan||null),implantPlan:structuredClone(fitRecord.implantPlan||[]),tacticalModeTypeId:fitRecord.tacticalModeTypeId??null,slots:structuredClone(slots),drones:structuredClone(fitRecord.drones||[]),cargo:structuredClone(fitRecord.cargo||[])}}
+function applyEditSnapshot(s){fitRecord.loadoutPlan=s.loadoutPlan||null;fitRecord.implantPlan=s.implantPlan||[];fitRecord.tacticalModeTypeId=s.tacticalModeTypeId??null;slots=s.slots;fitRecord.drones=s.drones;fitRecord.cargo=s.cargo}
 
 function renderShipBadge(){
  const host=$('#ship');host.querySelector('.ship-tech-badge')?.remove();

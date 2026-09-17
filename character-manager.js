@@ -1,3 +1,4 @@
+import {installLoadoutManager} from './loadout-manager.js';
 import {createSkillPointDisplay,skillPointNote as pointNote} from './skill-points.js';
 import {matchesName,getLocale} from './i18n.js';
 import {readPilotFolders,writePilotFolders,onPilotFoldersChanged} from './pilot-folders.js';
@@ -7,6 +8,13 @@ export function installCharacterManager({api,catalog,onReturn}){
  const root=document.createElement('main');root.id='characters-page';root.hidden=true;
  root.innerHTML='<div class="character-heading"><div><small>CHARACTER ROSTER / 角色管理</small><h1>角色管理</h1></div></div><div class="character-workspace"><aside class="character-roster"><div class="character-tree-title"><span>角色</span><button id="character-add" aria-label="新增角色或文件夹" title="新增角色或文件夹">＋</button></div><div id="character-folder-editor" hidden></div><input id="character-search" aria-label="搜索角色" placeholder="搜索角色或文件夹"><div id="character-list" tabindex="0" aria-label="角色列表"></div><div class="character-tree-footer">Ctrl+C / V 复制粘贴 · 右键管理</div></aside><section class="character-editor"><div id="character-status" role="status"></div><div id="character-detail"></div></section></div>';
  document.querySelector('header').after(root);
+ const tabs=document.createElement('div');tabs.className='character-tabs';tabs.setAttribute('role','tablist');tabs.innerHTML='<button role="tab" aria-selected="true" data-view="skills">角色技能</button><button role="tab" aria-selected="false" data-view="plans">脑插与增效剂</button>';root.querySelector('.character-heading').after(tabs);
+ const planHost=document.createElement('section');planHost.className='loadout-management';planHost.hidden=true;root.append(planHost);
+ const loadouts=installLoadoutManager(planHost,{api});let activeView='skills';try{activeView=sessionStorage.getItem('fitlab-character-view')==='plans'?'plans':'skills'}catch{}
+ function switchView(view,options={}){activeView=view;try{sessionStorage.setItem('fitlab-character-view',view)}catch{}root.querySelector('.character-workspace').hidden=view!=='skills';tabs.querySelectorAll('button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.view===view)));if(view==='plans')loadouts.show({fromFit:location.hash.includes('from=fitting'),...options});else loadouts.hide();}
+ tabs.querySelectorAll('button').forEach(b=>b.onclick=()=>switchView(b.dataset.view));
+ document.addEventListener('fitlab-manage-loadout',e=>{switchView('plans',e.detail||{});});
+
  const contextMenu=document.createElement('div');contextMenu.className='character-context-menu';contextMenu.role='menu';contextMenu.hidden=true;document.body.append(contextMenu);
  const $=s=>root.querySelector(s),skills=catalog.filter(t=>t.kind==='skill').sort((a,b)=>a.name.localeCompare(b.name,'zh-CN'));
  const group=t=>t.path?.at(-1)||'其他技能';
@@ -127,5 +135,5 @@ export function installCharacterManager({api,catalog,onReturn}){
  $('#character-search').oninput=drawList;
  document.querySelector('#nav-library').addEventListener('click',async e=>{if(root.hidden)return;e.preventDefault();if(await guard()){dirty=false;if(onReturn)onReturn();else location.hash='library'}});
 
- return {async show(){root.hidden=false;if(loaded){drawList();drawDetail();return}const token=++generation;status('正在读取角色…');try{const list=await api('characters');if(token!==generation)return;people=list;loaded=true;const params=new URLSearchParams(location.hash.split('?')[1]||'');selected=people.find(c=>c.id===params.get('imported'))||people[0]||null;status(params.has('authError')?'官网授权未完成或技能读取失败，请重新授权。':params.has('imported')?'官网角色技能已导入。':'');try{const cached=JSON.parse(sessionStorage.getItem('fitlab-character-draft')||'null');if(cached){draft=cached;dirty=true;selected=people.find(c=>c.id===cached.id)||null;status('已恢复未保存的角色修改')}}catch{}drawList();drawDetail()}catch(e){status('读取失败：'+e.message)}},hide(){root.hidden=true;contextMenu.hidden=true;loaded=false;generation++;if(!dirty){draft=null;selected=null}}};
+ return {async show(){root.hidden=false;switchView(activeView,{fromFit:location.hash.includes('from=fitting')});if(loaded){drawList();drawDetail();return}const token=++generation;status('正在读取角色…');try{const list=await api('characters');if(token!==generation)return;people=list;loaded=true;const params=new URLSearchParams(location.hash.split('?')[1]||'');selected=people.find(c=>c.id===params.get('imported'))||people[0]||null;status(params.has('authError')?'官网授权未完成或技能读取失败，请重新授权。':params.has('imported')?'官网角色技能已导入。':'');try{const cached=JSON.parse(sessionStorage.getItem('fitlab-character-draft')||'null');if(cached){draft=cached;dirty=true;selected=people.find(c=>c.id===cached.id)||null;status('已恢复未保存的角色修改')}}catch{}drawList();drawDetail()}catch(e){status('读取失败：'+e.message)}},hide(){root.hidden=true;contextMenu.hidden=true;loaded=false;generation++;if(!dirty){draft=null;selected=null}}};
 }
