@@ -9,7 +9,7 @@ class NativeCurves(unittest.TestCase):
     def fit(self):return {'name':'Curve policy','shipId':587,'skills':[],'slots':[{'key':'high-0','kind':'high','item':2881,'ammo':185,'state':'Active'}]}
     def test_ideal_and_edps_public_full_result_parity(self):
         b=bridge();sys.path.insert(0,str(b.root/'.tools/u3-python'));import jsonschema
-        schema=json.loads((b.root/'contracts/headless-v1/r36/output-schemas.json').read_text())['schemas']['fit_output_curves']
+        schema=json.loads((b.root/f"contracts/headless-v1/r{b.baseline['revision']}/output-schemas.json").read_text())['schemas']['fit_output_curves']
         target={'id':'target','distanceMeters':1000,'signatureMeters':40,'speedMetersPerSecond':100,'angularRadiansPerSecond':.02,'layer':{'name':'armor','resonances':{'em':.5,'thermal':.8,'kinetic':.4,'explosive':.3}}}
         for chosen in (None,target):
             fit=self.fit();fit['attackMode']='edps' if chosen else 'dps';report=analyze(fit,target=chosen);view=build_curves(report);native=view['native']

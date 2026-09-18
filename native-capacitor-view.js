@@ -8,7 +8,12 @@ export function capacitorHtml(report){
  const summary=failed?'付款失败 · '+fmt(r.firstFailedPaymentSeconds,'s'):stable===true?'平均稳定':stable===false?'平均不稳定':'稳定性未确定';
  let html='<div class="panel-title"><span>电容</span><div class="section-summary"><b style="color:'+(failed||stable===false?'#f18080':stable===true?'#79d6ab':'var(--muted)')+'">'+summary+'</b></div></div><div class="stat-block">';
  html+='<label class="native-cap-window">观察窗口 <select aria-label="电容观察窗口" data-cap-horizon>'+[60,300,900,3600].map(n=>'<option value="'+n+'" '+(n===(r?.query.horizonSeconds||report.curveRequest?.capacitorHorizon||300)?'selected':'')+'>'+n/60+' 分钟</option>').join('')+'</select></label>';
- if(!r)return html+'<p class="profile-note">周期查询不可用</p><details><summary>原因</summary><p class="profile-note">'+esc(data?.reason||'电容查询尚未就绪')+'</p></details></div>';
+ if(!r){
+  const recharge=report.native?.capacitorRecharge;
+  if(recharge)html+=row('容量',fmt(recharge.capacity,'GJ'))+row('峰值回充',fmt(recharge.peakRecharge,'GJ/s'));
+  const missing=(report.native?.capacitorContributions||[]).filter(c=>c.state!=='available');
+  return html+'<p class="profile-note">周期查询不可用</p><details><summary>原因</summary><p class="profile-note">'+esc(data?.reason||report.native?.capacitorUnavailableReason||'电容查询尚未就绪')+'</p>'+missing.map(c=>'<p class="profile-note">未计入：'+esc(c.instanceId)+' · '+esc(c.reason)+'</p>').join('')+'</details></div>';
+ }
  html+=row('容量',fmt(r.recharge.capacity,'GJ'))+row('已知净消耗',fmt(average.knownNetDrainGjPerSecond,'GJ/s'))+row('峰值回充',fmt(average.peakRechargeGjPerSecond,'GJ/s'));
  if(average.complete&&stable===true)html+=row('平均稳定电量',fmt(average.stableFraction*100,'%'));
  html+=row('窗口内最低',fmt(r.minimumAmountGj,'GJ'))+row('窗口结束电量',fmt(r.finalAmountGj,'GJ'));

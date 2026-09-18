@@ -63,7 +63,7 @@ def attach_capacitor(fit,report,fits):
         try:
             diagnostic=json.loads(reason).get('error')
             if diagnostic:
-                names={'CAP_SCENARIO_FIT':'本舰或外部来源装配尚未通过原生校验，请查看装配诊断','CAP_SCENARIO_SUPPLY':'注电需要明确弹种、实际装弹量和有限货舱供应','CAP_SCENARIO_NOS_TARGET':'本舰吸电缺少对方电量、容量、抗性或距离条件','CAP_SCENARIO_NOS_SOURCE':'外来吸电缺少来源电容条件'}
+                names={'CAP_SCENARIO_FIT':'本舰或外部来源不满足电容周期查询条件，请查看装配与电容分项诊断','CAP_SCENARIO_SUPPLY':'注电需要明确弹种、实际装弹量和有限货舱供应','CAP_SCENARIO_NOS_TARGET':'本舰吸电缺少对方电量、容量、抗性或距离条件','CAP_SCENARIO_NOS_SOURCE':'外来吸电缺少来源电容条件'}
                 reason=names.get(diagnostic.get('code'),diagnostic.get('message',reason))
         except (ValueError,AttributeError):pass
         report['capacitorScenario']={'state':'unavailable','reason':reason,'diagnostic':diagnostic,'sources':sources,

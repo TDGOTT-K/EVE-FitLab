@@ -22,5 +22,12 @@ class Status(unittest.TestCase):
   before=copy.deepcopy(r);s=classify_report(r)
   self.assertEqual((s['state'],s['legality']),('unsupported','unknown'))
   self.assertEqual(r,before)
+ def test_integrated_partial_validation_and_capacitor_contributions(self):
+  r=self.report();r['native']['capacitorUnavailableReason']='CAPACITOR_CONTRIBUTIONS_INCOMPLETE'
+  r['native']['capacitorContributions']=[{'instanceId':'high-0','state':'unavailable','reason':'EVE_CAPACITOR_EFFECT'}]
+  s=classify_report(r);self.assertEqual((s['legality'],s['state']),('valid','partial'))
+  self.assertEqual(s['unavailable'][0]['exclusions'][0]['instanceId'],'high-0')
+  r['native']['validationState']='partial_static_dependencies'
+  self.assertEqual(classify_report(r)['legality'],'unknown')
 
 if __name__=='__main__':unittest.main()
