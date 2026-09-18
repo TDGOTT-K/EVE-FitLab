@@ -4,7 +4,7 @@ Deterministic operation IDs let an identical request recover a lost response or
 an interrupted UI-library write. Native session files are never edited here.
 """
 import copy,hashlib,json,uuid
-from nengine_adapter import bridge,native_fit
+from nengine_adapter import bridge,native_fit,validate_source_binding
 from nengine_bridge import NEngineError
 from nengine_edit_commands import commands_between
 
@@ -12,6 +12,7 @@ class SaveConflict(ValueError):pass
 
 def native_save(fit,previous,transaction,client=None,editing=None):
     client=client or bridge();status=client.discover();build=status['source']['source']['buildNumber']
+    validate_source_binding(fit,client)
     candidate=native_fit(fit,build)
     expected=client.call('fit_analyze',{'fit':candidate})['result']['fitHash']
     if editing is not None:

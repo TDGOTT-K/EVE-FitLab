@@ -1,10 +1,11 @@
 """Read-only command preview through the public engine, with normal UI projections."""
 import copy
-from nengine_adapter import bridge
+from nengine_adapter import bridge,validate_source_binding
 from nengine_edit_commands import prepare_ui_edit
 
 def preview_fit(before,after,analyze):
     client=bridge();status=client.discover()
+    validate_source_binding(before,client);validate_source_binding(after,client)
     prepared=prepare_ui_edit(before,after,status['source']['source']['buildNumber'])
     previews=[]
     def query(context):

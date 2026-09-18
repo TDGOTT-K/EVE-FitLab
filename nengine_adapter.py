@@ -55,8 +55,18 @@ def native_fit(f, build):
             'crystals':f.get('crystals',[])}
     return result
 
+def source_binding(client):
+    b=client.baseline
+    return {key:b[key] for key in ('engineVersion','revision','staticRule','buildNumber','indexSha256')}
+
+def validate_source_binding(f,client):
+    binding=f.get('sourceBinding')
+    if binding is not None and binding!=source_binding(client):
+        raise ValueError('装配绑定的引擎、接口或数据版本与当前版本不同；未自动重算或改写来源。请保留原分享文件。')
+
 def analyze(f,target=None,native_query=None):
     client=bridge(); status=client.discover()
+    validate_source_binding(f,client)
     build=status['source']['source']['buildNumber']
     native=native_fit(f,build)
     def query(context):
@@ -119,13 +129,16 @@ def analyze(f,target=None,native_query=None):
     if not a['staticCoverageComplete']:
         issues.append({'code':'STATIC_COVERAGE_INCOMPLETE','message':'当前引擎副本未覆盖部分效果；分项是否可用以各自状态为准，完整装配尚未通过校验。'})
     selection=fighter_damage_selection(f,a)
-    return {'provider':'nengine','contract':'fitlab-analysis-v2','engineVersion':status['engineVersion'],
+    report={'provider':'nengine','contract':'fitlab-analysis-v2','engineVersion':status['engineVersion'],'sourceBinding':source_binding(client),
         'fighterDamageSelection':selection,'outputSelection':output['selection'],'outputBreakdown':breakdown,'baselineOutputBreakdown':baseline_breakdown,
         'outputContext':context['output'],'baselineOutputSelection':baseline,'baselineOutputItems':baseline_items,
         'scenarioTarget':target,'attackMode':'edps' if effective else 'dps','curveRequest':f,
         'native':a,'nativeFit':native,'attributes':projection,'snapshot':{'modules':modules},
         'skillCount':len(native['skills']),'isValid':not issues,
         'issues':issues,'integrationNotices':notices,'source':{'buildNumber':build,'revision':client.baseline['revision']}}
+    from analysis_status import classify_report
+    report['analysisStatus']=classify_report(report)
+    return report
 
 def fighter_damage_selection(f,analysis):
     """Sum only selected engine-returned primary contributions; never model abilities.

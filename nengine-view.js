@@ -1,3 +1,4 @@
+import {scaleReading} from './analysis-status.js';
 import {capacitorHtml} from './native-capacitor-view.js';
 import {numberAttributes,deltaClass} from './scenario-display.js';
 import {outputHtml,outputReading} from './nengine-output-view.js';
@@ -20,11 +21,11 @@ export function nativeSlotMetrics(report,slot,group){
  return fields.map(([label,id,unit])=>{const t=a['module.'+slot.key+'/'+id];return t?`<span class="slot-metric" ${tip(nativeDetail(t,label,unit))}><span class="slot-metric-label">${label}</span><b>${fmt(t.value)}</b><span class="slot-metric-unit">${unit}</span></span>`:''}).join('')+(group!=='resources'&&w?`<span class="slot-metric">${report.attackMode==='edps'?'EDPS':'DPS'} <b ${numberAttributes(dps,report.scenarioTarget?base:undefined)}>${fmt(dps)}</b></span><span class="slot-metric">周期 <b>${fmt(w.cycleSeconds,'s')}</b></span>`:'');
 }
 export function nativeResources(host,report){
- if(!report.native.resources.length){host.innerHTML='<p class="profile-note">当前输入包含未支持效果，资源数值不可用</p>';return;}host.innerHTML=report.native.resources.filter(r=>['cpu','powergrid'].includes(r.id)).map(r=>`<div class="meter ${r.withinCapacity?'':'over'}"><label>${r.id==='cpu'?'CPU':'能量栅格'} 剩余<span>${fmt(r.remaining)} / ${fmt(r.capacity,r.id==='cpu'?'tf':'MW')}</span></label><progress value="${Math.max(0,r.remaining)}" max="${r.capacity||1}"></progress></div>`).join('');
+ if(!report.native.resources.length){host.innerHTML='<p class="profile-note">当前输入包含未支持效果，资源数值不可用</p>';return;}host.innerHTML=report.native.resources.filter(r=>['cpu','powergrid'].includes(r.id)).map(r=>`<div class="meter ${r.withinCapacity===false?'over':''}"><label>${r.id==='cpu'?'CPU':'能量栅格'} 剩余<span>${fmt(r.remaining)} / ${fmt(r.capacity,r.id==='cpu'?'tf':'MW')}</span></label>${Number.isFinite(r.remaining)&&Number.isFinite(r.capacity)&&r.capacity>0?`<progress value="${Math.max(0,r.remaining)}" max="${r.capacity}"></progress>`:''}</div>`).join('');
 }
 export function mountNativeStats(root,report,{mode='hp',onMode,onDamageEdit,onOutputMetric,onCapHorizon,catalog=[]}={}){
  const a=report.native,attrs=a.attributes;
- const attr=(label,id,unit='',scale=1)=>{const t=attrs['ship/'+id];return row(label,fmt(t? t.value/scale : null,unit),nativeDetail(t,label))};
+ const attr=(label,id,unit='',scale=1)=>{const t=attrs['ship/'+id];return row(label,fmt(scaleReading(t?.value,scale),unit),nativeDetail(t,label))};
  let html=capacitorHtml(report);
  const unit=report.attackMode==='edps'?'EDPS':'DPS';
  const current=report.outputSelection,base=report.baselineOutputSelection,comparison=report.native.outputContributions.comparison;
@@ -42,8 +43,8 @@ export function mountNativeStats(root,report,{mode='hp',onMode,onDamageEdit,onOu
  }else html+=row('防御','不可计算');
  html+='</div>'+head('机动',`<b>${fmt(a.motion?.maximumSpeedMetersPerSecond,'m/s')}</b>`);
  html+='<div class="stat-block">'+row('起步至 75%',fmt(a.motion?.fromRestTo75PercentSeconds,'s'))+attr('信号半径',552,'m')+attr('跃迁速度',600,'AU/s')+'</div>';
- html+=head('锁定',`<b>${fmt(attrs['ship/76']?attrs['ship/76'].value/1000:null,'km')}</b>`)+'<div class="stat-block">'+attr('扫描分辨率',564,'mm')+row('锁定目标数',fmt(a.targetCountLimits?.maximum))+'</div>';
- if(a.droneBay&&a.droneBay.capacityCubicMeters>0)html+=head('无人机')+'<div class="stat-block">'+row('控制距离',fmt(a.droneBay.controlRangeMeters/1000,'km'))+row('最多出动',fmt(a.droneBay.maximumActive))+'</div>';
+ html+=head('锁定',`<b>${fmt(scaleReading(attrs['ship/76']?.value,1000),'km')}</b>`)+'<div class="stat-block">'+attr('扫描分辨率',564,'mm')+row('锁定目标数',fmt(a.targetCountLimits?.maximum))+'</div>';
+ if(a.droneBay&&a.droneBay.capacityCubicMeters>0)html+=head('无人机')+'<div class="stat-block">'+row('控制距离',fmt(scaleReading(a.droneBay.controlRangeMeters,1000),'km'))+row('最多出动',fmt(a.droneBay.maximumActive))+'</div>';
  const all=[...new Set([...report.integrationNotices,...report.issues.map(e=>e.code+' · '+e.message),...a.warnings.map(e=>e.code+' · '+e.message),...a.coverage.filter(c=>c.status==='unsupported_static').map(c=>c.name+' · '+c.reason)])];
  if(all.length)html+='<details class="native-status"><summary>计算范围与待处理项 <b>'+all.length+'</b></summary>'+all.map(s=>'<p class="profile-note">'+esc(s)+'</p>').join('')+'</details>';
  root.innerHTML=html;

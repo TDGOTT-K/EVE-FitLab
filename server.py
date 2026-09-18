@@ -133,6 +133,8 @@ def analyze(f,resolve_links=True,native_query=None):
   result['scenarioTargetSource']=source
   from nengine_capacitor import attach_capacitor
   attach_capacitor(f,result,read_library()['fits'] if resolve_links else [])
+  from analysis_status import classify_report
+  result['analysisStatus']=classify_report(result)
   return result
  return analyze_legacy(f,resolve_links)
 

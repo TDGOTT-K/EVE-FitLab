@@ -1,9 +1,10 @@
 """Translate UI inputs and deliver the public valuation result unchanged."""
-from nengine_adapter import bridge,native_fit
+from nengine_adapter import bridge,native_fit,validate_source_binding
 from market_prices import snapshot
 
 def value_fit(fit,market=None):
     client=bridge();status=client.discover()
+    validate_source_binding(fit,client)
     native=native_fit(fit,status['source']['source']['buildNumber'])
     market=market if market is not None else snapshot()
     # Transport projection only: select quoted type IDs; no quantities or totals.

@@ -3,7 +3,7 @@
 Inputs/outputs are public engine objects, so CLI can operate the same session.
 UI layout, scenarios and analysis selection do not become fitting commands.
 """
-from nengine_adapter import bridge
+from nengine_adapter import bridge,validate_source_binding
 
 OPERATIONS={
     'create':('fit_create',{'sessionId','fit','allowIncompleteDraft'}),
@@ -20,6 +20,7 @@ def request(action,arguments,client=None):
         if not isinstance(arguments,dict) or set(arguments)!={'before','after'}:raise ValueError('编辑准备需要before和after装配快照')
         from nengine_edit_commands import prepare_ui_edit
         client=client or bridge();status=client.discover()
+        validate_source_binding(arguments['before'],client);validate_source_binding(arguments['after'],client)
         return {'ok':True,'result':prepare_ui_edit(arguments['before'],arguments['after'],status['source']['source']['buildNumber'])}
     if action not in OPERATIONS:raise ValueError('未知装配事务操作')
     name,allowed=OPERATIONS[action]

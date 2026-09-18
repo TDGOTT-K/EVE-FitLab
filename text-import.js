@@ -1,3 +1,4 @@
+import {analysisStatusText} from './analysis-status.js';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export async function showTextImport({api,calculate,onSaved}){
  const dialog=document.createElement('dialog');dialog.className='share-dialog text-import-dialog';
@@ -19,7 +20,7 @@ export async function showTextImport({api,calculate,onSaved}){
    if(version!==token||!dialog.open)return;
    preview.innerHTML='<h3>'+esc(candidate.name)+'</h3><p>'+candidate.slots.filter(s=>s.item).length+' 件装备 · '+candidate.drones.reduce((n,d)=>n+d.quantity,0)+' 架无人机 · '+candidate.cargo.length+' 项货舱物品</p>'+result.notes.map(n=>'<p class="profile-note">'+esc(n)+'</p>').join('');
    if(reason||report?.issues?.length)preview.innerHTML+='<details open><summary>计算与校验提示</summary>'+[...(reason?[reason]:[]),...(report?.issues||[]).map(i=>i.message)].map(s=>'<p>'+esc(s)+'</p>').join('')+'</details>';
-   status.textContent=report?.isValid?'解析完成，装配校验通过。':'解析完成，可导入为草稿；部分结果或装配条件尚未满足。';save.disabled=false;
+   status.textContent='解析完成，'+analysisStatusText(report)+'。可导入为新草稿。';save.disabled=false;
   }catch(e){if(version===token)status.textContent=e.message}finally{parse.disabled=false}
  };
  save.onclick=async()=>{if(!fit)return;save.disabled=parse.disabled=true;text.disabled=role.disabled=true;status.textContent='正在保存新装配…';

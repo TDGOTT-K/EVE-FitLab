@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {scaleReading,analysisStatusText} from './analysis-status.js';
+import {mountNativeStats,nativeResources} from './nengine-view.js';
+assert.equal(scaleReading(null,1000),null);
+assert.equal(scaleReading(undefined,1000),null);
+assert.equal(scaleReading(0,1000),0);
+assert.equal(scaleReading(125000,1000),125);
+assert.equal(analysisStatusText({analysisStatus:{legality:'valid',completeness:'partial'}}),'装配合法 · 当前结果不完整');
+const report={native:{attributes:{'ship/76':{value:null},'ship/552':{value:null}},weapons:{},resources:[],coverage:[],warnings:[],outputContributions:{items:[],staticBlockers:[]},droneBay:{capacityCubicMeters:1,controlRangeMeters:null,maximumActive:0}},outputSelection:{metric:'nominalCycleDps',status:'empty_selection',groups:[],exclusions:[]},baselineOutputSelection:{metric:'nominalCycleDps'},outputContext:{selection:{contributionIds:[]}},outputBreakdown:Object.fromEntries(['weapons','drones','fighters'].map(k=>[k,{groups:[],exclusions:[]}])),integrationNotices:[],issues:[]};
+const host={innerHTML:'',querySelectorAll:()=>[],querySelector:()=>({})};
+mountNativeStats(host,report);
+assert(host.innerHTML.includes('锁定摘要"><b>—</b>'));
+assert(!host.innerHTML.includes('0 km'));
+assert(!host.innerHTML.includes('>0 m<'));
+report.native.resources=[{id:'cpu',remaining:null,capacity:null,withinCapacity:null}];
+nativeResources(host,report);assert(!host.innerHTML.includes('<progress'));
+console.log('Status presentation: null remains unknown; real zero preserved; unknown resources have no numeric bar');

@@ -1,5 +1,5 @@
 """Bounded public attribute queries; no fitted-attribute evaluation in the host."""
-from nengine_adapter import bridge,native_fit
+from nengine_adapter import bridge,native_fit,validate_source_binding
 
 
 def inspect_attributes(fit,item_id,attribute_ids):
@@ -9,6 +9,7 @@ def inspect_attributes(fit,item_id,attribute_ids):
         raise ValueError('属性查询必须包含1–1024个正整数ID')
     if len(set(attribute_ids))!=len(attribute_ids):raise ValueError('属性查询重复')
     client=bridge();status=client.discover()
+    validate_source_binding(fit,client)
     native=native_fit(fit,status['source']['source']['buildNumber'])
     merged=None;requests=[]
     for offset in range(0,len(attribute_ids),256):

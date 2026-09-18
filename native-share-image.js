@@ -1,3 +1,4 @@
+import {analysisStatusText} from './analysis-status.js';
 import {mountNativeStats} from './nengine-view.js';
 import {encodeFitCodes,qrCanvas} from './fit-image-code.js';
 import {implantCatalog,boosterCatalog} from './loadout-catalog.js';
@@ -82,7 +83,7 @@ export async function renderNativeShareImage(fit,report,catalog,options,valuatio
  line('N '+report.engineVersion+' · SDE '+report.source.buildNumber+' · 本地接口 r'+report.source.revision,{size:19,color:'#91aebb'});
  if(valuation){const summary=valuationSummary(valuation,language);line(summary.label+' · '+summary.value,{size:24,bold:true,color:'#e9b479'});line(summary.source,{size:18,color:'#91aebb'});line(summary.scope,{size:18,color:'#91aebb'});}
  else line('参考估价暂不可用',{size:20,color:'#91aebb'});
- if(!report.isValid)line('装配存在校验或机制覆盖问题，以下保留可用分项；不代表装配已合法。',{size:21,color:'#edaf83'});
+ line(analysisStatusText(report),{size:21,color:report.analysisStatus?.state==='valid'?'#9eb7c4':'#edaf83'});
  heading('装配配置');let previous='';
  for(const row of config){
   if(row.section!==previous){line(row.section,{size:24,bold:true,color:'#94dce1'});previous=row.section}
@@ -100,7 +101,7 @@ export async function renderNativeShareImage(fit,report,catalog,options,valuatio
  if(options.notes&&fit.notes){heading('备注');line(fit.notes,{raw:true})}
  heading('装配导入码');line('保存全部二维码可恢复装配输入。情景和本地关联不包含在图片中。',{size:20});
  line('二维码始终包含全部库存与技能快照；上方货舱开关仅控制可见清单。',{size:18,color:'#9eb7c4'});
- const codes=await encodeFitCodes(fit,options);
+ const codes=await encodeFitCodes({...fit,sourceBinding:report.sourceBinding},options);
  for(const [i,code] of codes.entries()){
   y+=16;line('装配码 '+(i+1)+' / '+codes.length,{bold:true});const qr=await qrCanvas(code),top=y;
   commands.push(()=>{ctx.imageSmoothingEnabled=false;ctx.drawImage(qr,140,top,800,800);ctx.imageSmoothingEnabled=true});y+=830;
