@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {detachUnmatchedCrystals,exchangeCrystalSlots,mountCrystal,crystalWearText} from './crystal-stock.js';
+const fit={slots:[{key:'high-0',item:455,ammo:23089},{key:'high-1',item:455,ammo:247}],crystals:[{id:'used',typeId:23089,damage:.5,moduleId:'high-0'},{id:'other',typeId:247,damage:0,moduleId:'high-1'},{id:'spare',typeId:23089,damage:.25,moduleId:null}]};
+const before=structuredClone(fit);
+exchangeCrystalSlots(fit.crystals,'high-0','high-1');
+[fit.slots[0].ammo,fit.slots[1].ammo]=[fit.slots[1].ammo,fit.slots[0].ammo];
+assert.equal(detachUnmatchedCrystals(fit),0);
+assert.equal(fit.crystals[0].moduleId,'high-1');assert.equal(fit.crystals[0].damage,.5);
+mountCrystal(fit,'spare','high-1');
+assert.equal(fit.crystals[0].moduleId,null);assert.equal(fit.crystals[2].moduleId,'high-1');
+fit.slots[1].ammo=null;assert.equal(detachUnmatchedCrystals(fit),1);
+assert.equal(fit.crystals[2].damage,.25);
+assert.equal(before.crystals[0].moduleId,'high-0');
+assert.equal(crystalWearText(null),'损伤待计算');
+console.log('Crystal identity, swap, replacement, unload and unknown display pass');

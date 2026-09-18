@@ -30,6 +30,27 @@ class Inventory(unittest.TestCase):
             cli=json.loads((p/'result.json').read_text(encoding='utf-8-sig'))
             self.assertEqual(cli['inventory'],inventory)
 
+    def test_physical_crystals_and_protocol_parity(self):
+        fit=self.fit();fit['slots'][0].update(item=455,ammo=23089)
+        fit['crystals']=[{'id':'mounted','typeId':23089,'damage':.5,'moduleId':'high-0'},
+                         {'id':'spare','typeId':247,'damage':0,'moduleId':None}]
+        result=analyze(fit);inventory=result['native']['inventory']
+        self.assertEqual(inventory['usedCubicMeters'],1)
+        self.assertEqual(inventory['crystals'][0]['item']['wear']['initialDamage'],.5)
+        b=bridge()
+        with tempfile.TemporaryDirectory() as directory:
+            p=Path(directory);(p/'fit.json').write_text(json.dumps(result['nativeFit']),encoding='utf-8')
+            subprocess.run([str(b.root/'.tools/dotnet/dotnet.exe'),str(b.root/'src/NEngine.Cli/bin/Debug/net10.0/NEngine.Cli.dll'),
+                'sde-fit','--data',str(b.root/b.baseline['dataDirectory']),'--fit',str(p/'fit.json'),'--out',str(p/'result.json')],check=True,capture_output=True)
+            cli=json.loads((p/'result.json').read_text(encoding='utf-8-sig'))
+            self.assertEqual(cli['inventory'],inventory)
+        fit['crystals'][0]['moduleId']=None;fit['slots'][0]['ammo']=None
+        self.assertEqual(analyze(fit)['native']['inventory']['usedCubicMeters'],2)
+        fit['crystals'][0]['damage']=1
+        with self.assertRaises(ValueError):analyze(fit)
+        fit['crystals'][0]['damage']=-.1
+        with self.assertRaises(ValueError):analyze(fit)
+
     def test_limits_and_unsupported_plain_crystal(self):
         fit=self.fit();fit['cargo']=[{'item':185,'quantity':100000}];fit['slots'][0]['loadedCharges']=161
         result=analyze(fit)
