@@ -653,7 +653,7 @@ function queueInstallPreview(key,id=dragged,source='drag',instance=draggedInstan
  if(previewKey===identity)return;cancelInstallPreview();previewKey=identity;const token=previewToken;
  const target=key?$('#slots [data-key="'+key+'"]'):null;target?.classList.add('preview-target');
  previewTimer=setTimeout(async()=>{
-  const item=instance||byId(id),fit=currentFit(),slot=fit.slots.find(s=>s.key===key);if(!item)return;
+  const item=instance||byId(id),before={...currentFit(),attackMode},fit=structuredClone(before),slot=fit.slots.find(s=>s.key===key);if(!item)return;
   const host=document.createElement('div');host.className='fit-install-preview';host.setAttribute('role','status');$('.fit-actions').append(host);
   const title=slot?labels[slot.kind]+' '+(Number(slot.key.split('-')[1])+1)+' · '+(byId(item.kind==='ammo'?slot.ammo:slot.item)?.name||'空槽')+' → '+item.name:item.name;
   const hint=source==='drag'?'移开取消 · 松开安装':'移开恢复 · 双击或 Enter 安装';
@@ -661,11 +661,11 @@ function queueInstallPreview(key,id=dragged,source='drag',instance=draggedInstan
   if(!slot||!canInstall(item,key)){banner(selectedSlots.size>1?'请选择单个目标槽位，或拖入指定槽位':'没有兼容目标，请先选择槽位或腾出空槽');return;}
   if(reportVersion!==version||analysisState!=='complete'){banner('等待当前装配计算完成，再悬停预览');return;}
   const limitReason=installLimit(item,key);if(limitReason){banner('无法安装：'+limitReason);return;}
-  const previousAmmo=slot.ammo;applyCandidate(slot,item);fit.crystals=structuredClone(fit.crystals||[]);detachUnmatchedCrystals(fit);
+  const previousAmmo=slot.ammo;applyCandidate(slot,item);detachUnmatchedCrystals(fit);
   const ammoNote=item.kind!=='ammo'&&previousAmmo&&!slot.ammo?' · 原弹药不兼容，将卸下':'';
   banner('预览计算中…'+ammoNote);
   try{
-   const result=await getCalculation(fit);
+   const result=report?.provider==='nengine'?await api('preview',{before,after:fit}):await getCalculation(fit);
    if(token!==previewToken||version!==analysisVersion||!host.isConnected||(source==='drag'&&dragged!==id))return;
    document.dispatchEvent(new CustomEvent('fitlab-calculation-invalidated'));
    applyPreviewValues(result,fit);$('.inspector').classList.add('install-preview-active');

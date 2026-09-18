@@ -55,28 +55,30 @@ def native_fit(f, build):
             'crystals':f.get('crystals',[])}
     return result
 
-def analyze(f,target=None):
+def analyze(f,target=None,native_query=None):
     client=bridge(); status=client.discover()
     build=status['source']['source']['buildNumber']
     native=native_fit(f,build)
+    def query(context):
+        return native_query(context) if native_query else client.call('fit_analyze',{'fit':native,'context':context})['result']
     context={}
     profile=f.get('damageProfile')
     if f.get('defenseMode')=='targeted' and isinstance(profile,list) and len(profile)==4:
         context['incomingDamage']=dict(zip(('em','thermal','kinetic','explosive'),profile))
-    a=client.call('fit_analyze',{'fit':native,'context':context})['result']
+    a=query(context)
     metric=f.get('outputMetric','nominalCycleDps')
     if metric not in METRICS: raise ValueError('输出口径无效')
     if 'outputContributions' not in a: raise ValueError('当前适配器需要 r24 分项输出接口，请检查独立副本路径')
     contribution_ids=selected_ids(f,a['outputContributions'])
     context['output']={'selection':{'metric':metric,'contributionIds':contribution_ids}}
-    a=client.call('fit_analyze',{'fit':native,'context':context})['result']
+    a=query(context)
     baseline=a['outputContributions']['selection']
     baseline_items=a['outputContributions']['items']
     effective=f.get('attackMode')=='edps' and target is not None
     if target is not None:
         metric=('effectiveLoadedCycleDps' if metric=='loadedCycleDps' else 'effectiveCycleDps') if effective else ('appliedLoadedCycleDps' if metric=='loadedCycleDps' else 'appliedCycleDps')
         context['output']={'selection':{'metric':metric,'contributionIds':contribution_ids},'target':target}
-        a=client.call('fit_analyze',{'fit':native,'context':context})['result']
+        a=query(context)
     output=a['outputContributions']
     selected=[item for item in output['items'] if item['id'] in contribution_ids]
     breakdown={kind:grouped_reading([item for item in selected if (

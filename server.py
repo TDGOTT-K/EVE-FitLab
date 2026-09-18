@@ -122,13 +122,13 @@ def validate_fit(f):
  if os.environ.get('FITLAB_CALCULATOR','nengine')=='nengine':
   return {**f,'slots':[{**v,'state':module_state(v),'online':module_state(v)!='Offline'} if v.get('item') else dict(v) for v in f['slots']]}
  return f
-def analyze(f,resolve_links=True):
+def analyze(f,resolve_links=True,native_query=None):
  if os.environ.get("FITLAB_CALCULATOR", "nengine")=="nengine":
   validate_fit(f)
   from nengine_adapter import analyze as native_analyze
   from nengine_scenario import resolve_context
   target,source=resolve_context(f,read_library()['fits'],native_analyze) if resolve_links else (None,None)
-  result=native_analyze(f,target=target)
+  result=native_analyze(f,target=target,native_query=native_query)
   result['scenarioTargetSource']=source
   from nengine_capacitor import attach_capacitor
   attach_capacitor(f,result,read_library()['fits'] if resolve_links else [])
@@ -290,6 +290,11 @@ class Handler(SimpleHTTPRequestHandler):
     return self.reply(parse_eft(body.get('text')))
    if self.path=='/api/analyze':
     with LOCK:return self.reply(analyze(body))
+   if self.path=='/api/preview':
+    from nengine_preview import preview_fit
+    with LOCK:
+     before=validate_fit(body['before']);after=validate_fit(body['after'])
+     return self.reply(preview_fit(before,after,analyze))
    if self.path=='/api/eve/login':
     client=sso_client()
     url,browser=eve_sso.begin(client)
