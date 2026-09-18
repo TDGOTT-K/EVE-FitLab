@@ -84,4 +84,25 @@ class NativeSessions(unittest.TestCase):
         finally:self.client.state=old
         self.assertEqual(created,cli_created)
 
+    def test_preview_missing_resources_remain_null_in_mcp_and_cli(self):
+        self.call('create',sessionId='qa',fit=self.fit,allowIncompleteDraft=True)
+        commands=[{'kind':'setShip','shipTypeId':23913}]
+        path=self.root/'commands.json';path.write_text(json.dumps(commands),encoding='utf-8')
+        preview=self.call('preview',sessionId='qa',revision=0,commands=commands)
+        self.assertEqual(preview,self.cli('eve-preview',revision=0,commands=path))
+        fighter=next(r for r in preview['resourceDeltas'] if r['id']=='fighterBay')
+        self.assertIsNone(fighter['capacityBefore']);self.assertIsNone(fighter['usedBefore'])
+        self.assertEqual(fighter['reasonBefore'],'BASELINE_RESOURCE_UNAVAILABLE')
+        self.assertEqual(fighter['stateAfter'],'available');self.assertGreater(fighter['capacityAfter'],0)
+        cpu=next(r for r in preview['resourceDeltas'] if r['id']=='cpu')
+        self.assertEqual(cpu['usedBefore'],0);self.assertEqual(cpu['stateBefore'],'available')
+        self.assertFalse(preview['resourceComparisonComplete'])
+        self.assertEqual(preview['baselineAnalysis'],self.client.call('fit_analyze',{'fit':self.fit})['result'])
+        self.call('execute',sessionId='qa',revision=0,requestId='carrier',operation='apply',commands=commands)
+        commands=[{'kind':'setShip','shipTypeId':587}];path.write_text(json.dumps(commands),encoding='utf-8')
+        reverse=self.call('preview',sessionId='qa',revision=1,commands=commands)
+        self.assertEqual(reverse,self.cli('eve-preview',revision=1,commands=path))
+        fighter=next(r for r in reverse['resourceDeltas'] if r['id']=='fighterBay')
+        self.assertIsNone(fighter['capacityAfter']);self.assertEqual(fighter['reasonAfter'],'CANDIDATE_RESOURCE_UNAVAILABLE')
+
 if __name__=='__main__':unittest.main()
