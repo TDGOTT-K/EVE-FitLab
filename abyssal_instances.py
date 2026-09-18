@@ -9,7 +9,12 @@ def save_instance(body,library,types,stamp):
     if type(body.get('baseTypeId')) is not int:raise ValueError('原装备类型无效')
     base=types.get(body.get('baseTypeId'))
     groups={t['group'] for t in types.values() if 'Abyssal' in t.get('en','') and t.get('kind') in ['high','mid','low']}
-    if not base or base.get('kind') not in ['high','mid','low'] or base['group'] not in groups or 'Abyssal' in base.get('en',''):raise ValueError('原装备不在当前深渊装备目录中')
+    if body.get('generationReceipt') is not None:
+        from nengine_mutations import options
+        eligible=bool(options(types).get(str(body['baseTypeId'])))
+    else:
+        eligible=bool(base and base.get('kind') in ['high','mid','low'] and base['group'] in groups and 'Abyssal' not in base.get('en',''))
+    if not eligible:raise ValueError('原装备不在当前深渊装备目录中')
     if previous and previous['baseTypeId']!=base['id']:raise ValueError('不能更换实例的原装备')
     name,notes=body.get('name'),body.get('notes','')
     if not isinstance(name,str) or not 1<=len(name.strip())<=100:raise ValueError('名称须为 1–100 字')
@@ -26,5 +31,14 @@ def save_instance(body,library,types,stamp):
             if any(not isinstance(row.get(k),str) or len(row[k])>80 for k in ('label','unit')):raise ValueError('演示属性文字无效')
         record['uiMock']=copy.deepcopy(mock)
         record['status']='mock'
+    receipt=body.get('generationReceipt')
+    if receipt is not None:
+        from nengine_mutations import verify_receipt
+        receipt=verify_receipt(receipt,base['id'],types)
+        if not receipt['rule']['nativeInstanceSupported']:raise ValueError('当前引擎不支持安装此类变异实例')
+        record.update(status='generated',resultTypeId=receipt['rule']['resultTypeId'],mutation=copy.deepcopy(receipt['mutation']),generationReceipt=receipt)
+        record.pop('uiMock',None)
+    elif previous and previous.get('generationReceipt'):
+        raise ValueError('编辑真实实例时须保留变异凭据')
     library['abyssalInstances']=[x for x in records if x['id']!=record['id']]+[record]
     return dict(record)

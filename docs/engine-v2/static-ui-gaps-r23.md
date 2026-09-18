@@ -96,3 +96,8 @@ MCP published 目录返回 94 条舰载机记录（本页无后续游标），65
 - `docs/mutation-generation.md`、`docs/catalog.md`、`docs/fitting-library.md`：已经存在而不应重复列为缺失的能力。
 
 验收限制：未做全装备扫描、全部脑插套装或全部药剂的逐项认证；未跑引擎全量测试；未执行任何战斗任务。历史 UI-ready/全量通过记录不能替代本次实际用户场景复核。
+
+
+### 2026-09-18 跟进：U01 / U02
+
+高/中/低槽模块已在 FitLab 接入真实 mutation_rule / mutation_roll，使用固定映射发现突变质体；完成实例保存、装配预览/安装和回执校验。见 nengine-ui-acceptance.md 的 NUI-17（待用户验收）。这是 UI 侧落地，不表示正式发现接口缺口或变异无人机支持已解决。

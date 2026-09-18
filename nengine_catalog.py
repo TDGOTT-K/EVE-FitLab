@@ -14,7 +14,7 @@ def index_metadata():
     def read(name):
         with (index/(name+'.jsonl')).open(encoding='utf-8') as stream:
             return {r['_key']:r for r in map(json.loads,stream)}
-    return {name:read(name) for name in ['types','typeDogma','dogmaAttributes','dogmaEffects','dogmaUnits']}
+    return {name:read(name) for name in ['types','typeDogma','dogmaAttributes','dogmaEffects','dogmaUnits','dynamicItemAttributes']}
 
 def refresh_catalog(catalog):
     data=index_metadata();result=[]

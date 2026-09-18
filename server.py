@@ -1,3 +1,4 @@
+import nengine_mutations
 from abyssal_instances import save_instance
 from loadout_plans import save_plan, save_layout
 from workspace_view import attach_workspace_view
@@ -204,6 +205,7 @@ class Handler(SimpleHTTPRequestHandler):
     manifest=ROOT/('app-version.json' if (ROOT/'app-version.json').exists() else 'package.json')
     return self.reply({'version':json.loads(manifest.read_text(encoding='utf-8'))['version']})
    if self.path=='/api/storage':return self.reply({'directory':str(STATE.resolve())})
+   if self.path=='/api/mutation-options':return self.reply(nengine_mutations.options(TYPES))
    if self.path=='/api/abyssal-instances':return self.reply(read_library().get('abyssalInstances',[]))
    if self.path=='/api/loadout-layout':return self.reply(read_library().get('loadoutLayout',{'revision':0,'folders':[],'order':[]}))
    if self.path=='/api/loadout-plans':return self.reply(read_library().get('loadoutPlans',[]))
@@ -235,6 +237,8 @@ class Handler(SimpleHTTPRequestHandler):
    size=int(self.headers.get('Content-Length',0))
    if not 0<size<=2000000:raise ValueError('请求大小无效')
    body=json.loads(self.rfile.read(size))
+   if self.path in ('/api/mutation-rule','/api/mutation-roll'):
+    return self.reply(nengine_mutations.generate(body,TYPES,roll=self.path.endswith('-roll')))
    if self.path=='/api/storage/open':
     with LOCK:storage_location.open_directory(STATE)
     return self.reply({'opened':True})
