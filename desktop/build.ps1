@@ -1,4 +1,4 @@
-param([string]$EngineSourceRoot='')
+param([string]$EngineSourceRoot='',[string]$OutputDirectory='')
 $ErrorActionPreference='Stop'
 Set-Location (Split-Path $PSScriptRoot -Parent)
 if($EngineSourceRoot){python desktop/prepare_nengine.py --engine $EngineSourceRoot}else{python desktop/prepare_nengine.py}
@@ -7,5 +7,5 @@ python -m PyInstaller --noconfirm --clean --onedir --name FitLab.Backend --paths
 if($LASTEXITCODE){throw 'Backend packaging failed'}
 New-Item -ItemType Directory -Force desktop/build/backend | Out-Null
 Copy-Item -Path desktop/build/python/FitLab.Backend/* -Destination desktop/build/backend -Recurse -Force
-npm run package:windows
+if($OutputDirectory){node node_modules/electron-builder/cli.js --win nsis --x64 "--config.directories.output=$OutputDirectory"}else{npm run package:windows}
 if($LASTEXITCODE){throw 'Windows installer packaging failed'}

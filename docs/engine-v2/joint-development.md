@@ -217,3 +217,13 @@ LOCAL-007提交对应：引擎dbb3fb4；UI 1f94c3c。
 验证：JS控制器驱动真实Python→MCP引擎，覆盖apply/undo/redo、无输入变化、不同编辑归属、create/apply/save成功后丢响应恢复、同会话保存后undo/redo以及重开再保存。3项原生持久化故障/CLI回归、保存竞态与库存快照测试、60模块静态检查通过。5352隔离页面弹量0→10形成原生revision1，保存revision2；撤销revision3工作弹量0而saved仍10，重做恢复10；改名再撤销成功；刷新再保存成功。未写5208用户库。
 
 引擎仍0.190.8-ui.1/r41，未改引擎代码或增加机制。本批接好工作台编辑、撤销/重做和保存，不代表全应用覆盖审计与Windows打包已完成。后续继续核查全部面板和允许装配类型，不将这些有限案例当全量认证。
+
+## NUI-47：当前引擎Windows打包验证（待用户验收）
+
+修正打包资源：同时带入公开MCP和CLI宿主（此前仅MCP），网页新增模块由现有glob纳入，Python新增适配器由PyInstaller静态分析纳入。build.ps1增加独立输出目录；发现npm未将输出目录参数传给builder，改为直接调用electron-builder并在output/windows-r41-20260918完成构建。没有发布或安装到用户目录。
+
+扩展显式--smoke-test模式，必须设置隔离FITLAB_TEST_ROOT。打包后的Electron使用自己的backend.exe、web资源、.NET runtime和固定SDE，测试页面分析/命令预览、真实native-edit-history模块安装、同会话保存、撤销/重做、导出hash一致；另由desktop/verify_windows.py调用包内CLI对同一saved快照导出，hash与预览相同，未授权API为403。测试后程序退出，原生会话及证据保留在隔离目录。
+
+结果：output/windows-r41-smoke-001/verification.json通过，版本0.190.8-ui.1/r41；desktop-smoke.png视觉核对原生桌面壳与装配库正常显示。NSIS安装包生成成功，212703281字节，SHA256 d8d7ab8feebccb8ff60f9162f5dbb3e0ed537f96de5dc59780e316261a473d58，路径output/windows-r41-20260918/EVE-FitLab-0.1.2-beta.1-Windows-x64-Setup.exe。没有运行安装器的安装/卸载流程，测试的是其同批win-unpacked程序；未完成所有面板/所有机制组合覆盖，也没有将其当正式发布。60模块静态检查通过。
+
+本批只改UI打包和显式测试入口，独立引擎源码与契约不变。全目标仍待装配类型/面板覆盖审计，继续按现有机制能力核查，不开发缺失机制或仿真沙盒。

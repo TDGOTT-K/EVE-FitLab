@@ -21,7 +21,7 @@ for name in ['data','assets','locales']:shutil.copytree(ROOT/name,web/name,dirs_
 (web/'app-version.json').write_text(json.dumps({'version':json.loads((ROOT/'package.json').read_text(encoding='utf-8'))['version']}),encoding='utf-8')
 shutil.copy2(source/'UI-BASELINE.json',target/'UI-BASELINE.json')
 if manifest.name!='UI-BASELINE.json':shutil.copy2(manifest,target/manifest.name)
-for relative in ['src/NEngine.Mcp/bin/Debug/net10.0',baseline['dataDirectory'],'.tools/dotnet/host','.tools/dotnet/shared']:
+for relative in ['src/NEngine.Mcp/bin/Debug/net10.0','src/NEngine.Cli/bin/Debug/net10.0',baseline['dataDirectory'],'.tools/dotnet/host','.tools/dotnet/shared']:
     shutil.copytree(source/relative,target/relative,dirs_exist_ok=True)
 shutil.copy2(source/'.tools/dotnet/dotnet.exe',target/'.tools/dotnet/dotnet.exe')
 print('Staged pinned NEngine '+baseline['engineVersion']+' without changing engine source.')

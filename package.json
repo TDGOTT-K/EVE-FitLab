@@ -36,6 +36,7 @@
     "files": [
       "desktop/main.cjs",
       "desktop/preload.cjs",
+      "desktop/smoke.cjs",
       "desktop/splash.html",
       "package.json",
       "desktop/icon.png"
