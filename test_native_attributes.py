@@ -27,6 +27,20 @@ class NativeAttributes(unittest.TestCase):
         self.assertEqual(unknown['state'],'unavailable');self.assertIsNone(unknown['trace']);self.assertTrue(unknown['reason'])
         default=inspect_attributes(self.fit(),'ship',[68])['inspection']['items'][0]
         self.assertEqual(default['state'],'requires_policy');self.assertIsNone(default['trace'])
+    def test_fighter_squadron_identity_for_tube_and_reserve(self):
+        fit={'name':'Fighter attributes','shipId':23913,'slots':[],'skills':[],
+          'fighterLoadout':{'tubes':[{'id':'tube-alpha','typeId':23055,'quantity':6,'active':True}],
+                           'reserve':[{'id':'spare-beta','typeId':23055,'quantity':6,'active':False}]}}
+        for identity in ('tube-alpha','spare-beta'):
+            result=inspect_attributes(fit,'fighter.'+identity,[9,37,552])['inspection']
+            self.assertTrue(result['errors'])
+            self.assertTrue(all(row['typeId']==23055 for row in result['items']))
+            self.assertTrue(all(row['state']=='available' for row in result['items']))
+            self.assertTrue(all(row['trace']['key'].startswith('fighter.'+identity+'/') for row in result['items']))
+        fit['fighterLoadout']['tubes'][0].pop('id')
+        result=inspect_attributes(fit,'fighter.fighter-tubes-0',[9])['inspection']
+        self.assertEqual(result['items'][0]['state'],'available')
+
     def test_batches_and_invalid_queries(self):
         result=inspect_attributes(self.fit(),'ship',list(range(1,258)))
         self.assertEqual(len(result['requests']),2);self.assertEqual(len(result['inspection']['items']),257)

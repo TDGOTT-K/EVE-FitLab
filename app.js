@@ -195,25 +195,25 @@ function renderShipStats(){if(report){renderEngineStats();return}$('#ship-stats'
 let infoOrigin=null;
 function closeInfo(){const panel=$('#info-window');if(panel.hidden)return;panel.hidden=true;if(infoOrigin?.isConnected)infoOrigin.focus({preventScroll:true})}
 let infoRequest=0;
-async function showInfo(t,slotKey=null,droneIndex=null){infoOrigin=document.activeElement;const request=++infoRequest,panel=$('#info-window'),captured=currentFit(),selected=slotKey?captured.slots.find(s=>s.key===slotKey):null;$('#info-title').textContent=t.path.join(' › ');$('#info-title').title='在装备浏览器中定位此物品';$('#info-title').onclick=e=>{e.preventDefault();if(t.kind!=='loadout')locateItem(t)};if(t.kind==='loadout')$('#info-title').title='脑插与增效剂 · 物品详情';$('#info-content').innerHTML='<p class="profile-note">正在读取物品属性…</p>';panel.hidden=false;if(!panel.style.left){panel.style.left=Math.max(8,(innerWidth-panel.offsetWidth)/2)+'px';panel.style.top='100px'}clampInfo();$('#info-close').focus({preventScroll:true});
- const useNative=!!t.metadataSource;
+async function showInfo(t,slotKey=null,droneIndex=null,fittedObject=null){infoOrigin=document.activeElement;const request=++infoRequest,panel=$('#info-window'),captured=currentFit(),selected=slotKey?captured.slots.find(s=>s.key===slotKey):null;$('#info-title').textContent=t.path.join(' › ');$('#info-title').title='在装备浏览器中定位此物品';$('#info-title').onclick=e=>{e.preventDefault();if(t.kind!=='loadout')locateItem(t)};if(t.kind==='loadout')$('#info-title').title='脑插与增效剂 · 物品详情';$('#info-content').innerHTML='<p class="profile-note">正在读取物品属性…</p>';panel.hidden=false;if(!panel.style.left){panel.style.left=Math.max(8,(innerWidth-panel.offsetWidth)/2)+'px';panel.style.top='100px'}clampInfo();$('#info-close').focus({preventScroll:true});
+ const useNative=!!t.metadataSource||!!fittedObject;
  const calculationRequest=!useNative&&(selected||droneIndex!==null||t.kind==='ship')?getCalculation(captured):Promise.resolve(null);
  // Attach rejection handling immediately, even while item metadata is in flight.
  const settledCalculation=calculationRequest.then(value=>({value}),error=>({error}));
  try{const data=t.kind==='loadout'?(await import('./loadout-item-info.js')).loadoutItemInfo(t.id):await cachedItem(t.id,t.id);if(request!==infoRequest||panel.hidden)return;
  renderItemInfo($('#info-content'),t,data,null,catalog,'');clampInfo();
- if(!selected&&droneIndex===null&&t.kind!=='ship'){say('已读取物品详情');return}
+ if(!selected&&droneIndex===null&&t.kind!=='ship'&&!fittedObject){say('已读取物品详情');return}
  const status=document.createElement('p');status.className='profile-note';status.textContent='装配参数计算中 · 可先查看基础属性';$('#info-content').append(status);
  let touched=false;const remember=()=>{touched=true};$('#info-content').querySelector('.info-tabs').addEventListener('click',remember,{once:true});
  const outcome=await settledCalculation;if(request!==infoRequest||panel.hidden)return;
  if(outcome.error){status.textContent='装配参数暂不可用：'+outcome.error.message;return}
  if(useNative){
-  const itemId=t.kind==='ship'?'ship':droneIndex!==null?'drone.drone-'+droneIndex+'-0':(t.kind==='ammo'?'charge.':selected.kind==='subsystem'?'subsystem.':'module.')+selected.key;
+  const itemId=fittedObject||(t.kind==='ship'?'ship':droneIndex!==null?'drone.drone-'+droneIndex+'-0':(t.kind==='ammo'?'charge.':selected.kind==='subsystem'?'subsystem.':'module.')+selected.key);
   const attributeIds=data.attributes.filter(a=>a.published&&a.displayName).map(a=>a.id);
   if(!attributeIds.length){status.textContent='该物品未声明可展示的属性';return;}
   let result;try{result=await api('native-attributes',{fit:captured,itemId,attributeIds})}catch(error){if(request===infoRequest&&!panel.hidden)status.textContent='装配参数暂不可用：'+error.message;return;}if(request!==infoRequest||panel.hidden)return;
   const selectedTab=touched?$('#info-content [aria-pressed="true"]')?.dataset.infoTab:null,scroll=panel.scrollTop;
-  renderItemInfo($('#info-content'),t,data,{nativeInspection:result.inspection},catalog,'N 号引擎 · 按需属性快照');
+  renderItemInfo($('#info-content'),t,data,{nativeInspection:result.inspection},catalog,t.fittedContext||'N 号引擎 · 按需属性快照');
   if(selectedTab)$('#info-content').querySelector('[data-info-tab="'+selectedTab+'"]').click();clampInfo();if(touched)panel.scrollTop=scroll;return;
  }
  const calculation=outcome.value,group=t.kind==='ship'?[]:droneIndex!==null?calculation.snapshot.droneBay.drones:selected.kind==='rig'?calculation.snapshot.rigs:calculation.snapshot.modules;
@@ -490,7 +490,7 @@ function addToBay(t,kind){
  mutate(()=>{const entries=fitRecord[kind]??=[];const e=entries.find(e=>e.item===t.id&&(kind!=='drones'||e.quantity<5));if(e){if(e.quantity>=100000)return;e.quantity++}else entries.push({item:t.id,quantity:1,...(kind==='drones'?{active:0}:{})})},'已放入'+t.name);
 }
 function selectBay(kind){filter=filter?.bay===kind?null:{bay:kind};$('#search').value='';renderSlots();renderTree()}
-function renderBayConfig(){const previous=document.querySelector('#fighter-config'),key=JSON.stringify([fitRecord.fighterLoadout,report?.native?.fighterBay,reportVersion]);const reuse=previous&&previous._fit===fitRecord&&previous._key===key;if(reuse)previous.remove();renderBayConfigBody();renderCrystalStock();if(reuse){document.querySelector('#bay-config').prepend(previous);return;}mountFighters(document.querySelector('#bay-config'),{ship,fit:fitRecord,report,mutate,say,onInfo:t=>showInfo({...t,kind:'fighter',path:['铁骑舰载机',t.kind],attrs:{},effects:[]}),validate:candidate=>getCalculation({...currentFit(),fighterLoadout:candidate.fighterLoadout}),browse:()=>{if(abyssalLibrary.active)document.querySelector('.equipment-browser-switch').click();filter={fighters:true};document.querySelector('#search').value='';renderTree()}});const mounted=document.querySelector('#fighter-config');if(mounted){mounted._fit=fitRecord;mounted._key=key;}}
+function renderBayConfig(){const previous=document.querySelector('#fighter-config'),key=JSON.stringify([fitRecord.fighterLoadout,report?.native?.fighterBay,reportVersion]);const reuse=previous&&previous._fit===fitRecord&&previous._key===key;if(reuse)previous.remove();renderBayConfigBody();renderCrystalStock();if(reuse){document.querySelector('#bay-config').prepend(previous);return;}mountFighters(document.querySelector('#bay-config'),{ship,fit:fitRecord,report,mutate,say,onInfo:(t,objectId,context)=>showInfo({...t,fittedContext:context,kind:'fighter',path:['铁骑舰载机',t.kind],attrs:{},effects:[]},null,null,objectId),validate:candidate=>getCalculation({...currentFit(),fighterLoadout:candidate.fighterLoadout}),browse:()=>{if(abyssalLibrary.active)document.querySelector('.equipment-browser-switch').click();filter={fighters:true};document.querySelector('#search').value='';renderTree()}});const mounted=document.querySelector('#fighter-config');if(mounted){mounted._fit=fitRecord;mounted._key=key;}}
 function renderBayConfigBody(){
  const root=$('#bay-config');if(!root)return;
  root.innerHTML=(fighterHull(ship)?['cargo']:['drones','cargo']).map(kind=>{

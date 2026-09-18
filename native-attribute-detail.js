@@ -9,7 +9,7 @@ export function nativeAttributeDetail(readout,inspection,label,format,catalog){
    terms:[['操作',operations[s.operation]??String(s.operation)],['来源修正值',String(s.sourceValue)],['堆叠系数',String(s.penalty)]],
    conditions:[['效果 ID',String(s.effectId)],['修正记录',s.modifierId]]}])
  ]:[],conditions:[['状态',available?'可用':state],...(readout.reason?[['原因',readout.reason]]:[]),
-  ['对象',readout.query.itemId],['来源','N 号引擎 · '+inspection.ruleVersion],...(trace?[['基础值来源',trace.origin]]:[])]};
+  ['对象',readout.query.itemId],['属性 ID',String(readout.query.attributeId)],['来源','N 号引擎 · '+inspection.ruleVersion],...(trace?[['基础值来源',trace.origin]]:[])]};
  let direction='';const high=readout.metadata?.definition?.highIsGood;
  if(available&&typeof high==='boolean'&&trace.value!==trace.baseValue)direction=(high?trace.value>trace.baseValue:trace.value<trace.baseValue)?'value-improved':'value-worsened';
  return {value:available?format(trace.value):'— · '+state,detail,direction};
