@@ -3,9 +3,10 @@ import {mountDpsChart} from './dps-chart.js';
 import {getLocale} from './i18n.js';
 // One explanation branch; each locked panel can own a deeper explanation.
 export function installExplanations(){
+ const curveCache=new Map();
  const chain=[],delay=800;let leaveTimer,lastPointer=null,chartMode='distance';
  const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- function closeFrom(depth){for(const node of chain.splice(depth)){cancelAnimationFrame(node.frame);node.anchor.removeAttribute('aria-describedby');node.panel.remove();node.bridge.remove();node.aura?.remove()}}
+ function closeFrom(depth){for(const node of chain.splice(depth)){cancelAnimationFrame(node.frame);node.resize?.disconnect();node.anchor.removeAttribute('aria-describedby');node.panel.remove();node.bridge.remove();node.aura?.remove()}}
  function lock(node){if(!node.lockable||!node.panel.isConnected)return;node.locked=true;node.panel.inert=false;node.panel.classList.add('locked');node.bridge.classList.add('locked');node.aura.classList.add('complete');node.panel.querySelector('.explain-lock').textContent='已锁定 · 可继续查看明细';}
  function place(node){const r=node.anchor.getBoundingClientRect(),p=node.panel,w=p.offsetWidth,h=p.offsetHeight;let x=r.left-w-10;if(x<8)x=r.right+10;if(x+w>innerWidth-8)x=Math.max(8,innerWidth-w-8);const y=Math.max(8,Math.min(r.top,innerHeight-h-8));p.style.left=x+'px';p.style.top=y+'px';const b=node.bridge,left=x+w<=r.left?x+w:r.right,right=x+w<=r.left?r.left:x;Object.assign(b.style,{left:left+'px',top:Math.max(y,r.top)+'px',width:Math.max(0,right-left)+'px',height:Math.max(0,Math.min(y+h,r.bottom)-Math.max(y,r.top))+'px'});}
  function show(anchor){const owner=anchor.closest('.stat-explanation'),depth=owner?Number(owner.dataset.depth)+1:0;if(owner&&!chain[depth-1]?.locked)return;if(chain[depth]?.anchor===anchor)return;clearTimeout(leaveTimer);closeFrom(depth);let detail;try{detail=JSON.parse(anchor.dataset.explain)}catch{return}
@@ -46,7 +47,15 @@ export function installExplanations(){
    }
   }
   const node={panel,bridge,anchor,lockable,interactive,locked:false,frame:null,aura:null,chart:null};
-  if(detail.chart)node.chart=mountDpsChart(panel.querySelector('.dps-chart'),detail.chart,{mode:chartMode,onMode:mode=>{chartMode=mode}});chain.push(node);document.body.append(bridge,panel);anchor.setAttribute('aria-describedby',panel.id);place(node);if(lockable)animateLock(node);panel.querySelector('.dps-chart-breakdown')?.addEventListener('toggle',()=>{place(node);if(!node.lockable)return;cancelAnimationFrame(node.frame);node.aura?.remove();if(node.locked){animateLock(node);cancelAnimationFrame(node.frame);lock(node)}else animateLock(node)});
+  if(detail.chart?.request){
+   const body=JSON.stringify(detail.chart.request),key=detail.chart.cacheKey||body;
+   if(!curveCache.has(key)){
+    if(curveCache.size>=4)curveCache.delete(curveCache.keys().next().value);
+    curveCache.set(key,fetch('/api/native-dps-curves',{method:'POST',headers:{'Content-Type':'application/json'},body}).then(async r=>{const d=await r.json();if(!r.ok)throw Error(d.error||'曲线查询失败');return d}).catch(e=>{curveCache.delete(key);return {status:'unavailable',reason:e.message}}));
+   }
+   curveCache.get(key).then(data=>{if(!panel.isConnected)return;panel.querySelector('.dps-chart').replaceChildren();node.chart=mountDpsChart(panel.querySelector('.dps-chart'),data,{mode:node.chart?.mode()||chartMode,onMode:mode=>{chartMode=mode}});place(node)});
+  }
+  if(detail.chart)node.chart=mountDpsChart(panel.querySelector('.dps-chart'),detail.chart,{mode:chartMode,onMode:mode=>{chartMode=mode}});chain.push(node);document.body.append(bridge,panel);if(detail.chart){node.resize=new ResizeObserver(()=>{if(panel.isConnected)place(node)});node.resize.observe(panel)}anchor.setAttribute('aria-describedby',panel.id);place(node);if(lockable)animateLock(node);panel.querySelector('.dps-chart-breakdown')?.addEventListener('toggle',()=>{place(node);if(!node.lockable)return;cancelAnimationFrame(node.frame);node.aura?.remove();if(node.locked){animateLock(node);cancelAnimationFrame(node.frame);lock(node)}else animateLock(node)});
  }
  function inChain(target){return target instanceof Node&&chain.some(n=>n.anchor.contains(target)||n.panel.contains(target)||n.bridge.contains(target))}
  function animateLock(node){

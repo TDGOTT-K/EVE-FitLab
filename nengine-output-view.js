@@ -1,3 +1,4 @@
+import {numberAttributes} from './scenario-display.js';
 // Only formats engine readings/reducer states; no damage formulas.
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>Number.isFinite(n)?n.toLocaleString('zh-CN',{maximumFractionDigits:2}):'—';
@@ -9,22 +10,22 @@ export function outputReading(selection){
  return '—';
 }
 export function outputHtml(report,catalog){
- const selection=report.outputSelection,output=report.native.outputContributions,metric=selection?.metric||'nominalCycleDps';
+ const selection=report.outputSelection,output=report.native.outputContributions,metric=selection?.metric||'nominalCycleDps',basis=report.baselineOutputSelection?.metric||metric;
  if(!output)return '<div class="stat-block">输出接口不可用</div>';
  const name=item=>{const type=catalog.find(t=>t.id===item.source.typeId),ability=report.native.fighters[item.source.squadronId]?.abilityMetadata?.abilities?.find(a=>a.abilityId===item.source.officialAbilityId);return (type?.name||report.native.fighters[item.source.squadronId]?.abilityMetadata?.name?.zh||report.native.fighters[item.source.squadronId]?.abilityMetadata?.name?.en||item.source.instanceId)+(ability?' · '+(ability.displayName.zh||ability.displayName.en):'');};
  const selected=new Set(report.outputContext.selection.contributionIds),excluded=new Map((selection.exclusions||[]).map(x=>[x.contributionId,x]));
- let html='<div class="stat-block"><select class="native-output-metric" aria-label="输出计算口径"><option value="nominalCycleDps" '+(metric==='nominalCycleDps'?'selected':'')+'>名义周期 DPS</option><option value="loadedCycleDps" '+(metric==='loadedCycleDps'?'selected':'')+'>有限弹量周期 DPS</option></select>';
+ let html='<div class="stat-block"><select class="native-output-metric" aria-label="输出计算口径"><option value="nominalCycleDps" '+(basis==='nominalCycleDps'?'selected':'')+'>名义周期 DPS</option><option value="loadedCycleDps" '+(basis==='loadedCycleDps'?'selected':'')+'>有限弹量周期 DPS</option></select>';
  for(const [key,label] of [['weapons','武器'],['drones','无人机'],['fighters','舰载机已选武器']]){
   const value=report.outputBreakdown[key];
-  if(value.groups.length||value.exclusions.length)html+='<div class="stat-row"><span>'+label+' DPS</span><b>'+outputReading(value)+'</b></div>';
+  if(value.groups.length||value.exclusions.length)html+='<div class="stat-row"><span>'+label+' DPS</span><b '+numberAttributes(value.total,report.scenarioTarget?report.baselineOutputBreakdown[key].total:undefined)+'>'+outputReading(value)+'</b></div>';
  }
  const explanation=selection.status==='empty_selection'?(output.staticBlockers.length?'计算受限，未取得可选分项':'没有已选输出项'):selection.completeSelection?'仅汇总已选武器':'仅显示可计算小计';
- html+='<small class="profile-note">'+explanation+' · 不扣抗性'+(metric==='loadedCycleDps'?' · 假定可发射，非持续输出':'')+'</small>';
+ html+='<small class="profile-note">'+explanation+(report.scenarioTarget?' · 已应用情景':'')+' · 不扣抗性'+(basis==='loadedCycleDps'?' · 假定可发射，非持续输出':'')+'</small>';
  html+='<details class="native-output-details"><summary>输出分项 <span>'+selected.size+' / '+output.items.length+'</span></summary>';
  for(const item of output.items){
   const reading=item.metrics[metric],missing=excluded.get(item.id),chosen=selected.has(item.id),reason=missing?.reason||reading?.reason;
   const status=chosen?(missing?(reasons[reason]||states[reading?.state]||reason):'已计入'):item.source.deployed===false?'待命 · 不计入':'未选择';
-  html+='<div class="native-output-item"><span>'+esc(name(item))+'</span><b>'+fmt(reading?.state==='available'?reading.value:null)+'</b><small title="'+esc(reason||'')+'">'+esc(status)+'</small></div>';
+  html+='<div class="native-output-item"><span>'+esc(name(item))+'</span><b '+numberAttributes(reading?.state==='available'?reading.value:null,report.scenarioTarget?report.baselineOutputItems.find(x=>x.id===item.id)?.metrics[basis]?.value:undefined)+'>'+fmt(reading?.state==='available'?reading.value:null)+'</b><small title="'+esc(reason||'')+'">'+esc(status)+'</small></div>';
  }
  html+='</details></div>';
  return html;

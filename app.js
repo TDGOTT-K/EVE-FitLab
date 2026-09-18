@@ -668,14 +668,14 @@ async function renderLibraryPrices(){
 
 function capturePageScroll(page){const selectors=page==='editor'?['.fitting','.inspector','#tree']:page==='library'?['#library-list','.library-tree-scroll']:['#character-list','#character-skills'];pageScrollStates.set(page,{windowY:window.scrollY,positions:selectors.map(selector=>({selector,top:$(selector)?.scrollTop||0,left:$(selector)?.scrollLeft||0}))})}
 function restorePageScroll(page){const state=pageScrollStates.get(page);if(!state)return;for(const {selector,top,left} of state.positions){const el=$(selector);if(el){el.scrollTop=top;el.scrollLeft=left}}window.scrollTo(0,state.windowY)}
-function scenarioStatusMarkup(){if(report?.provider==='nengine')return '<small id="scenario-calculation-status" class="scenario-calculation-status">N 引擎情景待接入</small>';return '<small id="scenario-calculation-status" role="status" class="scenario-calculation-status '+analysisState+'">'+(analysisState==='pending'?'计算中<span class="calculation-dots" aria-hidden="true">...</span>':analysisState==='complete'?'计算完成':'计算失败')+'</small>'}
+function scenarioStatusMarkup(){return '<small id="scenario-calculation-status" role="status" class="scenario-calculation-status '+analysisState+'">'+(analysisState==='pending'?'计算中<span class="calculation-dots" aria-hidden="true">...</span>':analysisState==='complete'?'计算完成':'计算失败')+'</small>'}
 function updateScenarioStatus(){
  const status=$('#scenario-calculation-status');if(status)status.outerHTML=scenarioStatusMarkup();
  $('.workspace').dataset.analysisState=analysisState;
  let badge=$('#scenario-context');if(!badge){badge=document.createElement('button');badge.id='scenario-context';badge.className='scenario-context';badge.setAttribute('aria-haspopup','menu');badge.setAttribute('aria-expanded','false');badge.setAttribute('aria-controls','scenario-quick-menu');$('.fit-actions').append(badge)}
  const state=scenarioPresets(fitRecord),name=state.scenarios.find(s=>s.id===state.activeScenarioId)?.name||'不应用情景';
  badge.textContent=(analysisState==='pending'?'计算中 · ':analysisState==='failed'?'计算失败 · ':'')+name+' ▾';
- if(report?.provider==='nengine'&&state.activeScenarioId)badge.textContent='情景未接入 · 显示基准 ▾';badge.title='快速切换情景';
+ badge.title='快速切换情景';
 }
 
 

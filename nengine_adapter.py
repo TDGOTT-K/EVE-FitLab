@@ -56,7 +56,7 @@ def native_fit(f, build):
         'boosters':[{'id':f'booster-{i}','typeId':x['typeId'],
             'enabledSideEffects':x.get('enabledSideEffects',[])} for i,x in enumerate(plan.get('boosters',[]))]}
 
-def analyze(f):
+def analyze(f,target=None):
     client=bridge(); status=client.discover()
     build=status['source']['source']['buildNumber']
     native=native_fit(f,build)
@@ -71,10 +71,20 @@ def analyze(f):
     contribution_ids=selected_ids(f,a['outputContributions'])
     context['output']={'selection':{'metric':metric,'contributionIds':contribution_ids}}
     a=client.call('fit_analyze',{'fit':native,'context':context})['result']
+    baseline=a['outputContributions']['selection']
+    baseline_items=a['outputContributions']['items']
+    if target is not None:
+        metric='appliedLoadedCycleDps' if metric=='loadedCycleDps' else 'appliedCycleDps'
+        context['output']={'selection':{'metric':metric,'contributionIds':contribution_ids},'target':target}
+        a=client.call('fit_analyze',{'fit':native,'context':context})['result']
     output=a['outputContributions']
     selected=[item for item in output['items'] if item['id'] in contribution_ids]
     breakdown={kind:grouped_reading([item for item in selected if (
         item['kind'].startswith('fighter_') if kind=='fighters' else item['kind']=='drone' if kind=='drones' else item['kind'].startswith('ship_'))],metric)
+        for kind in ('weapons','drones','fighters')}
+    baseline_selected=[item for item in baseline_items if item['id'] in contribution_ids]
+    baseline_breakdown={kind:grouped_reading([item for item in baseline_selected if (
+        item['kind'].startswith('fighter_') if kind=='fighters' else item['kind']=='drone' if kind=='drones' else item['kind'].startswith('ship_'))],baseline['metric'])
         for kind in ('weapons','drones','fighters')}
     attrs=a['attributes']
     def value(key):return attrs.get(key,{}).get('value')
@@ -95,7 +105,9 @@ def analyze(f):
     if a.get('droneBay'):
         projection['attributeSnapshot']['maxActiveDrones']=a['droneBay']['maximumActive']
     if f.get('activeScenarioId') or f.get('scenario'):
-        notices.append('当前情景尚未接入 N 号静态查询，显示装配基准值；未套用旧引擎公式。')
+        if target is None:notices.append('当前情景未配置目标，显示装配基准输出。')
+        if (f.get('scenario') or {}).get('supportFitId') or (f.get('scenario') or {}).get('hostileFitId'):notices.append('传电与毁电尚未接入，电容仍显示自身装配基准。')
+        if target is not None:notices.append('情景按画布相对速度作静态应用参考；目标抗性、拦截及飞行时序未计入。')
     if f.get('fighterUiMock') and not f.get('fighterLoadout'):
         notices.append('原舰载机示例保留在草稿中，请重新选择真实型号；示例不参与计算。')
     if f.get('cargo'): notices.append('本批尚未接入货舱库存校验。')
@@ -104,8 +116,9 @@ def analyze(f):
         issues.append({'code':'STATIC_COVERAGE_INCOMPLETE','message':'当前引擎副本未覆盖部分效果；分项是否可用以各自状态为准，完整装配尚未通过校验。'})
     selection=fighter_damage_selection(f,a)
     return {'provider':'nengine','contract':'fitlab-analysis-v2','engineVersion':status['engineVersion'],
-        'fighterDamageSelection':selection,'outputSelection':output['selection'],'outputBreakdown':breakdown,
-        'outputContext':context['output'],
+        'fighterDamageSelection':selection,'outputSelection':output['selection'],'outputBreakdown':breakdown,'baselineOutputBreakdown':baseline_breakdown,
+        'outputContext':context['output'],'baselineOutputSelection':baseline,'baselineOutputItems':baseline_items,
+        'scenarioTarget':target,'curveRequest':f,
         'native':a,'nativeFit':native,'attributes':projection,'snapshot':{'modules':modules},
         'skillCount':len(native['skills']),'isValid':not issues,
         'issues':issues,'integrationNotices':notices,'source':{'buildNumber':build,'revision':client.baseline['revision']}}

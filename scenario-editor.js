@@ -23,7 +23,7 @@ export function openScenarioEditor({fit,fits,shipName,calculate,onSave}){
   form=$('form');form.onsubmit=e=>e.preventDefault();form.oninput=changed;
   const root=$('.scenario-map');plane=mountTargetPlane(root,value);const currentPlane=plane;
   async function speedLimit(){const request=++revision,id=form.elements.targetFitId.value;currentPlane.setSpeedLimit(null,id?'正在读取速度上限…':'右键空地放置目标');if(!id)return;
-   try{const enemy=fits.find(f=>f.id===id);if(!enemy)throw Error('目标装配已删除，请重新选择');const [a,b]=await Promise.all([calculate(withoutScenario(fit)),calculate(withoutScenario(enemy))]);if(request!==revision||!dialog.open)return;const limit=a.attributes.maxVelocity+b.attributes.maxVelocity;if(!Number.isFinite(limit))throw Error('速度数据缺失');currentPlane.setSpeedLimit(limit,'相对速度上限 '+limit.toFixed(1)+' m/s');}
+   try{const enemy=fits.find(f=>f.id===id);if(!enemy)throw Error('目标装配已删除，请重新选择');const [a,b]=await Promise.all([calculate(withoutScenario(fit)),calculate(withoutScenario(enemy))]);if(request!==revision||!dialog.open)return;if(!Number.isFinite(a.attributes.maxVelocity)||!Number.isFinite(b.attributes.maxVelocity))throw Error('速度数据缺失');const limit=a.attributes.maxVelocity+b.attributes.maxVelocity;currentPlane.setSpeedLimit(limit,'相对速度上限 '+limit.toFixed(1)+' m/s');}
    catch(e){if(request===revision&&dialog.open)currentPlane.setSpeedLimit(null,'速度上限不可用；已有矢量保留，位置仍可调整。');}
   }
   controls=installTargetMapControls(root,{form,fits,ownShipId:fit.shipId,shipName,onTargetChange:()=>{changed();speedLimit()},health:value.targetHealth,plane});

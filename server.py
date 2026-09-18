@@ -121,7 +121,9 @@ def analyze(f,resolve_links=True):
  if os.environ.get("FITLAB_CALCULATOR", "nengine")=="nengine":
   validate_fit(f)
   from nengine_adapter import analyze as native_analyze
-  return native_analyze(f)
+  from nengine_scenario import resolve_target
+  target=resolve_target(f,read_library()['fits'],native_analyze) if resolve_links else None
+  return native_analyze(f,target=target)
  return analyze_legacy(f,resolve_links)
 
 def analyze_legacy(f,resolve_links=True):
@@ -237,6 +239,9 @@ class Handler(SimpleHTTPRequestHandler):
    size=int(self.headers.get('Content-Length',0))
    if not 0<size<=2000000:raise ValueError('请求大小无效')
    body=json.loads(self.rfile.read(size))
+   if self.path=='/api/native-dps-curves':
+    from nengine_curves import build_curves
+    return self.reply(build_curves(analyze(body)))
    if self.path in ('/api/mutation-rule','/api/mutation-roll'):
     return self.reply(nengine_mutations.generate(body,TYPES,roll=self.path.endswith('-roll')))
    if self.path=='/api/storage/open':
