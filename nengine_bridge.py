@@ -23,7 +23,7 @@ class NEngineBridge:
         self.baseline = json.loads(manifest.read_text(encoding='utf-8-sig'))
         if not self.baseline.get('independentClone'):
             raise ValueError('拒绝连接非独立引擎副本')
-        self.state = Path(state or os.environ.get('FITLAB_NENGINE_STATE',Path(__file__).resolve().parent / 'state/nengine-ui-local-r35')).resolve()
+        self.state = Path(state or os.environ.get('FITLAB_NENGINE_STATE',Path(__file__).resolve().parent / 'state/nengine-ui-local-r36')).resolve()
         self.lock = threading.RLock()
         self.process = None
         self.sequence = 0
@@ -79,7 +79,7 @@ class NEngineBridge:
             return reply['result']
 
     def call(self, name, arguments=None):
-        if name not in {'engine_status','catalog_search','catalog_item','catalog_type_details','catalog_variants','fit_analyze','fit_attributes','mutation_rule','mutation_roll','booster_plan_analyze','booster_plan_roll','booster_plan_verify','capacitor_scenario'}:
+        if name not in {'engine_status','catalog_search','catalog_item','catalog_type_details','catalog_variants','fit_analyze','fit_output_curves','fit_attributes','mutation_rule','mutation_roll','booster_plan_analyze','booster_plan_roll','booster_plan_verify','capacitor_scenario'}:
             raise ValueError('此适配层只开放静态装配和目录查询')
         with self.lock:
             self._start()

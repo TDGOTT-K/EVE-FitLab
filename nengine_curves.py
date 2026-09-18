@@ -1,83 +1,41 @@
-"""Sample the public static engine API; never duplicate weapon formulas."""
+"""Present the public engine curve query. No reference, grid or peak computation here."""
 import json
-import math
 from functools import lru_cache
 from nengine_adapter import bridge
-from nengine_catalog import index_metadata
 
 
 def build_curves(report):
-    payload={key:report[key] for key in ('nativeFit','outputContext','outputSelection','baselineOutputSelection','scenarioTarget','source','attackMode')}
-    payload['comparison']=report['native']['outputContributions'].get('comparison')
-    payload['items']=report['native']['outputContributions']['items']
-    return _build(json.dumps(payload,sort_keys=True))
+    request={'fit':report['nativeFit'],'query':{'selection':report['outputContext']['selection'],
+        'target':report['scenarioTarget'],'referencePolicy':'weapon-size-ideal-v1','intervals':32}}
+    return _build(json.dumps(request,sort_keys=True))
 
 
 @lru_cache(maxsize=6)
 def _build(key):
-    report=json.loads(key);selection=report['outputSelection'];baseline=report['baselineOutputSelection']
-    if not selection['completeSelection'] or not baseline['completeSelection']:
-        return {'status':'unavailable','reason':'所选输出不完整，不能将部分小计画成完整 DPS 曲线。'}
-    ids=report['outputContext']['selection']['contributionIds']
-    items=[i for i in report['items'] if i['id'] in ids]
-    target=report['scenarioTarget'];ideal=target is None
-    radii=[];ranges=[];angular=[];references=[]
-    data=index_metadata()
-    for item in items:
-        app=item['application'];turret=app.get('turretParameters');missile=app.get('missileParameters') or (app.get('fighterParameters') or {}).get('application')
-        if ideal:
-            dogma=data['typeDogma'].get(item['source']['typeId'],{})
-            size=next((x['value'] for x in dogma.get('dogmaAttributes',[]) if x['attributeID']==128),None)
-            ref={1:40,2:125,3:400,4:3000}.get(size)
-            if ref is None:return {'status':'unavailable','reason':'无情景曲线缺少所选武器的尺寸参考，请选择具体情景目标。'}
-            references.append(ref)
-        if missile:radii.append(missile['explosionRadiusMeters'])
-        distance=app.get('rangeMeters') or (app.get('missileFlight') or {}).get('nominalPathMeters') or 0
-        if turret:distance=turret['optimalMeters']+3*turret['settings']['falloffMeters']
-        if app.get('fighterParameters'):distance+=3*app['fighterParameters'].get('falloffMeters',0)
-        ranges.append(distance)
-    if ideal:
-        target={'id':'fitlab-weapon-class-reference','distanceMeters':0,'speedMetersPerSecond':0,
-                'angularRadiansPerSecond':0,'signatureMeters':max(references+radii)}
-    for item in items:
-        settings=(item['application'].get('turretParameters') or {}).get('settings')
-        if settings and settings.get('signatureResolutionMeters',0)>0:
-            angular.append(settings['tracking']*target['signatureMeters']/settings['signatureResolutionMeters'])
-    definitions=[('distance','距离','km','distanceMeters',0,min(1e7,max([1000,target['distanceMeters']*1.5]+[r*1.15 for r in ranges]))),
-        ('signature','目标信号半径','m','signatureMeters',.1,min(1e7,max([400,target['signatureMeters']*2]+[r*2 for r in radii]))),
-        ('angular','角速度','rad/s','angularRadiansPerSecond',0,min(100,max([.02,target['angularRadiansPerSecond']*2]+[v*3 for v in angular])))]
-    metric=selection['metric'] if not ideal else ('appliedLoadedCycleDps' if baseline['metric']=='loadedCycleDps' else 'appliedCycleDps')
-    series=[];samples=[];destinations=[]
-    for name,label,unit,field,low,high in definitions:
-        xs={low+(high-low)*i/32 for i in range(33)}
-        if not ideal:xs.add(target[field])
-        if name=='signature':xs.update(v for v in radii if low<=v<=high)
-        if name=='distance':
-            for item in items:
-                app=item['application'];turret=app.get('turretParameters')
-                boundary=turret['optimalMeters'] if turret else app.get('rangeMeters')
-                if boundary is not None and low<=boundary<=high:xs.update([boundary,math.nextafter(boundary,math.inf)])
-        points=[]
-        for x in sorted(xs):
-            samples.append({**target,field:x,'id':'curve-'+str(len(samples))})
-            points.append([x,None]);destinations.append((points,len(points)-1))
-        series.append({'key':name,'label':label,'unit':unit,'min':low,'max':high,'points':points,
-                       'currentX':target[field],'currentY':selection['total'],'currentRatio':(report.get('comparison') or {}).get('ratio',{}).get('value'),
-                       'fixed':'静止目标 · 其余条件理想化 · 参考信号半径 '+str(target['signatureMeters'])+' m'})
-    # Respect both the target count and the total contribution-row contract bound.
-    inventory_count=max(1,len(report['items']))
-    batch_size=min(256,16384//inventory_count-1)
-    if batch_size<1:return {'status':'unavailable','reason':'当前输出分项过多，超出曲线批量查询范围。'}
-    for start in range(0,len(samples),batch_size):
-        batch=samples[start:start+batch_size]
-        context={'output':{'selection':{'metric':metric,'contributionIds':ids},'targets':batch}}
-        output=bridge().call('fit_analyze',{'fit':report['nativeFit'],'context':context})['result']['outputContributions']
-        by_id={sample['target']['id']:sample for sample in output['samples']}
-        for offset,target_sample in enumerate(batch):
-            sample=by_id[target_sample['id']];result=sample['selection'];points,index=destinations[start+offset]
-            points[index][1]=result['total'] if result['completeSelection'] else None
-            points[index].append((sample.get('comparison') or {}).get('ratio',{}).get('value'))
-    return {'status':'ready','attackMode':report['attackMode'],'ratiosFromEngine':True,'series':series,'ideal':ideal,'totalDps':baseline['total'],
-            'target':{'distance':target['distanceMeters'],'signature':target['signatureMeters'],'angular':target['angularRadiansPerSecond'],'speed':target['speedMetersPerSecond']},
-            'yMax':max([1]+[y for s in series for _,y,*_ in s['points'] if y is not None]),
-            'scope':('固定'+{'shield':'护盾','armor':'装甲','hull':'结构'}.get(target.get('layer',{}).get('name'),'目标')+'层 EDPS · 已扣抗性' if report['attackMode']=='edps' else 'N 引擎静态应用 · 不扣抗性')+' · 导弹假定成功交付'+(' · 有限弹量周期，非持续输出' if baseline['metric']=='loadedCycleDps' else '')}
+    request=json.loads(key);client=bridge();client.discover()
+    result=client.call('fit_output_curves',request)['result']
+    if result['state']!='ready':
+        reasons={'INCOMPLETE_OUTPUT_SELECTION':'所选输出不完整，不能将部分小计画成完整 DPS 曲线。',
+            'WEAPON_SIZE_REFERENCE_UNAVAILABLE':'所选武器缺少尺寸参考，请选择具体情景目标。',
+            'TARGET_LAYER_REQUIRED':'EDPS 曲线需要明确目标防御层。',
+            'CURRENT_APPLICATION_UNAVAILABLE':'当前目标下的输出不可计算，请查看原生输出诊断。',
+            'TARGET_GEOMETRY_REQUIRED':'曲线需要完整的距离、信号半径、速度和角速度条件。',
+            'TARGET_OUTSIDE_CURVE_POLICY_RANGE':'目标超出当前曲线政策的取样范围。',
+            'CURVE_SAMPLE_LIMIT':'取样点数量超过接口上限。','CURVE_CONTRIBUTION_LIMIT':'输出分项数量超过曲线批量查询上限。'}
+        return {'status':'unavailable','reason':reasons.get(result['reason'],result['reason']),'native':result,'request':request}
+    target=result['referenceTarget'];baseline=result['baseline'];current=result['current'];ideal=result['ideal']
+    effective=current['metric'].startswith('effective')
+    series=[]
+    for axis in result['series']:
+        series.append({'key':axis['axis'],'label':{'distance':'距离','signature':'目标信号半径','angular':'角速度'}[axis['axis']],
+            'unit':'km' if axis['axis']=='distance' else axis['unit'],'min':axis['minimum'],'max':axis['maximum'],
+            'points':[[p['x'],p['selection']['total'] if (p.get('selection') or {}).get('completeSelection') else None,
+                (p.get('comparison') or {}).get('ratio',{}).get('value')] for p in axis['points']],
+            'sampledPeak':axis['sampledPeak'],'currentX':axis['currentX'],'currentY':current['total'],'currentRatio':(result.get('currentComparison') or {}).get('ratio',{}).get('value'),
+            'fixed':('静止目标 · 其余条件理想化 · 参考信号半径 '+str(target['signatureMeters'])+' m') if ideal else '其余目标条件保持不变'})
+    return {'status':'ready','attackMode':'edps' if effective else 'dps','ratiosFromEngine':True,'series':series,
+        'angularLinearSpeedReferenceMeters':result['angularLinearSpeedReferenceMeters'],'ideal':ideal,'totalDps':baseline['total'],'target':{'distance':target['distanceMeters'],'signature':target['signatureMeters'],
+        'angular':target['angularRadiansPerSecond'],'speed':target['speedMetersPerSecond']},
+        'yMax':(1 if result['sampledPeak'] is None else max(1,result['sampledPeak'])),'sampledPeak':result['sampledPeak'],
+        'scope':('固定'+{'shield':'护盾','armor':'装甲','hull':'结构'}.get((target.get('layer') or {}).get('name'),'目标')+'层 EDPS · 已扣抗性' if effective else 'N 引擎静态应用 · 不扣抗性')+' · 导弹假定成功交付'+(' · 有限弹量周期，非持续输出' if baseline['metric']=='loadedCycleDps' else ''),
+        'native':result,'request':request}
