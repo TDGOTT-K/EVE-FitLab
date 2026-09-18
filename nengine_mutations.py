@@ -1,4 +1,5 @@
 """Pinned mutation rules and reproducible generation receipts; no local RNG."""
+import copy
 from nengine_adapter import bridge
 from nengine_catalog import index_metadata
 
@@ -54,6 +55,16 @@ def verify_receipt(receipt, base, types):
     canonical = generate({'baseTypeId': base,
         'mutaplasmidTypeId': receipt['rule'].get('mutaplasmidTypeId'),
         'seed': receipt['seed']}, types, roll=True)['data']
-    if canonical != receipt:
+    comparable=copy.deepcopy(canonical)
+    if 'comparisonSummary' not in receipt:comparable.pop('comparisonSummary',None)
+    if isinstance(receipt.get('rolls'),list):
+        for current,historical in zip(comparable['rolls'],receipt['rolls']):
+            if isinstance(historical,dict) and 'comparison' not in historical:current.pop('comparison',None)
+    if comparable != receipt:
         raise ValueError('变异结果与当前引擎不一致，请重新生成')
-    return canonical
+    return copy.deepcopy(receipt)
+
+
+def review_receipt(body,types):
+    receipt=verify_receipt(body.get('generationReceipt'),body.get('baseTypeId'),types)
+    return generate({'baseTypeId':body['baseTypeId'],'mutaplasmidTypeId':receipt['rule']['mutaplasmidTypeId'],'seed':receipt['seed']},types,roll=True)

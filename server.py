@@ -20,7 +20,7 @@ from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 ROOT=Path(os.environ.get('FITLAB_WEB_ROOT',Path(__file__).resolve().parent))
 STATE=storage_location.read_location(Path(os.environ.get('FITLAB_DEFAULT_STATE',ROOT/'state'))); STATE.mkdir(parents=True,exist_ok=True)
-os.environ.setdefault('FITLAB_NENGINE_STATE',str(STATE/'nengine-ui-local-r34'))
+os.environ.setdefault('FITLAB_NENGINE_STATE',str(STATE/'nengine-ui-local-r35'))
 CATALOG=json.loads((ROOT/'data/full-catalog.json').read_text(encoding='utf-8'))
 if os.environ.get('FITLAB_CALCULATOR','nengine')=='nengine':
  from nengine_catalog import refresh_catalog
@@ -258,6 +258,7 @@ class Handler(SimpleHTTPRequestHandler):
    if self.path=='/api/native-dps-curves':
     from nengine_curves import build_curves
     return self.reply(build_curves(analyze(body)))
+   if self.path=='/api/mutation-review':return self.reply(nengine_mutations.review_receipt(body,TYPES))
    if self.path in ('/api/mutation-rule','/api/mutation-roll'):
     return self.reply(nengine_mutations.generate(body,TYPES,roll=self.path.endswith('-roll')))
    if self.path=='/api/storage/open':

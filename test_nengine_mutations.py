@@ -1,9 +1,10 @@
 """Real pinned engine generation, persistence and fitted-value regression checks."""
-import copy
+import copy,json,subprocess,tempfile
+from pathlib import Path
 import unittest
 from abyssal_instances import save_instance
 from nengine_adapter import analyze, bridge
-from nengine_mutations import generate, options
+from nengine_mutations import generate, options,verify_receipt,review_receipt
 from server import TYPES
 
 
@@ -42,6 +43,34 @@ class Mutations(unittest.TestCase):
         cpu = next(r['used'] for r in result['native']['resources'] if r['id'] == 'cpu')
         self.assertAlmostEqual(cpu, record['mutation']['attributes']['50'])
         self.assertEqual(result['nativeFit']['items'][0]['mutation'], record['mutation'])
+
+    def test_comparison_protocol_and_historical_receipt(self):
+        args=dict(baseTypeId=526,mutaplasmidTypeId=47699,seed='public-comparison')
+        current=generate(args,TYPES,True)['data'];counts=dict(improved=0,degraded=0,unchanged=0,unknown=0)
+        for row in current['rolls']:
+            comparison=row['comparison'];delta=row['value']-row['range']['baseValue']
+            self.assertEqual(comparison['difference'],delta)
+            if row['range']['baseValue']:self.assertEqual(comparison['relativeChange'],delta/abs(row['range']['baseValue']))
+            counts[comparison['changeState']]+=1
+        self.assertEqual({k:current['comparisonSummary'][k] for k in counts},counts)
+        b=bridge()
+        with tempfile.TemporaryDirectory() as directory:
+            path=Path(directory)/'roll.json'
+            subprocess.run([str(b.root/'.tools/dotnet/dotnet.exe'),str(b.root/'src/NEngine.Cli/bin/Debug/net10.0/NEngine.Cli.dll'),
+                'sde-mutation-roll','--data',str(b.root/b.baseline['dataDirectory']),'--base','526','--mutaplasmid','47699','--seed',args['seed'],'--out',str(path)],check=True,capture_output=True)
+            self.assertEqual(json.loads(path.read_text(encoding='utf-8-sig')),current)
+        historical=copy.deepcopy(current);historical.pop('comparisonSummary')
+        for row in historical['rolls']:row.pop('comparison')
+        original=copy.deepcopy(historical)
+        self.assertEqual(verify_receipt(historical,526,TYPES),original)
+        reviewed=review_receipt({'baseTypeId':526,'generationReceipt':historical},TYPES)
+        self.assertEqual(reviewed['data'],current);self.assertEqual(historical,original)
+        record=save_instance(dict(baseTypeId=526,name='Historical',generationReceipt=historical),{},TYPES,'now')
+        self.assertEqual(record['generationReceipt'],original)
+        forged=copy.deepcopy(current);forged['comparisonSummary']['improved']+=1
+        with self.assertRaises(ValueError):verify_receipt(forged,526,TYPES)
+        forged=copy.deepcopy(current);forged['rolls'][0]['comparison']['difference']+=1
+        with self.assertRaises(ValueError):verify_receipt(forged,526,TYPES)
 
     def test_wrong_mapping_rejected(self):
         self.assertTrue(options(TYPES)['526'])
