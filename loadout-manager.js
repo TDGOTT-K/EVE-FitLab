@@ -227,7 +227,7 @@ export async function openLoadoutPicker(anchor,{api,snapshot,onSelect,onManage})
  menu.addEventListener('toggle',e=>{if(e.newState==='closed')menu.remove()});
  const close=()=>{menu.hidePopover();menu.remove()};
  try{
-  const [plans,layout,pilots]=await Promise.all([api('loadout-plans'),api('loadout-layout'),api('characters')]);if(layout.revision>0)extraFolders=layout.folders.slice();if(!menu.isConnected)return;menu.innerHTML='<input class="loadout-search" aria-label="搜索可用方案" placeholder="搜索方案">';
+  const plans=await api('loadout-plans');if(!menu.isConnected)return;menu.innerHTML='<input class="loadout-search" aria-label="搜索可用方案" placeholder="搜索方案">';
   const add=(label,fn)=>{const b=document.createElement('button');b.role='menuitem';b.textContent=label;b.onclick=()=>{close();fn()};menu.append(b);return b;};
   add('不使用方案',()=>onSelect(null));
   for(const p of plans){const b=add((snapshot?.id===p.id?'✓ ':'')+p.name+(snapshot?.id===p.id?(snapshot.customized?' · 已自定义':snapshot.revision!==p.revision?' · 有更新':''):''),()=>onSelect(p));b.dataset.search=(p.name+' '+(p.folder||'')).toLowerCase();}
