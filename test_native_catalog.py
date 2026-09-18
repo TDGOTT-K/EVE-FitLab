@@ -7,6 +7,22 @@ class NativeCatalog(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):bridge().close()
 
+    def test_loadout_details_match_public_metadata(self):
+        from nengine_catalog import indexed_item,item_metadata
+        b=bridge()
+        for ident in [9941,9947,9950,10151]:
+            view=item_metadata(indexed_item(ident))
+            native=b.call('catalog_type_details',{'typeId':ident})['result']
+            self.assertEqual(view['description'],native['type'].get('description',{}))
+            self.assertEqual({a['id']:a['value'] for a in view['attributes']},
+                {a['value']['attributeId']:a['value']['value'] for a in native['attributes']})
+            self.assertEqual(view['source']['typeId'],ident)
+            self.assertEqual(view['source']['indexSha256'],b.baseline['indexSha256'])
+            with tempfile.TemporaryDirectory() as directory:
+                output=Path(directory)/'metadata.json'
+                subprocess.run([str(b.root/'.tools/dotnet/dotnet.exe'),str(b.root/'src/NEngine.Cli/bin/Debug/net10.0/NEngine.Cli.dll'),'sde-type-details','--data',str(b.root/b.baseline['dataDirectory']),'--type',str(ident),'--out',str(output)],check=True,capture_output=True)
+                self.assertEqual(json.loads(output.read_text(encoding='utf-8-sig')),native)
+
     def test_all_published_ships_skills_drones_match_public_catalog(self):
         for category,kind in [(6,'ship'),(16,'skill'),(18,'drone'),(8,'ammo'),(32,'subsystem')]:
             ids=set();cursor=None

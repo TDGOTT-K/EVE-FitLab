@@ -201,7 +201,7 @@ async function showInfo(t,slotKey=null,droneIndex=null,fittedObject=null){infoOr
  const calculationRequest=!useNative&&(selected||droneIndex!==null||t.kind==='ship')?getCalculation(captured):Promise.resolve(null);
  // Attach rejection handling immediately, even while item metadata is in flight.
  const settledCalculation=calculationRequest.then(value=>({value}),error=>({error}));
- try{const data=t.kind==='loadout'?(await import('./loadout-item-info.js')).loadoutItemInfo(t.id):await cachedItem(t.id,t.id);if(request!==infoRequest||panel.hidden)return;
+ try{const data=await cachedItem(t.id,t.id);if(request!==infoRequest||panel.hidden)return;
  renderItemInfo($('#info-content'),t,data,null,catalog,'');clampInfo();
  if(!selected&&droneIndex===null&&t.kind!=='ship'&&!fittedObject){say('已读取物品详情');return}
  const status=document.createElement('p');status.className='profile-note';status.textContent='装配参数计算中 · 可先查看基础属性';$('#info-content').append(status);

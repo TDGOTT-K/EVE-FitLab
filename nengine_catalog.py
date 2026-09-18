@@ -82,7 +82,8 @@ def refresh_catalog(catalog):
 
 def item_metadata(item):
     data=index_metadata()
-    return {'attributes':[dict(data['dogmaAttributes'].get(int(k),{}),id=int(k),value=v) for k,v in item['attrs'].items()],
+    return {'source':{**data['source'],'typeId':item['id'],'tables':['types','typeDogma','dogmaAttributes','dogmaEffects','dogmaUnits']},
+        'attributes':[dict(data['dogmaAttributes'].get(int(k),{}),id=int(k),value=v) for k,v in item['attrs'].items()],
         'units':{str(k):v for k,v in data['dogmaUnits'].items()},
         'effects':[data['dogmaEffects'].get(i,{}) for i in item['effects']],
         'description':data['types'][item['id']].get('description',{})}
