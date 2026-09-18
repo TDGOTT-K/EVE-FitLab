@@ -32,9 +32,11 @@ import {requestCache} from './request-cache.js';
 import {renderItemInfo} from './item-info.js?v=ship-parameters-1';
 import {installExplanations} from './explanations.js';
 import {mountEngineStats,attributeDetail} from './engine-view.js?v=calculation-graphs-1';
-await initI18n();
-const catalog=await fetch('./api/catalog').then(r=>r.json());
-const marketIcons=await fetch('./data/market-icons.json').then(r=>r.json());
+const [,catalog,marketIcons]=await Promise.all([
+ initI18n(),
+ fetch('./api/catalog').then(r=>r.json()),
+ fetch('./data/market-icons.json').then(r=>r.json())
+]);
 
 const tLabel=t;
 const $=s=>document.querySelector(s), typeIndex=new Map(catalog.map(t=>[t.id,t])), byId=id=>typeIndex.get(Number(id));

@@ -9,6 +9,7 @@ from pathlib import Path
 import queue
 import subprocess
 import threading
+from collections import OrderedDict
 
 DEFAULT_ROOT = Path(__file__).resolve().parent.parent / 'N号引擎-UI接入-0.190-r33'
 
@@ -35,9 +36,12 @@ class NEngineBridge:
         self.process = None
         self.sequence = 0
         self.status = None
+        self.read_cache=OrderedDict()
+        self.read_cache_bytes=0
         atexit.register(self.close)
 
     def close(self):
+        self.read_cache.clear();self.read_cache_bytes=0
         p, self.process = self.process, None
         if p and p.poll() is None:
             p.terminate()
@@ -49,6 +53,7 @@ class NEngineBridge:
 
     def _start(self):
         if self.process and self.process.poll() is None: return
+        self.read_cache.clear();self.read_cache_bytes=0
         runtime = self.root / '.tools/dotnet'
         dll = self.root / 'src/NEngine.Mcp/bin/Debug/net10.0/NEngine.Mcp.dll'
         if not dll.is_file(): raise ValueError('N 号引擎副本缺少已构建的 MCP 宿主')
@@ -90,6 +95,12 @@ class NEngineBridge:
             raise ValueError('此适配层只开放静态装配和目录查询')
         with self.lock:
             self._start()
+            # Only immutable snapshot queries; never cache session-dependent reads.
+            cacheable=name in {'fit_analyze','fit_preview_input','fit_attributes','capacitor_scenario'} and isinstance((arguments or {}).get('fit'),dict)
+            cache_key=json.dumps([name,arguments or {}],ensure_ascii=False,separators=(',',':')) if cacheable else None
+            if cache_key in self.read_cache:
+                cached,size=self.read_cache.pop(cache_key);self.read_cache[cache_key]=(cached,size)
+                return json.loads(cached)
             result=self._rpc('tools/call',{'name':name,'arguments':arguments or {}})
             payload=result.get('structuredContent')
             if payload is None:
@@ -97,6 +108,13 @@ class NEngineBridge:
                 try: payload=json.loads(content)
                 except json.JSONDecodeError: payload={'message':content}
             if result.get('isError'): raise NEngineError(payload)
+            if cacheable:
+                cached=json.dumps(payload,ensure_ascii=False,separators=(',',':'))
+                size=len(cached.encode('utf-8'))+len(cache_key.encode('utf-8'))
+                if size<=16*1024*1024:
+                    self.read_cache[cache_key]=(cached,size);self.read_cache_bytes+=size
+                    while len(self.read_cache)>48 or self.read_cache_bytes>16*1024*1024:
+                        _,(_,removed)=self.read_cache.popitem(last=False);self.read_cache_bytes-=removed
             return payload
 
     def discover(self):

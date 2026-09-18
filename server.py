@@ -11,6 +11,7 @@ from market_prices import prices
 from capacitor import calculate_capacitor
 """FitLab local storage and fitting-engine adapter. Run: python server.py"""
 import json, os, re, threading, uuid, urllib.request, urllib.error, urllib.parse
+import gzip,hashlib
 from http.cookies import SimpleCookie
 import eve_sso
 import storage_location
@@ -183,17 +184,36 @@ def analyze_legacy(f,resolve_links=True):
  if resolve_links:attach_workspace_view(result,f,TYPES)
  return result
 class Handler(SimpleHTTPRequestHandler):
+ cached_documents={}
+ document_lock=threading.Lock()
  def __init__(self,*args,**kw):super().__init__(*args,directory=str(ROOT),**kw)
  def end_headers(self):
-  self.send_header('Cache-Control','no-store')
+  self.send_header('Cache-Control','private, max-age=0, must-revalidate' if getattr(self,'cacheable_document',False) or not self.path.startswith('/api/') else 'no-store')
   super().end_headers()
  def log_message(self,*args):pass
  def reply(self,data,status=200):
   b=json.dumps(data,ensure_ascii=False).encode();self.send_response(status);self.send_header('Content-Type','application/json; charset=utf-8');self.send_header('Cache-Control','no-store');self.send_header('Content-Length',str(len(b)));self.end_headers();self.wfile.write(b)
+ def reply_catalog(self,data):
+  with self.document_lock:
+   key=self.path
+   if key not in self.cached_documents:
+    raw=json.dumps(data,ensure_ascii=False,separators=(',',':')).encode()
+    self.cached_documents[key]=(raw,gzip.compress(raw,compresslevel=5),hashlib.sha256(raw).hexdigest())
+   raw,compressed,digest=self.cached_documents[key]
+  zipped='gzip' in self.headers.get('Accept-Encoding','')
+  etag='"'+digest+('-gzip' if zipped else '-identity')+'"'
+  self.cacheable_document=True
+  self.send_response(304 if self.headers.get('If-None-Match')==etag else 200)
+  self.send_header('ETag',etag);self.send_header('Vary','Accept-Encoding')
+  if self.headers.get('If-None-Match')==etag:self.end_headers();return
+  body=compressed if zipped else raw
+  self.send_header('Content-Type','application/json; charset=utf-8')
+  if zipped:self.send_header('Content-Encoding','gzip')
+  self.send_header('Content-Length',str(len(body)));self.end_headers();self.wfile.write(body)
  def do_GET(self):
   if os.environ.get('FITLAB_API_KEY') and self.headers.get('X-FitLab-Key')!=os.environ['FITLAB_API_KEY']:return self.reply({'error':'未授权'},403)
   try:
-   if self.path=='/api/catalog':return self.reply(CATALOG)
+   if self.path=='/api/catalog':return self.reply_catalog(CATALOG)
    if self.path=='/api/catalog-source':
     if os.environ.get('FITLAB_CALCULATOR','nengine')=='nengine':
      from nengine_catalog import index_metadata
@@ -204,7 +224,7 @@ class Handler(SimpleHTTPRequestHandler):
     return self.reply({'provider':os.environ.get('FITLAB_CALCULATOR','nengine'),'status':bridge().discover()})
    if self.path=='/api/loadout-catalog':
     from nengine_loadout_catalog import loadout_catalog
-    return self.reply(loadout_catalog())
+    return self.reply_catalog(loadout_catalog())
    if self.path=='/api/fighters':
     from nengine_adapter import fighter_catalog
     return self.reply(fighter_catalog())
