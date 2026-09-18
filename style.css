@@ -595,3 +595,34 @@ label:has(>input[type="checkbox"]:disabled){cursor:default;color:var(--muted)}
 .mutation-plasmid-icon{width:44px;height:44px;flex:none;object-fit:contain}
 
 .native-output-metric{width:100%;margin:3px 0 8px;background:#111d26;border:1px solid #29404d;color:#a5ced7;font-size:11px;padding:5px}.native-output-details{font-size:11px;margin-top:8px}.native-output-details summary{cursor:pointer;color:#80a6b5}.native-output-details summary span{float:right}.native-output-item{display:grid;grid-template-columns:1fr auto;gap:4px;padding:8px 0;border-bottom:1px solid #20313b}.native-output-item small{grid-column:1/-1;color:#93a0a9}.native-output-item b{color:#bad5df;font-variant-numeric:tabular-nums}
+/* Mutaplasmid selection: native-app list with a hover inspection pane. */
+.mutation-plasmid{padding:0;display:block}
+.mutation-material-trigger{display:flex;align-items:center;gap:9px;width:100%;min-height:94px;padding:10px;text-align:left;border:0;background:transparent;color:#f0c6b5;cursor:pointer}
+.mutation-material-trigger>span:not(.mutation-material-chevron){flex:1;min-width:0}
+.mutation-material-trigger b{font-size:12px;line-height:1.5;font-weight:500;display:block;overflow-wrap:anywhere}
+.mutation-material-trigger small{color:#ba9290}
+.mutation-material-trigger:hover,.mutation-material-trigger[aria-expanded=true]{background:#65302d55}
+.mutation-material-trigger:focus-visible{outline:1px solid #eaa080;outline-offset:-3px}
+.mutation-material-chevron{flex:none;font-size:16px;color:#d89a85}
+.mutation-material-popup{position:fixed;inset:auto;margin:0;padding:0;border:1px solid #895049;border-radius:5px;background:#1c1218;color:#eadade;box-shadow:0 16px 48px #000b;color-scheme:dark;overflow:auto}
+.mutation-material-popup:popover-open{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.mutation-material-options{max-height:350px;overflow-y:auto;padding:6px;border-right:1px solid #583238}
+.mutation-material-options button{width:100%;min-height:58px;display:flex;align-items:center;gap:9px;padding:8px;border:1px solid transparent;background:transparent;color:#d4b9bc;text-align:left;cursor:pointer;border-radius:3px}
+.mutation-material-options button img{width:36px;height:36px;flex:none;object-fit:contain}
+.mutation-material-options button span{font-size:12px;line-height:1.5;flex:1;min-width:0}
+.mutation-material-options button i{font-style:normal;color:#f4b599;width:12px}
+.mutation-material-options button[aria-selected=true]{background:#62352e55;color:#ffe0c9}
+.mutation-material-options button.previewing,.mutation-material-options button:focus-visible{background:#743c3555;border-color:#a96453;outline:0}
+.mutation-material-description{padding:15px;max-height:350px;overflow:auto;background:radial-gradient(ellipse at 100% 0,#6e312733,transparent 75%),#160f15}
+.mutation-material-detail-head{display:flex;gap:10px;align-items:center}
+.mutation-material-detail-head img{width:48px;height:48px;flex:none}
+.mutation-material-detail-head b{font-size:13px;line-height:1.5;color:#f3c4ad}
+.material-description-text{font-size:12px;line-height:1.8;color:#c5afb5;white-space:pre-line;margin:14px 0;overflow-wrap:anywhere}
+.material-price{border-top:1px solid #513037;padding-top:12px;display:flex;flex-direction:column;gap:5px}
+.material-price small{font-size:10px;color:#a1848e;white-space:pre-line;line-height:1.6}
+.material-price b{font-size:16px;color:#e2bb81;font-variant-numeric:tabular-nums;font-weight:500}
+@media(max-width:560px){.mutation-material-popup:popover-open{grid-template-columns:1fr}.mutation-material-options{max-height:180px;border-right:0;border-bottom:1px solid #583238}.mutation-material-description{max-height:220px}.mutation-material-trigger{min-height:74px}}
+.mutation-material-description{display:flex;flex-direction:column;height:350px;overflow:hidden;box-sizing:border-box}
+.mutation-material-detail-head,.material-price{flex:none}
+.material-description-text{flex:1;min-height:0;overflow:auto;margin:12px 0;padding-right:4px}
+@media(max-width:560px){.mutation-material-description{height:220px}}
