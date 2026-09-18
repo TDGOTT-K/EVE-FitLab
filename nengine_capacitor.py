@@ -1,6 +1,7 @@
 """Bind UI sources to existing native periodic energy queries; no energy formula."""
 import math,json
 from nengine_adapter import bridge,analyze
+from scenario_snapshots import context_fits
 
 
 def attach_capacitor(fit,report,fits):
@@ -12,6 +13,7 @@ def attach_capacitor(fit,report,fits):
            'sampleTimesSeconds':[horizon*i/60 for i in range(61)]}
     sources=[];scenario=fit.get('scenario') or {}
     try:
+        fits=context_fits(fit,fits)
         initial=scenario.get('ownCapacitorFraction',1)
         if type(initial) not in (int,float) or not math.isfinite(initial) or not 0<=initial<=1:raise ValueError('本舰初始电量比例必须为0–1')
         query['initialFraction']=initial

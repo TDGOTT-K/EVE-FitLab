@@ -6,6 +6,7 @@ def value_fit(fit,market=None):
     client=bridge();status=client.discover()
     validate_source_binding(fit,client)
     native=native_fit(fit,status['source']['source']['buildNumber'])
+    market=market if market is not None else fit.get('valuationSnapshot')
     market=market if market is not None else snapshot()
     # Transport projection only: select quoted type IDs; no quantities or totals.
     ids=set()

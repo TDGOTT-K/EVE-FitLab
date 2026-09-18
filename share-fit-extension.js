@@ -5,7 +5,7 @@ const mutation=value=>{if(value==null)return value;const attributes=value.attrib
  return {...pick(value,['baseTypeId','mutaplasmidTypeId','ruleVersion']),attributes:structuredClone(attributes)};
 };
 export function shareFitExtension(fit,options={}){
- const out=pick(fit,['sourceBinding','tacticalModeTypeId','outputMetric','capacitorHorizon','defenseMode','damageProfile']);
+ const out=pick(fit,['nativeFitId','sourceBinding','tacticalModeTypeId','outputMetric','capacitorHorizon','defenseMode','damageProfile']);
  out.cargoDeclared=Object.hasOwn(fit,'cargo');
  out.slots=(fit.slots||[]).map(s=>({...pick(s,['key','loadedCharges','abyssalName']),...(s.mutation?{mutation:mutation(s.mutation)}:{})}));
  out.drones=(fit.drones||[]).map(d=>d.mutation?{mutation:mutation(d.mutation)}:{});
@@ -21,14 +21,14 @@ export function shareFitExtension(fit,options={}){
 export function applyShareFitExtension(fit,extra){
  if(!extra||!Array.isArray(extra.slots)||!Array.isArray(extra.drones)||!Array.isArray(extra.cargo)||extra.slots.length!==fit.slots.length||extra.drones.length!==fit.drones.length||extra.cargo.length!==fit.cargo.length)throw Error('分享扩展结构无效');
  for(let i=0;i<fit.slots.length;i++)if(extra.slots[i].key!==fit.slots[i].key)throw Error('分享槽位对应关系无效');
- const candidate={...fit,...pick(extra,['sourceBinding','tacticalModeTypeId','outputMetric','capacitorHorizon','defenseMode','damageProfile','crystals','fighterLoadout','loadoutPlan','implantPlan']),
+ const candidate={...fit,...pick(extra,['nativeFitId','sourceBinding','tacticalModeTypeId','outputMetric','capacitorHorizon','defenseMode','damageProfile','crystals','fighterLoadout','loadoutPlan','implantPlan']),
   slots:fit.slots.map((s,i)=>({...s,...pick(extra.slots[i],['loadedCharges','abyssalName','mutation'])})),
   drones:fit.drones.map((d,i)=>({...d,...pick(extra.drones[i],['mutation'])})),
   cargo:fit.cargo.map((c,i)=>({...c,...pick(extra.cargo[i],['id'])}))};
  if(!extra.cargoDeclared)delete candidate.cargo;
  // Run the same explicit projection on inbound data. Native validation follows.
  const clean=shareFitExtension(candidate,{pilot:true});
- const result={...fit,...pick(clean,['sourceBinding','tacticalModeTypeId','outputMetric','capacitorHorizon','defenseMode','damageProfile','crystals','fighterLoadout','loadoutPlan','implantPlan']),
+ const result={...fit,...pick(clean,['nativeFitId','sourceBinding','tacticalModeTypeId','outputMetric','capacitorHorizon','defenseMode','damageProfile','crystals','fighterLoadout','loadoutPlan','implantPlan']),
   slots:fit.slots.map((s,i)=>({...s,...clean.slots[i]})),drones:fit.drones.map((d,i)=>({...d,...clean.drones[i]})),cargo:candidate.cargo};
  if(!extra.cargoDeclared)delete result.cargo;
  return result;

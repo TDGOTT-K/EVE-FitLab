@@ -1,5 +1,6 @@
 // Display the transport classification; preserve admission and completeness separately.
 export function analysisStatusText(report){
+ if(!report)return '计算不可用';
  const s=report.analysisStatus;
  if(!s)return report.isValid?'装配校验通过':'装配存在校验问题';
  const legal={valid:'装配合法',invalid:'装配不合法',unknown:'合法性未确定'}[s.legality];

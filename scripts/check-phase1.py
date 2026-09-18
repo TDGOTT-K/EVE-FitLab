@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
 PYTHON_TESTS=[
- 'test_analysis_status','test_source_binding','test_read_cache','test_native_admission','test_module_activation',
+ 'test_fit_package','test_analysis_status','test_source_binding','test_read_cache','test_native_admission','test_module_activation',
  'test_nengine_integration','test_nengine_output','test_nengine_scenario','test_nengine_mutations',
  'test_native_inventory','test_native_edps','test_native_curves','test_native_capacitor',
  'test_native_attributes','test_native_booster_plan','test_native_catalog',

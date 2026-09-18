@@ -310,6 +310,11 @@ class Handler(SimpleHTTPRequestHandler):
    if self.path=='/api/import/eft':
     from eft_import import parse_eft
     return self.reply(parse_eft(body.get('text')))
+   if self.path in ('/api/fit-package/export','/api/fit-package/import'):
+    from fit_package import export_package,import_package
+    with LOCK:
+     if self.path.endswith('/export'):return self.reply(export_package(body['fit'],read_library()['fits'],analyze,validate_fit))
+     return self.reply(import_package(body['document'],analyze,validate_fit))
    if self.path=='/api/analyze':
     with LOCK:return self.reply(analyze(body))
    if self.path=='/api/preview':

@@ -41,7 +41,7 @@ def native_fit(f, build):
                 'memberIds':[f'{ident}-{j}' for j in range(row['quantity'])],
                 'deployed':location=='tubes' and row.get('active',True)})
     if len(fighters)>200: raise ValueError('本适配层一次最多分析 200 个舰载机中队')
-    result={'id':f.get('id') or 'fitlab-draft','name':f.get('name'),'tags':f.get('tags',[]),'buildNumber':build,
+    result={'id':f.get('nativeFitId') or f.get('id') or 'fitlab-draft','name':f.get('name'),'tags':f.get('tags',[]),'buildNumber':build,
         'shipTypeId':f['shipId'],'omittedSkills':'untrained',
         'skills':{str(s['skillTypeId']):s['level'] for s in f.get('skills',[])},
         'tacticalModeTypeId':f.get('tacticalModeTypeId'),'items':items,'subsystems':subsystems,
@@ -115,6 +115,8 @@ def analyze(f,target=None,native_query=None):
         for s in f.get('slots',[]) if s.get('item')]
     corrected=[s['key'] for s in f.get('slots',[]) if s.get('item') and s.get('state')=='Active' and effective_module_state(s)=='Online']
     notices=['已修正被动装备的旧启用状态为在线：'+', '.join(corrected)] if corrected else []
+    if f.get('scenarioSnapshots'):notices.append('情景引用使用装配文件内的冻结快照，不随本地同名装配变化。')
+    if f.get('valuationSnapshot'):notices.append('估价使用装配文件内的历史报价快照，时间与来源见估价明细。')
     if a.get('droneBay'):
         projection['attributeSnapshot']['maxActiveDrones']=a['droneBay']['maximumActive']
     if f.get('activeScenarioId') or f.get('scenario'):

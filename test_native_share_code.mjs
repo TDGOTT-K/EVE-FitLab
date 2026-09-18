@@ -12,6 +12,8 @@ const decoded=await decodeFitCodes(codes,catalog);
 const binding={engineVersion:'0.190.8-ui.1',revision:41,staticRule:'eve-static-dogma-v54',buildNumber:3503375,indexSha256:'test-source'};
 const boundDecoded=await decodeFitCodes(await encodeFitCodes({...base,sourceBinding:binding}),catalog);
 assert.deepEqual(boundDecoded.sourceBinding,binding);
+const identityDecoded=await decodeFitCodes(await encodeFitCodes({...base,nativeFitId:base.id}),catalog);
+assert.equal(identityDecoded.nativeFitId,base.id);assert.equal(identityDecoded.id,undefined);
 assert.deepEqual(decoded.crystals,base.crystals);assert.deepEqual(decoded.loadoutPlan.implants,base.loadoutPlan.implants);assert.deepEqual(decoded.loadoutPlan.boosters,base.loadoutPlan.boosters);
 assert.equal(decoded.outputMetric,base.outputMetric);assert.equal(decoded.capacitorHorizon,900);assert.equal(decoded.defenseMode,'targeted');assert.deepEqual(decoded.damageProfile,base.damageProfile);
 const text=JSON.stringify(decoded);for(const value of ['private-plan-id','private-folder','private-target','private-scenario','private-fit','Private pilot','rollReceipt'])assert(!text.includes(value));
@@ -34,3 +36,13 @@ execFileSync('python',['-c',[
  'bridge().close()'
 ].join(';')],{input:JSON.stringify([base,decoded]),encoding:'utf8'});
 console.log('Native share: complete input roundtrip, unknown inventory, privacy, identities and native result parity passed');
+execFileSync('python',['-c',[
+ 'import json,sys',
+ 'from nengine_adapter import analyze,bridge',
+ 'a,b=json.load(sys.stdin)',
+ "a.pop('scenario',None);a.pop('scenarios',None);a.pop('activeScenarioId',None)",
+ "b['id']='new-local-library-record'",
+ "assert analyze(a)['native']==analyze(b)['native']",
+ 'bridge().close()'
+].join(';')],{input:JSON.stringify([base,identityDecoded]),encoding:'utf8'});
+console.log('Native identity survives a different local library record ID');

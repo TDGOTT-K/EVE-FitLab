@@ -1,8 +1,10 @@
 """Static UI target geometry; all weapon application stays in NEngine."""
 import math
+from scenario_snapshots import context_fits
 
 
 def resolve_context(fit, fits, analyze):
+    fits=context_fits(fit,fits)
     value=fit.get('scenario') or {}
     if not value.get('targetFitId'): return None,None
     victim=next((f for f in fits if f.get('id')==value['targetFitId']),None)

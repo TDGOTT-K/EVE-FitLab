@@ -101,7 +101,7 @@ export async function renderNativeShareImage(fit,report,catalog,options,valuatio
  if(options.notes&&fit.notes){heading('备注');line(fit.notes,{raw:true})}
  heading('装配导入码');line('保存全部二维码可恢复装配输入。情景和本地关联不包含在图片中。',{size:20});
  line('二维码始终包含全部库存与技能快照；上方货舱开关仅控制可见清单。',{size:18,color:'#9eb7c4'});
- const codes=await encodeFitCodes({...fit,sourceBinding:report.sourceBinding},options);
+ const codes=await encodeFitCodes({...fit,nativeFitId:report.nativeFit.id,sourceBinding:report.sourceBinding},options);
  for(const [i,code] of codes.entries()){
   y+=16;line('装配码 '+(i+1)+' / '+codes.length,{bold:true});const qr=await qrCanvas(code),top=y;
   commands.push(()=>{ctx.imageSmoothingEnabled=false;ctx.drawImage(qr,140,top,800,800);ctx.imageSmoothingEnabled=true});y+=830;
