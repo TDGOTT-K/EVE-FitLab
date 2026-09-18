@@ -1,0 +1,2704 @@
+{
+  "noSkills": {
+    "ok": true,
+    "staticCoverageComplete": true,
+    "errors": [
+      {
+        "code": "SKILL_REQUIRED",
+        "message": "ship requires 35685 level 1.",
+        "instanceId": "ship"
+      }
+    ],
+    "unsupported": [],
+    "attributeCount": 154,
+    "nominalDps": 0,
+    "nominalDpsUnavailableReason": null,
+    "fighterPrimaryNominalDps": 0,
+    "fighterBombCount": 0
+  },
+  "unrelatedSkill3322": {
+    "ok": true,
+    "staticCoverageComplete": false,
+    "errors": [
+      {
+        "code": "SKILL_REQUIRED",
+        "message": "ship requires 35685 level 1.",
+        "instanceId": "ship"
+      },
+      {
+        "code": "SKILL_REQUIRED",
+        "message": "skill.3322 requires 3319 level 2.",
+        "instanceId": "skill.3322"
+      }
+    ],
+    "unsupported": [
+      {
+        "sourceId": "skill.3322",
+        "effectId": 660,
+        "name": "missileEMDmgBonus",
+        "status": "unsupported_static",
+        "reason": "IMPERATIVE_EFFECT_ADAPTER_MISSING",
+        "matchedTargets": null
+      },
+      {
+        "sourceId": "skill.3322",
+        "effectId": 661,
+        "name": "missileExplosiveDmgBonus",
+        "status": "unsupported_static",
+        "reason": "IMPERATIVE_EFFECT_ADAPTER_MISSING",
+        "matchedTargets": null
+      },
+      {
+        "sourceId": "skill.3322",
+        "effectId": 662,
+        "name": "missileThermalDmgBonus",
+        "status": "unsupported_static",
+        "reason": "IMPERATIVE_EFFECT_ADAPTER_MISSING",
+        "matchedTargets": null
+      },
+      {
+        "sourceId": "skill.3322",
+        "effectId": 668,
+        "name": "missileKineticDmgBonus2",
+        "status": "unsupported_static",
+        "reason": "IMPERATIVE_EFFECT_ADAPTER_MISSING",
+        "matchedTargets": null
+      }
+    ],
+    "attributeCount": 0,
+    "nominalDps": null,
+    "nominalDpsUnavailableReason": "STATIC_COVERAGE_INCOMPLETE",
+    "fighterPrimaryNominalDps": null,
+    "fighterBombCount": 0
+  },
+  "all505": {
+    "ok": true,
+    "staticCoverageComplete": false,
+    "errors": [],
+    "unsupported": [
+      {
+        "sourceId": "skill.3322",
+        "effectId": 660,
+        "name": "missileEMDmgBonus",
+        "status": "unsupported_static",
+        "reason": "IMPERATIVE_EFFECT_ADAPTER_MISSING",
+        "matchedTargets": null
+      },
+      {
+        "sourceId": "skill.3322",
+        "effectId": 661,
+        "name": "missileExplosiveDmgBonus",
+        "status": "unsupported_static",
+        "reason": "IMPERATIVE_EFFECT_ADAPTER_MISSING",
+        "matchedTargets": null
+      },
+      {
+        "sourceId": "skill.3322",
+        "effectId": 662,
+        "name": "missileThermalDmgBonus",
+        "status": "unsupported_static",
+        "reason": "IMPERATIVE_EFFECT_ADAPTER_MISSING",
+        "matchedTargets": null
+      },
+      {
+        "sourceId": "skill.3322",
+        "effectId": 668,
+        "name": "missileKineticDmgBonus2",
+        "status": "unsupported_static",
+        "reason": "IMPERATIVE_EFFECT_ADAPTER_MISSING",
+        "matchedTargets": null
+      },
+      {
+        "sourceId": "skill.20210",
+        "effectId": 1851,
+        "name": "selfRof",
+        "status": "unsupported_static",
+        "reason": "IMPERATIVE_EFFECT_ADAPTER_MISSING",
+        "matchedTargets": null
+      },
+      {
+        "sourceId": "skill.20211",
+        "effectId": 1851,
+        "name": "selfRof",
+        "status": "unsupported_static",
+        "reason": "IMPERATIVE_EFFECT_ADAPTER_MISSING",
+        "matchedTargets": null
+      },
+      {
+        "sourceId": "skill.20212",
+        "effectId": 1851,
+        "name": "selfRof",
+        "status": "unsupported_static",
+        "reason": "IMPERATIVE_EFFECT_ADAPTER_MISSING",
+        "matchedTargets": null
+      },
+      {
+        "sourceId": "skill.20213",
+        "effectId": 1851,
+        "name": "selfRof",
+        "status": "unsupported_static",
+        "reason": "IMPERATIVE_EFFECT_ADAPTER_MISSING",
+        "matchedTargets": null
+      },
+      {
+        "sourceId": "skill.25718",
+        "effectId": 1851,
+        "name": "selfRof",
+        "status": "unsupported_static",
+        "reason": "IMPERATIVE_EFFECT_ADAPTER_MISSING",
+        "matchedTargets": null
+      },
+      {
+        "sourceId": "skill.37796",
+        "effectId": 6396,
+        "name": "skillStructureMissileDamageBonus",
+        "status": "unsupported_static",
+        "reason": "DOGMA_DOMAIN",
+        "matchedTargets": null
+      },
+      {
+        "sourceId": "skill.37797",
+        "effectId": 6679,
+        "name": "skillStructureDoomsdayDurationBonus",
+        "status": "unsupported_static",
+        "reason": "DOGMA_DOMAIN",
+        "matchedTargets": null
+      },
+      {
+        "sourceId": "skill.37798",
+        "effectId": 6400,
+        "name": "skillStructureElectronicSystemsCapNeedBonus",
+        "status": "unsupported_static",
+        "reason": "DOGMA_DOMAIN",
+        "matchedTargets": null
+      },
+      {
+        "sourceId": "skill.37799",
+        "effectId": 6401,
+        "name": "skillStructureEngineeringSystemsCapNeedBonus",
+        "status": "unsupported_static",
+        "reason": "DOGMA_DOMAIN",
+        "matchedTargets": null
+      }
+    ],
+    "attributeCount": 0,
+    "nominalDps": null,
+    "nominalDpsUnavailableReason": "STATIC_COVERAGE_INCOMPLETE",
+    "fighterPrimaryNominalDps": null,
+    "fighterBombCount": 0
+  },
+  "diagnosticOnlyExcludedSkills": [
+    "20210",
+    "20211",
+    "20212",
+    "20213",
+    "25718",
+    "3322",
+    "37796",
+    "37797",
+    "37798",
+    "37799"
+  ],
+  "diagnosticOnlyWithoutBlocked": {
+    "ok": true,
+    "staticCoverageComplete": true,
+    "errors": [],
+    "unsupported": [],
+    "attributeCount": 5538,
+    "nominalDps": 0,
+    "nominalDpsUnavailableReason": null,
+    "fighterPrimaryNominalDps": 0,
+    "fighterBombCount": 0
+  },
+  "fighterCatalogTotal": 94,
+  "fighterCatalogHasMore": false,
+  "fighters": [
+    {
+      "typeId": 2948,
+      "name": "暗影",
+      "groupId": 1653,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 32339 level 1.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 1.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 419,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 0
+      }
+    },
+    {
+      "typeId": 23055,
+      "name": "圣殿骑士 I",
+      "groupId": 1652,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 40572 level 1.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 1.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 423,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 0
+      }
+    },
+    {
+      "typeId": 23057,
+      "name": "蜻蜓 I",
+      "groupId": 1652,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 40572 level 1.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 1.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 423,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 0
+      }
+    },
+    {
+      "typeId": 23059,
+      "name": "掷矛手 I",
+      "groupId": 1652,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 40572 level 1.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 1.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 423,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 0
+      }
+    },
+    {
+      "typeId": 23061,
+      "name": "因赫吉 I",
+      "groupId": 1652,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 40572 level 1.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 1.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 423,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 0
+      }
+    },
+    {
+      "typeId": 32325,
+      "name": "独眼巨人 I",
+      "groupId": 1653,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 32339 level 1.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 1.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 423,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 0
+      }
+    },
+    {
+      "typeId": 32340,
+      "name": "槌骨 I",
+      "groupId": 1653,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 32339 level 1.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 1.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 423,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 0
+      }
+    },
+    {
+      "typeId": 32342,
+      "name": "斩裂剑 I",
+      "groupId": 1653,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 32339 level 1.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 1.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 423,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 0
+      }
+    },
+    {
+      "typeId": 32344,
+      "name": "螳螂 I",
+      "groupId": 1653,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 32339 level 1.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 1.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 423,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 0
+      }
+    },
+    {
+      "typeId": 37599,
+      "name": "修道士 I",
+      "groupId": 1537,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 40345,
+      "name": "圣甲虫 I",
+      "groupId": 1537,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 40346,
+      "name": "塞壬 I",
+      "groupId": 1537,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 40347,
+      "name": "德洛米 I",
+      "groupId": 1537,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 40358,
+      "name": "骑士 I",
+      "groupId": 1652,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Fighter lacks the supported attack-M primary effect; other ability families are not interchangeable."
+        }
+      }
+    },
+    {
+      "typeId": 40359,
+      "name": "蚱蜢 I",
+      "groupId": 1652,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Fighter lacks the supported attack-M primary effect; other ability families are not interchangeable."
+        }
+      }
+    },
+    {
+      "typeId": 40360,
+      "name": "萨梯 I",
+      "groupId": 1652,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Fighter lacks the supported attack-M primary effect; other ability families are not interchangeable."
+        }
+      }
+    },
+    {
+      "typeId": 40361,
+      "name": "格拉墨 I",
+      "groupId": 1652,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Fighter lacks the supported attack-M primary effect; other ability families are not interchangeable."
+        }
+      }
+    },
+    {
+      "typeId": 40362,
+      "name": "阿米特 I",
+      "groupId": 1653,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 32339 level 1.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 1.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 477,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 1
+      }
+    },
+    {
+      "typeId": 40363,
+      "name": "白蚁 I",
+      "groupId": 1653,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 32339 level 1.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 1.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 477,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 1
+      }
+    },
+    {
+      "typeId": 40364,
+      "name": "安泰 I",
+      "groupId": 1653,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 32339 level 1.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 1.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 477,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 1
+      }
+    },
+    {
+      "typeId": 40365,
+      "name": "长枪 I",
+      "groupId": 1653,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 32339 level 1.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 1.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 477,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 1
+      }
+    },
+    {
+      "typeId": 40552,
+      "name": "骑士 II",
+      "groupId": 1652,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Fighter lacks the supported attack-M primary effect; other ability families are not interchangeable."
+        }
+      }
+    },
+    {
+      "typeId": 40553,
+      "name": "格拉墨 II",
+      "groupId": 1652,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Fighter lacks the supported attack-M primary effect; other ability families are not interchangeable."
+        }
+      }
+    },
+    {
+      "typeId": 40554,
+      "name": "蚱蜢 II",
+      "groupId": 1652,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Fighter lacks the supported attack-M primary effect; other ability families are not interchangeable."
+        }
+      }
+    },
+    {
+      "typeId": 40555,
+      "name": "萨梯 II",
+      "groupId": 1652,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Fighter lacks the supported attack-M primary effect; other ability families are not interchangeable."
+        }
+      }
+    },
+    {
+      "typeId": 40556,
+      "name": "圣殿骑士 II",
+      "groupId": 1652,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 40572 level 4.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 5.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 92397 level 1.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 439,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 0
+      }
+    },
+    {
+      "typeId": 40557,
+      "name": "蜻蜓 II",
+      "groupId": 1652,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 40572 level 4.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 5.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 92400 level 1.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 439,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 0
+      }
+    },
+    {
+      "typeId": 40558,
+      "name": "掷矛手 II",
+      "groupId": 1652,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 40572 level 4.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 5.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 92398 level 1.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 439,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 0
+      }
+    },
+    {
+      "typeId": 40559,
+      "name": "因赫吉 II",
+      "groupId": 1652,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 40572 level 4.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 5.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 92399 level 1.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 439,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 0
+      }
+    },
+    {
+      "typeId": 40560,
+      "name": "阿米特 II",
+      "groupId": 1653,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 32339 level 4.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 5.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 477,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 1
+      }
+    },
+    {
+      "typeId": 40561,
+      "name": "槌骨 II",
+      "groupId": 1653,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 32339 level 4.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 5.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 423,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 0
+      }
+    },
+    {
+      "typeId": 40562,
+      "name": "安泰 II",
+      "groupId": 1653,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 32339 level 4.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 5.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 477,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 1
+      }
+    },
+    {
+      "typeId": 40563,
+      "name": "独眼巨人 II",
+      "groupId": 1653,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 32339 level 4.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 5.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 423,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 0
+      }
+    },
+    {
+      "typeId": 40564,
+      "name": "长枪 II",
+      "groupId": 1653,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 32339 level 4.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 5.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 477,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 1
+      }
+    },
+    {
+      "typeId": 40565,
+      "name": "斩裂剑 II",
+      "groupId": 1653,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 32339 level 4.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 5.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 423,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 0
+      }
+    },
+    {
+      "typeId": 40566,
+      "name": "白蚁 II",
+      "groupId": 1653,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 32339 level 4.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 5.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 477,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 1
+      }
+    },
+    {
+      "typeId": 40567,
+      "name": "螳螂 II",
+      "groupId": 1653,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 32339 level 4.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 5.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 423,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 0
+      }
+    },
+    {
+      "typeId": 40568,
+      "name": "修道士 II",
+      "groupId": 1537,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 40569,
+      "name": "圣甲虫 II",
+      "groupId": 1537,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 40570,
+      "name": "塞壬 II",
+      "groupId": 1537,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 40571,
+      "name": "德洛米 II",
+      "groupId": 1537,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47035,
+      "name": "屹立圣殿骑士 I",
+      "groupId": 4777,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47036,
+      "name": "屹立格拉墨 I",
+      "groupId": 4777,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47037,
+      "name": "屹立塞壬 I",
+      "groupId": 4778,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47038,
+      "name": "屹立螳螂 I",
+      "groupId": 4779,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47039,
+      "name": "屹立长枪 I",
+      "groupId": 4779,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47116,
+      "name": "屹立槌骨 I",
+      "groupId": 4779,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47117,
+      "name": "屹立独眼巨人 I",
+      "groupId": 4779,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47118,
+      "name": "屹立斩裂剑 I",
+      "groupId": 4779,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47119,
+      "name": "屹立槌骨 II",
+      "groupId": 4779,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47120,
+      "name": "屹立螳螂 II",
+      "groupId": 4779,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47121,
+      "name": "屹立独眼巨人 II",
+      "groupId": 4779,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47122,
+      "name": "屹立斩裂剑 II",
+      "groupId": 4779,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47123,
+      "name": "屹立暗影舰载机",
+      "groupId": 4779,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47124,
+      "name": "屹立阿米特 I",
+      "groupId": 4779,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47125,
+      "name": "屹立白蚁 I",
+      "groupId": 4779,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47126,
+      "name": "屹立安泰 I",
+      "groupId": 4779,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47127,
+      "name": "屹立阿米特 II",
+      "groupId": 4779,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47128,
+      "name": "屹立白蚁 II",
+      "groupId": 4779,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47129,
+      "name": "屹立安泰 II",
+      "groupId": 4779,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47130,
+      "name": "屹立长枪 II",
+      "groupId": 4779,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47131,
+      "name": "屹立修道士 I",
+      "groupId": 4778,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47132,
+      "name": "屹立圣甲虫 I",
+      "groupId": 4778,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47133,
+      "name": "屹立德洛米 I",
+      "groupId": 4778,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47134,
+      "name": "屹立修道士 II",
+      "groupId": 4778,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47135,
+      "name": "屹立圣甲虫 II",
+      "groupId": 4778,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47136,
+      "name": "屹立塞壬 II",
+      "groupId": 4778,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47137,
+      "name": "屹立德洛米 II",
+      "groupId": 4778,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47138,
+      "name": "屹立蜻蜓 I",
+      "groupId": 4777,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47139,
+      "name": "屹立掷矛手 I",
+      "groupId": 4777,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47140,
+      "name": "屹立因赫吉 I",
+      "groupId": 4777,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47141,
+      "name": "屹立圣殿骑士 II",
+      "groupId": 4777,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47142,
+      "name": "屹立蜻蜓 II",
+      "groupId": 4777,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47143,
+      "name": "屹立掷矛手 II",
+      "groupId": 4777,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47144,
+      "name": "屹立因赫吉 II",
+      "groupId": 4777,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47145,
+      "name": "屹立骑士 I",
+      "groupId": 4777,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47146,
+      "name": "屹立蚱蜢 I",
+      "groupId": 4777,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47147,
+      "name": "屹立萨梯 I",
+      "groupId": 4777,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47148,
+      "name": "屹立骑士 II",
+      "groupId": 4777,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47149,
+      "name": "屹立蚱蜢 II",
+      "groupId": 4777,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47150,
+      "name": "屹立萨梯 II",
+      "groupId": 4777,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 47151,
+      "name": "屹立格拉墨 II",
+      "groupId": 4777,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 83579,
+      "name": "圣殿骑士级帝国海军",
+      "groupId": 1652,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 40572 level 1.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 1.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 424,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 0
+      }
+    },
+    {
+      "typeId": 83582,
+      "name": "蜻蜓级加达里海军",
+      "groupId": 1652,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 40572 level 1.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 1.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 424,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 0
+      }
+    },
+    {
+      "typeId": 83583,
+      "name": "联邦海军掷矛手舰载机",
+      "groupId": 1652,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 40572 level 1.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 1.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 424,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 0
+      }
+    },
+    {
+      "typeId": 83584,
+      "name": "共和舰队因赫吉舰载机",
+      "groupId": 1652,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 20533 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 24313 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 40572 level 1.",
+            "instanceId": "fighter.squadron"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "fighter.squadron requires 23069 level 1.",
+            "instanceId": "fighter.squadron"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 424,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 0
+      }
+    },
+    {
+      "typeId": 83585,
+      "name": "帝国海军骑士",
+      "groupId": 1652,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Fighter lacks the supported attack-M primary effect; other ability families are not interchangeable."
+        }
+      }
+    },
+    {
+      "typeId": 83586,
+      "name": "加达里海军蚱蜢",
+      "groupId": 1652,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Fighter lacks the supported attack-M primary effect; other ability families are not interchangeable."
+        }
+      }
+    },
+    {
+      "typeId": 83587,
+      "name": "联邦海军萨梯",
+      "groupId": 1652,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Fighter lacks the supported attack-M primary effect; other ability families are not interchangeable."
+        }
+      }
+    },
+    {
+      "typeId": 83589,
+      "name": "共和舰队格拉墨",
+      "groupId": 1652,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Fighter lacks the supported attack-M primary effect; other ability families are not interchangeable."
+        }
+      }
+    },
+    {
+      "typeId": 83591,
+      "name": "帝国海军修道士",
+      "groupId": 1537,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 83592,
+      "name": "加达里海军圣甲虫",
+      "groupId": 1537,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 83593,
+      "name": "联邦海军塞壬",
+      "groupId": 1537,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    },
+    {
+      "typeId": 83594,
+      "name": "共和舰队德洛米",
+      "groupId": 1537,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_FIGHTER_PRIMARY",
+          "message": "Only published ship-launched light/heavy fighter primary weapons are supported."
+        }
+      }
+    }
+  ],
+  "drones": [
+    {
+      "name": "Hobgoblin II",
+      "typeId": 2456,
+      "result": {
+        "ok": true,
+        "staticCoverageComplete": true,
+        "errors": [
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "ship requires 3328 level 1.",
+            "instanceId": "ship"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "drone.drone requires 24241 level 5.",
+            "instanceId": "drone.drone"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "drone.drone requires 12486 level 1.",
+            "instanceId": "drone.drone"
+          },
+          {
+            "code": "SKILL_REQUIRED",
+            "message": "drone.drone requires 3436 level 5.",
+            "instanceId": "drone.drone"
+          }
+        ],
+        "unsupported": [],
+        "attributeCount": 214,
+        "nominalDps": 0,
+        "nominalDpsUnavailableReason": null,
+        "fighterPrimaryNominalDps": 0,
+        "fighterBombCount": 0
+      }
+    },
+    {
+      "name": "Mining Drone I",
+      "typeId": 10246,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_DRONE_UNSUPPORTED",
+          "message": "Only conventional combat drones with targetAttack are admitted."
+        }
+      }
+    },
+    {
+      "name": "Hornet EC-300",
+      "typeId": 23707,
+      "result": {
+        "ok": false,
+        "error": {
+          "code": "EVE_DRONE_UNSUPPORTED",
+          "message": "Only conventional combat drones with targetAttack are admitted."
+        }
+      }
+    }
+  ],
+  "mutationRule": {
+    "ok": true,
+    "result": {
+      "baseTypeId": 526,
+      "resultTypeId": 47702,
+      "mutaplasmidTypeId": 47699,
+      "source": {
+        "table": "dynamicItemAttributes",
+        "id": 47699,
+        "line": 3,
+        "buildNumber": 3503375,
+        "sourceSha256": "ae0c9a8f2b695f3d425fa32db3f6087e6c8e7094e016d9c7f78b147a30a182d2",
+        "tableSha256": "7544afb43effdfd40e7dafd76bc729b605ae35ba41187b9491150d77109ba7b5",
+        "compilerVersion": "sde-index-v3"
+      },
+      "indexSha256": "a73672fa5526f05d04095674b75d0d06b8763c1b0c542713b834daefee3d71da",
+      "attributes": [
+        {
+          "attributeId": 6,
+          "name": "capacitorNeed",
+          "unitId": 114,
+          "baseValue": 5,
+          "baseOrigin": "typeDogma:526:6",
+          "sdeMinMultiplier": 1.4,
+          "sdeMaxMultiplier": 1.8,
+          "minimumValue": 7,
+          "maximumValue": 9,
+          "highIsGood": null
+        },
+        {
+          "attributeId": 20,
+          "name": "speedFactor",
+          "unitId": 124,
+          "baseValue": -50,
+          "baseOrigin": "typeDogma:526:20",
+          "sdeMinMultiplier": 0.97,
+          "sdeMaxMultiplier": 1.035,
+          "minimumValue": -51.74999999999999,
+          "maximumValue": -48.5,
+          "highIsGood": false
+        },
+        {
+          "attributeId": 50,
+          "name": "cpu",
+          "unitId": 106,
+          "baseValue": 25,
+          "baseOrigin": "typeDogma:526:50",
+          "sdeMinMultiplier": 0.95,
+          "sdeMaxMultiplier": 1.25,
+          "minimumValue": 23.75,
+          "maximumValue": 31.25,
+          "highIsGood": null
+        },
+        {
+          "attributeId": 54,
+          "name": "maxRange",
+          "unitId": 1,
+          "baseValue": 10000,
+          "baseOrigin": "typeDogma:526:54",
+          "sdeMinMultiplier": 0.95,
+          "sdeMaxMultiplier": 1.075,
+          "minimumValue": 9500,
+          "maximumValue": 10750,
+          "highIsGood": null
+        }
+      ],
+      "ruleVersion": "native-mutated-instance-v2",
+      "nativeInstanceSupported": true,
+      "nativeInstanceAdmission": "native_instance_admitted_fitting_coverage_still_required"
+    }
+  },
+  "mutationRoll": {
+    "ok": true,
+    "result": {
+      "seed": "fitlab-static-audit-20260918",
+      "contextKey": "3ae4583e0ec9ed6bdc0fcff28f7bdf87ed16c4a296da6323b5d286fed45d0c6a",
+      "rule": {
+        "baseTypeId": 526,
+        "resultTypeId": 47702,
+        "mutaplasmidTypeId": 47699,
+        "source": {
+          "table": "dynamicItemAttributes",
+          "id": 47699,
+          "line": 3,
+          "buildNumber": 3503375,
+          "sourceSha256": "ae0c9a8f2b695f3d425fa32db3f6087e6c8e7094e016d9c7f78b147a30a182d2",
+          "tableSha256": "7544afb43effdfd40e7dafd76bc729b605ae35ba41187b9491150d77109ba7b5",
+          "compilerVersion": "sde-index-v3"
+        },
+        "indexSha256": "a73672fa5526f05d04095674b75d0d06b8763c1b0c542713b834daefee3d71da",
+        "attributes": [
+          {
+            "attributeId": 6,
+            "name": "capacitorNeed",
+            "unitId": 114,
+            "baseValue": 5,
+            "baseOrigin": "typeDogma:526:6",
+            "sdeMinMultiplier": 1.4,
+            "sdeMaxMultiplier": 1.8,
+            "minimumValue": 7,
+            "maximumValue": 9,
+            "highIsGood": null
+          },
+          {
+            "attributeId": 20,
+            "name": "speedFactor",
+            "unitId": 124,
+            "baseValue": -50,
+            "baseOrigin": "typeDogma:526:20",
+            "sdeMinMultiplier": 0.97,
+            "sdeMaxMultiplier": 1.035,
+            "minimumValue": -51.74999999999999,
+            "maximumValue": -48.5,
+            "highIsGood": false
+          },
+          {
+            "attributeId": 50,
+            "name": "cpu",
+            "unitId": 106,
+            "baseValue": 25,
+            "baseOrigin": "typeDogma:526:50",
+            "sdeMinMultiplier": 0.95,
+            "sdeMaxMultiplier": 1.25,
+            "minimumValue": 23.75,
+            "maximumValue": 31.25,
+            "highIsGood": null
+          },
+          {
+            "attributeId": 54,
+            "name": "maxRange",
+            "unitId": 1,
+            "baseValue": 10000,
+            "baseOrigin": "typeDogma:526:54",
+            "sdeMinMultiplier": 0.95,
+            "sdeMaxMultiplier": 1.075,
+            "minimumValue": 9500,
+            "maximumValue": 10750,
+            "highIsGood": null
+          }
+        ],
+        "ruleVersion": "native-mutated-instance-v2",
+        "nativeInstanceSupported": true,
+        "nativeInstanceAdmission": "native_instance_admitted_fitting_coverage_still_required"
+      },
+      "mutation": {
+        "baseTypeId": 526,
+        "mutaplasmidTypeId": 47699,
+        "attributes": {
+          "6": 8.41825145198818,
+          "20": -51.32496118671196,
+          "50": 29.437061586684933,
+          "54": 10100.58959998027
+        },
+        "ruleVersion": "native-mutated-instance-v2"
+      },
+      "rolls": [
+        {
+          "range": {
+            "attributeId": 6,
+            "name": "capacitorNeed",
+            "unitId": 114,
+            "baseValue": 5,
+            "baseOrigin": "typeDogma:526:6",
+            "sdeMinMultiplier": 1.4,
+            "sdeMaxMultiplier": 1.8,
+            "minimumValue": 7,
+            "maximumValue": 9,
+            "highIsGood": null
+          },
+          "sample": 0.7091257259940897,
+          "multiplier": 1.6836502903976358,
+          "value": 8.41825145198818,
+          "rangePercentile": 0.7091257259940895,
+          "qualityPercentile": null
+        },
+        {
+          "range": {
+            "attributeId": 20,
+            "name": "speedFactor",
+            "unitId": 124,
+            "baseValue": -50,
+            "baseOrigin": "typeDogma:526:20",
+            "sdeMinMultiplier": 0.97,
+            "sdeMaxMultiplier": 1.035,
+            "minimumValue": -51.74999999999999,
+            "maximumValue": -48.5,
+            "highIsGood": false
+          },
+          "sample": 0.8692188266806034,
+          "multiplier": 1.0264992237342392,
+          "value": -51.32496118671196,
+          "rangePercentile": 0.869218826680604,
+          "qualityPercentile": 0.13078117331939598
+        },
+        {
+          "range": {
+            "attributeId": 50,
+            "name": "cpu",
+            "unitId": 106,
+            "baseValue": 25,
+            "baseOrigin": "typeDogma:526:50",
+            "sdeMinMultiplier": 0.95,
+            "sdeMaxMultiplier": 1.25,
+            "minimumValue": 23.75,
+            "maximumValue": 31.25,
+            "highIsGood": null
+          },
+          "sample": 0.7582748782246578,
+          "multiplier": 1.1774824634673973,
+          "value": 29.437061586684933,
+          "rangePercentile": 0.7582748782246576,
+          "qualityPercentile": null
+        },
+        {
+          "range": {
+            "attributeId": 54,
+            "name": "maxRange",
+            "unitId": 1,
+            "baseValue": 10000,
+            "baseOrigin": "typeDogma:526:54",
+            "sdeMinMultiplier": 0.95,
+            "sdeMaxMultiplier": 1.075,
+            "minimumValue": 9500,
+            "maximumValue": 10750,
+            "highIsGood": null
+          },
+          "sample": 0.4804716799842169,
+          "multiplier": 1.010058959998027,
+          "value": 10100.58959998027,
+          "rangePercentile": 0.48047167998421614,
+          "qualityPercentile": null
+        }
+      ],
+      "modelVersion": "abyssal-independent-uniform-v1",
+      "randomVersion": "abyssal-sha256-53-v1",
+      "verification": "community_independent_uniform_model_not_ccp_server_rng_or_authenticated_item",
+      "percentileConvention": "original_sde_multiplier_endpoint_position_not_combat_utility_constant_range_is_null"
+    }
+  },
+  "catalogItemFields": [
+    "source",
+    "item",
+    "description",
+    "groupNames",
+    "categoryNames",
+    "traits",
+    "units",
+    "typeSource",
+    "traitsSource",
+    "textFormat",
+    "scope"
+  ],
+  "tools": [
+    "battle_cancel",
+    "battle_events",
+    "mutation_rule",
+    "battle_result",
+    "catalog_search",
+    "battle_resume",
+    "catalog_item",
+    "fit_export",
+    "fit_preview",
+    "fit_delete",
+    "catalog_variants",
+    "fit_inspect",
+    "battle_storage",
+    "battle_status",
+    "fit_create",
+    "fit_library",
+    "fit_analyze",
+    "engine_status",
+    "battle_start",
+    "fit_copy",
+    "fit_execute",
+    "fit_import",
+    "mutation_roll"
+  ],
+  "engineVersion": "0.180.0",
+  "contract": {
+    "id": "nengine-headless-v1",
+    "revision": 23,
+    "firstEngineVersion": "0.158.0",
+    "artifactSha256": {
+      "contracts/headless-v1/r23/tool-schemas.json": "f6ef2fce52f546cf2b1e805e668bf96c362abe1d04b5ac67cddbc40e9346990c",
+      "contracts/headless-v1/r23/output-schemas.json": "b169bbda6ba488a789217b37dde0a97f9317e9ee25d72f7c40ed7c21167af0d2",
+      "contracts/headless-v1/r23/semantics.md": "79618d87af206b02c64dc0c72b9efc871e9483fca0aabda7122b89f8dd8ae097"
+    },
+    "tools": [
+      "battle_cancel",
+      "battle_events",
+      "battle_result",
+      "battle_resume",
+      "battle_start",
+      "battle_status",
+      "battle_storage",
+      "catalog_item",
+      "catalog_search",
+      "catalog_variants",
+      "engine_status",
+      "fit_analyze",
+      "fit_copy",
+      "fit_create",
+      "fit_delete",
+      "fit_execute",
+      "fit_export",
+      "fit_import",
+      "fit_inspect",
+      "fit_library",
+      "fit_preview",
+      "mutation_roll",
+      "mutation_rule"
+    ],
+    "responseCompatibility": "additive_fields_require_revision_bump_breaking_changes_require_new_major",
+    "inputDocumentPolicy": "engine_documents_reject_unknown_and_duplicate_fields",
+    "saveCompatibility": "matching_schema_dataset_index_and_static_rule_no_automatic_migration",
+    "checkpointCompatibility": "exact_engine_version_build_and_controller_runtime",
+    "battleAssemblyRule": "eve-battle-assembly-v76",
+    "observationRule": "controller-observation-v27",
+    "controllerRuntimeId": "d2bbc06f50391ebd56ef73ea781ede953f0e884cf0ba0fdd1c869ad3a49b9fac",
+    "advancedPayloadPolicy": "scenario_and_script_payloads_require_matching_advertised_rules_and_runtime_not_ui_world_state"
+  },
+  "sourceIndex": "a73672fa5526f05d04095674b75d0d06b8763c1b0c542713b834daefee3d71da",
+  "displayedFighterIds": [
+    2948,
+    23055,
+    23057,
+    23059,
+    23061,
+    32325,
+    32340,
+    32342,
+    32344,
+    37599,
+    40345,
+    40346,
+    40347,
+    40358,
+    40359,
+    40360,
+    40361,
+    40362,
+    40363,
+    40364,
+    40365,
+    40552,
+    40553,
+    40554,
+    40555,
+    40556,
+    40557,
+    40558,
+    40559,
+    40560,
+    40561,
+    40562,
+    40563,
+    40564,
+    40565,
+    40566,
+    40567,
+    40568,
+    40569,
+    40570,
+    40571,
+    83579,
+    83582,
+    83583,
+    83584,
+    83585,
+    83586,
+    83587,
+    83589,
+    83591,
+    83592,
+    83593,
+    83594
+  ],
+  "displayedFighterResults": {
+    "total": 53,
+    "accepted": 29,
+    "rejected": 24
+  },
+  "weaponStateSemantics": [
+    {
+      "online": true,
+      "active": true,
+      "nominalDps": 10.56,
+      "drain": 0,
+      "errors": [
+        {
+          "code": "SKILL_REQUIRED",
+          "message": "ship requires 3329 level 1.",
+          "instanceId": "ship"
+        },
+        {
+          "code": "SKILL_REQUIRED",
+          "message": "module.gun requires 3302 level 5.",
+          "instanceId": "module.gun"
+        },
+        {
+          "code": "SKILL_REQUIRED",
+          "message": "module.gun requires 3300 level 2.",
+          "instanceId": "module.gun"
+        },
+        {
+          "code": "SKILL_REQUIRED",
+          "message": "module.gun requires 11084 level 1.",
+          "instanceId": "module.gun"
+        }
+      ]
+    },
+    {
+      "online": true,
+      "active": false,
+      "nominalDps": 10.56,
+      "drain": 0,
+      "errors": [
+        {
+          "code": "SKILL_REQUIRED",
+          "message": "ship requires 3329 level 1.",
+          "instanceId": "ship"
+        },
+        {
+          "code": "SKILL_REQUIRED",
+          "message": "module.gun requires 3302 level 5.",
+          "instanceId": "module.gun"
+        },
+        {
+          "code": "SKILL_REQUIRED",
+          "message": "module.gun requires 3300 level 2.",
+          "instanceId": "module.gun"
+        },
+        {
+          "code": "SKILL_REQUIRED",
+          "message": "module.gun requires 11084 level 1.",
+          "instanceId": "module.gun"
+        }
+      ]
+    },
+    {
+      "online": false,
+      "active": false,
+      "nominalDps": 0,
+      "drain": 0,
+      "errors": [
+        {
+          "code": "SKILL_REQUIRED",
+          "message": "ship requires 3329 level 1.",
+          "instanceId": "ship"
+        },
+        {
+          "code": "SKILL_REQUIRED",
+          "message": "module.gun requires 3302 level 5.",
+          "instanceId": "module.gun"
+        },
+        {
+          "code": "SKILL_REQUIRED",
+          "message": "module.gun requires 3300 level 2.",
+          "instanceId": "module.gun"
+        },
+        {
+          "code": "SKILL_REQUIRED",
+          "message": "module.gun requires 11084 level 1.",
+          "instanceId": "module.gun"
+        }
+      ]
+    }
+  ],
+  "weaponStateSemanticsTrained": [
+    {
+      "input": {
+        "id": "gun-state-audit",
+        "buildNumber": 3503375,
+        "shipTypeId": 587,
+        "omittedSkills": "untrained",
+        "skills": {
+          "3329": 1,
+          "3327": 1,
+          "3302": 5,
+          "3300": 2,
+          "11084": 1,
+          "3312": 3
+        },
+        "items": [
+          {
+            "id": "gun",
+            "typeId": 2881,
+            "slotIndex": 0,
+            "chargeTypeId": 185,
+            "online": true,
+            "active": true
+          }
+        ]
+      },
+      "nominalDps": 15.162162162162163,
+      "errors": []
+    },
+    {
+      "input": {
+        "id": "gun-state-audit",
+        "buildNumber": 3503375,
+        "shipTypeId": 587,
+        "omittedSkills": "untrained",
+        "skills": {
+          "3329": 1,
+          "3327": 1,
+          "3302": 5,
+          "3300": 2,
+          "11084": 1,
+          "3312": 3
+        },
+        "items": [
+          {
+            "id": "gun",
+            "typeId": 2881,
+            "slotIndex": 0,
+            "chargeTypeId": 185,
+            "online": true,
+            "active": false
+          }
+        ]
+      },
+      "nominalDps": 15.162162162162163,
+      "errors": []
+    },
+    {
+      "input": {
+        "id": "gun-state-audit",
+        "buildNumber": 3503375,
+        "shipTypeId": 587,
+        "omittedSkills": "untrained",
+        "skills": {
+          "3329": 1,
+          "3327": 1,
+          "3302": 5,
+          "3300": 2,
+          "11084": 1,
+          "3312": 3
+        },
+        "items": [
+          {
+            "id": "gun",
+            "typeId": 2881,
+            "slotIndex": 0,
+            "chargeTypeId": 185,
+            "online": false,
+            "active": false
+          }
+        ]
+      },
+      "nominalDps": 0,
+      "errors": []
+    }
+  ]
+}
