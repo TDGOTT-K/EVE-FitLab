@@ -10,10 +10,19 @@ from nengine_edit_commands import commands_between
 
 class SaveConflict(ValueError):pass
 
-def native_save(fit,previous,transaction,client=None):
+def native_save(fit,previous,transaction,client=None,editing=None):
     client=client or bridge();status=client.discover();build=status['source']['source']['buildNumber']
     candidate=native_fit(fit,build)
     expected=client.call('fit_analyze',{'fit':candidate})['result']['fitHash']
+    if editing is not None:
+        if not isinstance(editing,dict) or set(editing)!={'id','revision'} or type(editing['revision']) is not int or editing['revision']<0:raise ValueError('编辑会话引用无效')
+        inspected=client.call('fit_inspect',{'sessionId':editing['id']})['result']
+        if inspected['analysis']['fitHash']!=expected:raise SaveConflict('编辑会话与提交装配不同，未保存')
+        result=client.call('fit_execute',{'sessionId':editing['id'],'revision':editing['revision'],'requestId':transaction+'-save','operation':'save'})['result']
+        document=client.call('fit_export',{'sessionId':editing['id'],'snapshot':'saved'})['result']
+        if document['fitHash']!=expected:raise SaveConflict('原生已保存快照已变化，未覆盖装配库')
+        return {'id':editing['id'],'revision':result['appliedRevision'],'fitHash':expected,'source':document['source'],
+                'engineVersion':status['engineVersion'],'contractRevision':status['publicContract']['revision']}
     reference=(previous or {}).get('nativeSession')
     ident=reference['id'] if reference else 'fit-'+str(uuid.UUID(fit['id']))
     if reference:
@@ -54,7 +63,8 @@ def save_to_library(validated,library,write,now,client=None):
         return copy.deepcopy(previous)
     if previous and fit.get('revision')!=previous['revision']:raise SaveConflict('此装配已在另一窗口修改，请重新打开后再编辑。')
     transaction='ui-'+hashlib.sha256((fit['id']+'\n'+token+'\n'+digest).encode()).hexdigest()
-    fit['nativeSession']=native_save(fit,previous,transaction,client)
+    editing=fit.pop('_editSession',None)
+    fit['nativeSession']=native_save(fit,previous,transaction,client,editing)
     fit['revision']=(previous['revision'] if previous else 0)+1;fit['updatedAt']=now
     fit['saveReceipt']={'requestId':token,'inputHash':digest}
     updated={**library,'fits':[row for row in library['fits'] if row['id']!=fit['id']]+[fit]}

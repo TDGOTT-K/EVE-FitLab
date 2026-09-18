@@ -1,5 +1,6 @@
 import {createValuationReader,valuationSummary,valuationMarkup} from './valuation-view.js';
 import {createFitSaver} from './fit-save-controller.js';
+import {createNativeEditHistory} from './native-edit-history.js';
 import {captureEditSnapshot,restoreEditSnapshot} from './fitting-edit-snapshot.js';
 import {showTextImport} from './text-import.js';
 import {effectiveModuleState} from './module-state.js';
@@ -37,7 +38,8 @@ const marketIcons=await fetch('./data/market-icons.json').then(r=>r.json());
 
 const tLabel=t;
 const $=s=>document.querySelector(s), typeIndex=new Map(catalog.map(t=>[t.id,t])), byId=id=>typeIndex.get(Number(id));
-let ship=byId(587),fitRecord={name:'裂谷级 · 我的装配',shipId:587,skills:[],characterName:'无技能 · 基础对照'},report=null,reportVersion=-1,analysisVersion=0,analysisTimer,analysisState='pending';
+let ship=byId(587),fitRecord={id:crypto.randomUUID(),name:'裂谷级 · 我的装配',shipId:587,skills:[],characterName:'无技能 · 基础对照'},report=null,reportVersion=-1,analysisVersion=0,analysisTimer,analysisState='pending';
+const nativeHistory=createNativeEditHistory(api);let editTransition=null;
 const cachedItem=requestCache(id=>api('items/'+id),128);
 const cachedCalculation=requestCache(fit=>api('analyze',fit),4);
 let attackMode='dps';try{attackMode=localStorage.getItem('fitlab-attack-mode')==='edps'?'edps':'dps'}catch{}
@@ -58,9 +60,24 @@ const needsAmmo=mod=>mod&&[604,605,606,609,610].some(a=>mod.attrs[a]);
 function say(text){$('#message').textContent=text}
 function currentFit(){return {...fitRecord,shipId:ship.id,slots:structuredClone(slots).map(s=>s.item?{...s,state:moduleState(s),online:moduleState(s)!=='Offline'}:s)}}
 function save(){try{localStorage.setItem('fitlab-working-draft',JSON.stringify(currentFit()));$('#save').textContent='草稿已保留 · 待保存到装配库'}catch{$('#save').textContent='草稿存储失败，请保存装配'}scheduleAnalysis()}
-function mutate(fn,msg){cancelInstallPreview();redoHistory=[];$('#redo').disabled=true;history.push(editSnapshot());if(history.length>30)history.shift();fn();const detached=detachUnmatchedCrystals({...fitRecord,slots});if(detached)msg+=' · 晶体已移至货舱';if(filter?.ammo&&!needsAmmo(byId(slots.find(s=>s.key===filter.key)?.item)))filter=null;save();renderSlots();renderResources();renderShipStats();renderTree();$('#undo').disabled=false;say(msg)}
-function undo(){cancelInstallPreview();if(!history.length)return;redoHistory.push(editSnapshot());applyEditSnapshot(history.pop());$('#redo').disabled=false;filter=null;save();renderSlots();renderResources();renderShipStats();renderTree();$('#undo').disabled=!history.length;say('已撤销最近一次操作')}
-function redo(){cancelInstallPreview();if(!redoHistory.length)return;history.push(editSnapshot());applyEditSnapshot(redoHistory.pop());filter=null;save();renderSlots();renderResources();renderShipStats();renderTree();$('#undo').disabled=false;$('#redo').disabled=!redoHistory.length;say('已重做最近一次操作')}
+function canEditNow(){const state=nativeHistory.state();if(state.busy||state.pending){say(state.busy?'正在提交装配，请稍后':state.pendingSave?'上次保存结果待确认，请再次保存':'上次编辑结果待确认，请点击重试编辑');return false;}return true;}
+function refreshEditView(){updateShip();save();renderSlots();renderResources();renderShipStats();renderTree();$('#undo').disabled=!history.length;$('#redo').disabled=!redoHistory.length;}
+function historyRollback(){return {snapshot:editSnapshot(),undo:[...history],redo:[...redoHistory]};}
+function watchEdit(task,owner,rollback,message){
+ const transition={owner,rollback,message};editTransition=transition;$('#editor-page').inert=true;$('#retry-native-edit')?.remove();say('正在提交装配…');
+ const settle=promise=>promise.then(()=>{if(editTransition===transition&&nativeHistory.capture()===owner){editTransition=null;$('#retry-native-edit')?.remove();say(message);}}).catch(error=>{
+  if(editTransition!==transition||nativeHistory.capture()!==owner)return;
+  if(error.code&&error.code!=='EDIT_STATE_CONFLICT'){
+   nativeHistory.rejectPending(owner);applyEditSnapshot(rollback.snapshot);history=rollback.undo;redoHistory=rollback.redo;editTransition=null;refreshEditView();say('编辑未提交：'+error.message);
+  }else{
+   say('编辑结果待确认：'+error.message);const button=document.createElement('button');button.id='retry-native-edit';button.textContent='重试编辑';button.onclick=()=>{button.remove();$('#editor-page').inert=true;settle(nativeHistory.retry(owner));};$('.fit-actions').append(button);
+  }
+ }).finally(()=>{if(nativeHistory.capture()===owner)$('#editor-page').inert=false;});
+ settle(task);
+}
+function mutate(fn,msg){if(!canEditNow())return;cancelInstallPreview();const owner=nativeHistory.capture(),rollback=historyRollback(),before=currentFit();redoHistory=[];history.push(editSnapshot());if(history.length>30)history.shift();fn();const detached=detachUnmatchedCrystals({...fitRecord,slots});if(detached)msg+=' · 晶体已移至货舱';if(filter?.ammo&&!needsAmmo(byId(slots.find(s=>s.key===filter.key)?.item)))filter=null;const after=currentFit();refreshEditView();watchEdit(nativeHistory.apply(before,after,owner),owner,rollback,msg);}
+function undo(){if(!history.length||!canEditNow())return;cancelInstallPreview();const owner=nativeHistory.capture(),rollback=historyRollback();redoHistory.push(editSnapshot());applyEditSnapshot(history.pop());filter=null;refreshEditView();watchEdit(nativeHistory.undo(owner),owner,rollback,'已撤销最近一次操作');}
+function redo(){if(!redoHistory.length||!canEditNow())return;cancelInstallPreview();const owner=nativeHistory.capture(),rollback=historyRollback();history.push(editSnapshot());applyEditSnapshot(redoHistory.pop());filter=null;refreshEditView();watchEdit(nativeHistory.redo(owner),owner,rollback,'已重做最近一次操作');}
 $('#redo').onclick=redo;
 
 $('#undo').onclick=undo;
@@ -294,10 +311,10 @@ renderSlots();renderTree();renderResources();renderShipStats();
 
 installExplanations();
 
-async function api(path,body){const response=await fetch('/api/'+path,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await response.json();if(!response.ok)throw Error(data.error||'请求失败');return data}
+async function api(path,body){const response=await fetch('/api/'+path,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await response.json();if(!response.ok){const error=Error(typeof data.error==='string'?data.error:data.error?.message||'请求失败');error.code=data.error?.code||data.diagnostic?.code;error.status=response.status;throw error;}return data}
 function updateShip(){ship=byId(fitRecord.shipId);counts.subsystem=ship.group===963?4:0;for(const [kind,id] of Object.entries({high:14,mid:13,low:12,rig:1137}))counts[kind]=ship.attrs[id]||0;$('.title h1').textContent=fitRecord.name;renderFitTags();$('#ship .ship-label').textContent=ship.en;renderShipBadge();$('#ship img').src=`https://images.evetech.net/types/${ship.id}/render?size=512`;$('#ship img').alt=ship.name;$('#ship .ship-caption').innerHTML=`${esc(ship.name)}<small>拖入装备安装 · 拖入弹药批量装填</small>`;renderPilot();}
-function restoreFit(record){fitSaver.reset();editorFitDeleted=false;cancelInstallPreview();selectedSlots.clear();selectionAnchor=null;analysisVersion++;report=null;fitRecord={...structuredClone(record),...scenarioFields(scenarioPresets(record))};fitRecord.drones=splitDroneStacks(fitRecord.drones||[]);updateShip();slots=fresh().map(s=>record.slots?.find(x=>x.key===s.key)||s);for(const s of record.slots||[])if(s.item&&!slots.some(x=>x.key===s.key))slots.push(structuredClone(s));filter=ship.group===963?{key:'subsystem-0',ammo:false}:null;history=[];redoHistory=[];$('#undo').disabled=true;$('#redo').disabled=true;$('#search').value='';treeOpen.clear();renderSlots();renderTree();renderResources();renderShipStats();save()}
-const fitSaver=createFitSaver({read:currentFit,write:input=>api('save',input),accept:(saved,{unchanged})=>{fitRecord={...fitRecord,id:saved.id,revision:saved.revision,updatedAt:saved.updatedAt};localStorage.setItem('fitlab-working-draft',JSON.stringify(currentFit()));$('#save').textContent=unchanged?'已保存 · '+new Date(saved.updatedAt).toLocaleTimeString():'已保存上一版本 · 当前改动待保存';}});
+function restoreFit(record){nativeHistory.reset();editTransition=null;$('#editor-page').inert=false;$('#retry-native-edit')?.remove();fitSaver.reset();editorFitDeleted=false;cancelInstallPreview();selectedSlots.clear();selectionAnchor=null;analysisVersion++;report=null;fitRecord={...structuredClone(record),id:record.id||crypto.randomUUID(),...scenarioFields(scenarioPresets(record))};fitRecord.drones=splitDroneStacks(fitRecord.drones||[]);updateShip();slots=fresh().map(s=>record.slots?.find(x=>x.key===s.key)||s);for(const s of record.slots||[])if(s.item&&!slots.some(x=>x.key===s.key))slots.push(structuredClone(s));filter=ship.group===963?{key:'subsystem-0',ammo:false}:null;history=[];redoHistory=[];$('#undo').disabled=true;$('#redo').disabled=true;$('#search').value='';treeOpen.clear();renderSlots();renderTree();renderResources();renderShipStats();save()}
+const fitSaver=createFitSaver({read:currentFit,capture:()=>nativeHistory.capture(),write:(input,owner)=>nativeHistory.save(input,request=>api('save',request),owner),accept:(saved,{unchanged})=>{fitRecord={...fitRecord,id:saved.id,revision:saved.revision,updatedAt:saved.updatedAt};localStorage.setItem('fitlab-working-draft',JSON.stringify(currentFit()));$('#save').textContent=unchanged?'已保存 · '+new Date(saved.updatedAt).toLocaleTimeString():'已保存上一版本 · 当前改动待保存';}});
 function persistFit(){return fitSaver.save()}
 document.addEventListener('fitlab-attack-mode',e=>{attackMode=e.detail==='edps'?'edps':'dps';try{localStorage.setItem('fitlab-attack-mode',attackMode)}catch{}scheduleAnalysis()});
 function scheduleAnalysis(){document.dispatchEvent(new CustomEvent('fitlab-calculation-invalidated'));if(!$('#info-window').hidden)closeInfo();analysisState='pending';updateScenarioStatus();cancelInstallPreview();$('.inspector').classList.add('calculating');analysisVersion++;refreshSlotMetrics();clearTimeout(analysisTimer);$('#engine-status').textContent='计算中…';analysisTimer=setTimeout(runAnalysis,250)}
@@ -358,7 +375,7 @@ $('#new-fit').onclick=()=>{
  $('#create-fit-form').onsubmit=e=>{e.preventDefault();const name=$('#create-fit-name').value.trim();if(!name){$('#flow-error').textContent='请输入装配名称';return}const tags=[...new Set($('#create-fit-tags').value.split(/[,，]/).map(t=>t.trim()).filter(Boolean))];restoreFit({name,tags,shipId:hull.id,skills:[],characterName:'无技能 · 基础对照',slots:[]});flow.close();location.hash='fitting'};
 };
 
-installPilotPicker($('#pilot'),{api,catalog,current:()=>fitRecord.characterName,select:c=>{fitRecord.skills=structuredClone(c.skills);fitRecord.characterName=c.name;updateShip();save()}});
+installPilotPicker($('#pilot'),{api,catalog,current:()=>fitRecord.characterName,select:c=>mutate(()=>{fitRecord.skills=structuredClone(c.skills);fitRecord.characterName=c.name;},'已更换驾驶员')});
 
 $('#rename-fit').onclick=()=>{
  const heading=$('.title h1'),button=$('#rename-fit');
@@ -366,7 +383,7 @@ $('#rename-fit').onclick=()=>{
  const input=document.createElement('input');input.className='fit-name-input';input.setAttribute('aria-label','装配名称');input.maxLength=120;input.value=fitRecord.name;
  heading.hidden=true;button.hidden=true;heading.after(input);input.focus();input.select();
  let finished=false;
- const finish=commit=>{if(finished)return;finished=true;const value=input.value.trim();if(commit&&value&&value!==fitRecord.name){fitRecord.name=value;storeWorkingDraft()}heading.textContent=fitRecord.name;heading.hidden=false;button.hidden=false;input.remove()};
+ const finish=commit=>{if(finished)return;finished=true;const value=input.value.trim();if(commit&&value&&value!==fitRecord.name){mutate(()=>{fitRecord.name=value;},'已修改装配名称')}heading.textContent=fitRecord.name;heading.hidden=false;button.hidden=false;input.remove()};
  input.onblur=()=>finish(true);
  input.onkeydown=e=>{if(e.isComposing)return;if(e.key==='Enter'||e.key==='Escape'){e.preventDefault();e.stopPropagation();finish(e.key==='Enter');button.focus()}};
 };
@@ -377,7 +394,7 @@ function renderFitTags(){
   const existing=index!==null,source=existing?root.querySelector(`[data-tag-index="${index}"]`):root.querySelector('.add-fit-tag');
   const input=document.createElement('input');input.className='fit-tag-input';input.setAttribute('aria-label',existing?'编辑标签':'新标签');input.placeholder='输入标签，回车添加';input.maxLength=40;input.value=existing?fitRecord.tags[index]:'';
   source.hidden=true;source.after(input);input.focus();let finished=false;
-  const finish=commit=>{if(finished)return;finished=true;const text=input.value.trim();if(commit){const tags=[...(fitRecord.tags||[])];if(existing){if(text)tags[index]=text;else tags.splice(index,1)}else if(text)tags.push(text);fitRecord.tags=[...new Set(tags)];storeWorkingDraft()}renderFitTags()};
+  const finish=commit=>{if(finished)return;finished=true;const text=input.value.trim();if(commit){const tags=[...(fitRecord.tags||[])];if(existing){if(text)tags[index]=text;else tags.splice(index,1)}else if(text)tags.push(text);mutate(()=>{fitRecord.tags=[...new Set(tags)];},'已修改装配标签')}renderFitTags()};
   input.onblur=()=>finish(true);
   input.onkeydown=e=>{if(e.isComposing)return;if(e.key==='Enter'||e.key==='Escape'){e.preventDefault();e.stopPropagation();finish(e.key==='Enter');root.querySelector('.add-fit-tag').focus()}};
  };
@@ -687,7 +704,7 @@ function libraryMenu(e,fit=null){
  const entries=fit?[
   ['生成图片',()=>exportFitImage(fit)],
   ['编辑备注',()=>{openFlow('装配备注 · '+fit.name,'<form id="library-notes-form"><label>备注<textarea name="notes" aria-label="装配备注" maxlength="4000" rows="7" placeholder="用途、操作要点、适用场景…">'+esc(fit.notes||'')+'</textarea></label><button>保存备注</button></form>');$('#library-notes-form textarea').focus();$('#library-notes-form').onsubmit=async e=>{e.preventDefault();const button=e.currentTarget.querySelector('button');button.disabled=true;try{const source=structuredClone(fit);delete source._workingDraft;source.notes=$('#library-notes-form textarea').value.trim();const saved=await api('save',source);libraryFits=libraryFits.filter(f=>f!==fit&&(!fit.id||f.id!==fit.id));libraryFits.unshift(saved);if(fit.id&&fitRecord.id===fit.id){fitRecord.notes=saved.notes;fitRecord.revision=saved.revision;fitRecord.updatedAt=saved.updatedAt;localStorage.setItem('fitlab-working-draft',JSON.stringify(currentFit()))}refreshLibraryRows();flow.close();libraryMessage('备注已保存')}catch(error){$('#flow-error').textContent=error.message;button.disabled=false}}}],
-  ['重命名',()=>{openFlow('重命名装配','<form id="library-rename-form"><label>名称<input name="name" maxlength="120" required value="'+esc(fit.name)+'"></label><button>保存</button></form>');const input=$('#library-rename-form input');input.focus();input.select();$('#library-rename-form').onsubmit=async e=>{e.preventDefault();const name=input.value.trim();if(!name)return;try{const source=structuredClone(fit);delete source._workingDraft;source.name=name;const saved=await api('save',source);libraryFits=libraryFits.filter(f=>f!==fit&&(!fit.id||f.id!==fit.id));libraryFits.unshift(saved);if(fit.id&&fitRecord.id===fit.id){fitRecord.name=name;fitRecord.revision=saved.revision;fitRecord.updatedAt=saved.updatedAt;updateShip();localStorage.setItem('fitlab-working-draft',JSON.stringify(currentFit()))}refreshLibraryRows();flow.close();libraryMessage('名称已更新')}catch(error){$('#flow-error').textContent=error.message}}}],
+  ['重命名',()=>{openFlow('重命名装配','<form id="library-rename-form"><label>名称<input name="name" maxlength="120" required value="'+esc(fit.name)+'"></label><button>保存</button></form>');const input=$('#library-rename-form input');input.focus();input.select();$('#library-rename-form').onsubmit=async e=>{e.preventDefault();const name=input.value.trim();if(!name)return;try{const source=structuredClone(fit);delete source._workingDraft;source.name=name;const saved=await api('save',source);libraryFits=libraryFits.filter(f=>f!==fit&&(!fit.id||f.id!==fit.id));libraryFits.unshift(saved);if(fit.id&&fitRecord.id===fit.id){restoreFit(saved)}refreshLibraryRows();flow.close();libraryMessage('名称已更新')}catch(error){$('#flow-error').textContent=error.message}}}],
   ['复制',()=>{fitClipboard=structuredClone(fit);for(const k of ['id','revision','updatedAt','_workingDraft'])delete fitClipboard[k];try{sessionStorage.setItem('fitlab-fit-clipboard',JSON.stringify(fitClipboard))}catch{}libraryMessage('已复制「'+fit.name+'」，在列表底部空白处右键粘贴。')}],
   ['删除',()=>{openFlow('删除装配','<p>删除「'+esc(fit.name)+'」？</p><button id="library-confirm-delete">删除装配</button>');$('#library-confirm-delete').onclick=async()=>{try{if(fit.id&&fit.revision)await api('fit/delete',{id:fit.id,revision:fit.revision});libraryFits=libraryFits.filter(f=>f!==fit&&(!fit.id||f.id!==fit.id));const draft=JSON.parse(localStorage.getItem('fitlab-working-draft')||'null');if(draft&&(fit.id?draft.id===fit.id:!draft.id&&draft.name===fit.name))localStorage.removeItem('fitlab-working-draft');if(fitRecord.id===fit.id)editorFitDeleted=true;refreshLibraryRows();flow.close();libraryMessage('装配已删除')}catch(error){$('#flow-error').textContent=error.message}}}]
  ]:[['粘贴',async()=>{if(!fitClipboard)return;const copy=structuredClone(fitClipboard);const names=new Set(libraryFits.map(f=>f.name));let suffix=' · 副本',n=2;while(names.has(copy.name.slice(0,110)+suffix))suffix=' · 副本 '+n++;copy.name=copy.name.slice(0,110)+suffix;const saved=await api('save',copy);libraryFits.unshift(saved);$('#library-search').value='';libraryTree.update(libraryFits);libraryTree.revealHull(saved.shipId);drawFitLibrary();$('#library-list').scrollTop=0;libraryMessage('已粘贴「'+saved.name+'」')},!!fitClipboard]];

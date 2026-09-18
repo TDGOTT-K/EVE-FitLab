@@ -10,6 +10,7 @@ OPERATIONS={
     'import':('fit_import',{'sessionId','document'}),
     'inspect':('fit_inspect',{'sessionId','context'}),
     'preview':('fit_preview',{'sessionId','revision','commands','context'}),
+    'preview-input':('fit_preview_input',{'fit','commands','context'}),
     'execute':('fit_execute',{'sessionId','revision','requestId','operation','commands','context'}),
     'export':('fit_export',{'sessionId','snapshot'}),
 }
