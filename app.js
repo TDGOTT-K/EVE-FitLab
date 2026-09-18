@@ -303,7 +303,7 @@ const flow=document.createElement('dialog');flow.id='flow-dialog';document.body.
 function openFlow(title,body){flow.innerHTML=`<div class="flow-head"><b>${esc(title)}</b><button aria-label="关闭">×</button></div><div class="flow-body">${body}</div><p id="flow-error"></p>`;flow.querySelector('.flow-head button').onclick=()=>flow.close();flow.showModal()}
 function guarded(fn){return async()=>{try{await fn()}catch(e){say(e.message);if(flow.open)$('#flow-error').textContent=e.message}}}
 $('#save-fit').onclick=guarded(persistFit);
-function exportFitImage(fit){if(report?.provider==='nengine'){say('N 号引擎图片分享尚待适配，暂不导出缺少新配置的图片');return;}return showShareImage(withoutScenario(fit),{calculate:async f=>{const r=await getCalculation(f);if(r.provider==='nengine')throw Error('N 号引擎图片分享尚待适配，暂不导出缺少新配置的图片');return r;},catalog,getPrice:async f=>{marketPricePromise??=api('prices').catch(e=>{marketPricePromise=null;throw e});return estimateFitPrice(f,await marketPricePromise)}})}
+function exportFitImage(fit){return showShareImage(withoutScenario(fit),{calculate:getCalculation,catalog,getPrice:async f=>{marketPricePromise??=api('prices').catch(e=>{marketPricePromise=null;throw e});return estimateFitPrice(f,await marketPricePromise)}})}
 $('#share-fit').onclick=()=>exportFitImage(currentFit());
 $('#import-fit-image').onclick=()=>showImageImport({catalog,calculate:getCalculation,save:fit=>api('save',fit),onSaved:record=>{libraryFits.unshift(record);refreshLibraryRows();libraryMessage('已导入新装配：'+record.name)}});
 let libraryFits=[],pageMode=null,navigationVersion=0,lastWorkPage='library',libraryLoaded=false;const pageScrollStates=new Map();let editorFitDeleted=false;let fitClipboard=null;try{fitClipboard=JSON.parse(sessionStorage.getItem('fitlab-fit-clipboard'))}catch{}
@@ -682,7 +682,7 @@ document.addEventListener('dragleave',e=>{if(!e.relatedTarget&&!e.clientX&&!e.cl
 window.addEventListener('blur',cancelInstallPreview);
 
 function libraryMessage(message){let el=$('#library-notice');if(!el){el=document.createElement('span');el.id='library-notice';el.role='status';$('#library-count').after(el)}el.textContent=message}
-function refreshLibraryRows(){libraryTree.update(libraryFits);drawFitLibrary();libraryLoaded=true;restorePageScroll(next)}
+function refreshLibraryRows(){libraryTree.update(libraryFits);drawFitLibrary();libraryLoaded=true;restorePageScroll('library')}
 function libraryMenu(e,fit=null){
  e.preventDefault();e.stopPropagation();menuOrigin=e.target.closest('[data-fit],.library-paste-space')||$('#library-list');const menu=$('#menu');menu.innerHTML='<div class="menu-title">'+esc(fit?.name||'装配库')+'</div>';
  const entries=fit?[
