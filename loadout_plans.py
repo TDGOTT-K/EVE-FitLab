@@ -36,6 +36,15 @@ def save_plan(body, library, timestamp):
                 item['enabledSideEffects'] = list(effects)
             clean.append(item)
         contents[key] = clean
+    if 'pilot' in body:
+        from nengine_booster_plan import native_plan
+        native_plan(body)
+        pilot=body['pilot']
+        if not isinstance(pilot.get('name'),str) or len(pilot['name'])>100:raise ValueError('角色名称无效')
+        contents['pilot']={'name':pilot['name'],'skills':copy.deepcopy(pilot['skills'])}
+    if body.get('rollReceipt') is not None:
+        from nengine_booster_plan import verify_receipt
+        contents['rollReceipt']=verify_receipt(body['rollReceipt'])['receipt']
     plan = dict(contents, id=previous['id'] if previous else str(uuid.uuid4()),
                 name=name.strip(), folder=folder.strip(), revision=(previous['revision'] if previous else 0)+1,
                 updatedAt=timestamp)

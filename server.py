@@ -241,6 +241,9 @@ class Handler(SimpleHTTPRequestHandler):
    size=int(self.headers.get('Content-Length',0))
    if not 0<size<=2000000:raise ValueError('请求大小无效')
    body=json.loads(self.rfile.read(size))
+   if self.path in ('/api/booster-plan/analyze','/api/booster-plan/roll','/api/booster-plan/verify'):
+    from nengine_booster_plan import analyze_plan,roll_plan,verify_receipt
+    return self.reply(verify_receipt(body['receipt']) if self.path.endswith('/verify') else roll_plan(body) if self.path.endswith('/roll') else analyze_plan(body))
    if self.path=='/api/native-dps-curves':
     from nengine_curves import build_curves
     return self.reply(build_curves(analyze(body)))
