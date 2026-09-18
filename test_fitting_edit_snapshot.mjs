@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {captureEditSnapshot,restoreEditSnapshot} from './fitting-edit-snapshot.js';
+const record={name:'Draft'},slots=[{key:'high-0',item:2881,ammo:185}],unknown=captureEditSnapshot(record,slots);
+record.cargo=[];record.crystals=[];slots[0].loadedCharges=0;
+const empty=captureEditSnapshot(record,slots);
+let restored=restoreEditSnapshot(record,unknown);
+assert.equal(Object.hasOwn(record,'cargo'),false);assert.equal(Object.hasOwn(record,'crystals'),false);
+assert.equal(Object.hasOwn(restored[0],'loadedCharges'),false);
+restored=restoreEditSnapshot(record,empty);assert.deepEqual(record.cargo,[]);assert.equal(restored[0].loadedCharges,0);
+restored[0].loadedCharges=50;record.cargo.push({item:185,quantity:50});
+assert.deepEqual(empty.cargo,[]);assert.equal(empty.slots[0].loadedCharges,0);
+assert.equal(record.name,'Draft');
+console.log('Edit history preserves unknown inventory, explicit empty/zero and independent snapshots');

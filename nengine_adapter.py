@@ -41,7 +41,7 @@ def native_fit(f, build):
                 'memberIds':[f'{ident}-{j}' for j in range(row['quantity'])],
                 'deployed':location=='tubes' and row.get('active',True)})
     if len(fighters)>200: raise ValueError('本适配层一次最多分析 200 个舰载机中队')
-    result={'id':f.get('id') or 'fitlab-draft','name':f.get('name'),'buildNumber':build,
+    result={'id':f.get('id') or 'fitlab-draft','name':f.get('name'),'tags':f.get('tags',[]),'buildNumber':build,
         'shipTypeId':f['shipId'],'omittedSkills':'untrained',
         'skills':{str(s['skillTypeId']):s['level'] for s in f.get('skills',[])},
         'tacticalModeTypeId':f.get('tacticalModeTypeId'),'items':items,'subsystems':subsystems,
