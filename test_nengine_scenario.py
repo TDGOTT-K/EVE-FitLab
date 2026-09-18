@@ -30,8 +30,10 @@ class NativeScenario(unittest.TestCase):
         self.assertEqual(applied['native']['resources'],base['native']['resources'])
         curves=build_curves(applied)
         for series in curves['series']:
-            current=next(y for x,y in series['points'] if x==series['currentX'])
+            current=next(y for x,y,*_ in series['points'] if x==series['currentX'])
             self.assertAlmostEqual(current,applied['outputSelection']['total'])
+            ratio=next(row[2] for row in series['points'] if row[0]==series['currentX'])
+            self.assertAlmostEqual(ratio,applied['native']['outputContributions']['comparison']['ratio']['value'])
         self.assertEqual(curves['totalDps'],base['outputSelection']['total'])
         self.assertTrue(build_curves(base)['ideal'])
 

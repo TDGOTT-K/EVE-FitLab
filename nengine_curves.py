@@ -8,6 +8,7 @@ from nengine_catalog import index_metadata
 
 def build_curves(report):
     payload={key:report[key] for key in ('nativeFit','outputContext','outputSelection','baselineOutputSelection','scenarioTarget','source')}
+    payload['comparison']=report['native']['outputContributions'].get('comparison')
     payload['items']=report['native']['outputContributions']['items']
     return _build(json.dumps(payload,sort_keys=True))
 
@@ -61,7 +62,7 @@ def _build(key):
             samples.append({**target,field:x,'id':'curve-'+str(len(samples))})
             points.append([x,None]);destinations.append((points,len(points)-1))
         series.append({'key':name,'label':label,'unit':unit,'min':low,'max':high,'points':points,
-                       'currentX':target[field],'currentY':selection['total'],
+                       'currentX':target[field],'currentY':selection['total'],'currentRatio':(report.get('comparison') or {}).get('ratio',{}).get('value'),
                        'fixed':'静止目标 · 其余条件理想化 · 参考信号半径 '+str(target['signatureMeters'])+' m'})
     # Respect both the target count and the total contribution-row contract bound.
     inventory_count=max(1,len(report['items']))
@@ -71,11 +72,12 @@ def _build(key):
         batch=samples[start:start+batch_size]
         context={'output':{'selection':{'metric':metric,'contributionIds':ids},'targets':batch}}
         output=bridge().call('fit_analyze',{'fit':report['nativeFit'],'context':context})['result']['outputContributions']
-        by_id={sample['target']['id']:sample['selection'] for sample in output['samples']}
+        by_id={sample['target']['id']:sample for sample in output['samples']}
         for offset,target_sample in enumerate(batch):
-            result=by_id[target_sample['id']];points,index=destinations[start+offset]
+            sample=by_id[target_sample['id']];result=sample['selection'];points,index=destinations[start+offset]
             points[index][1]=result['total'] if result['completeSelection'] else None
-    return {'status':'ready','series':series,'ideal':ideal,'totalDps':baseline['total'],
+            points[index].append((sample.get('comparison') or {}).get('ratio',{}).get('value'))
+    return {'status':'ready','ratiosFromEngine':True,'series':series,'ideal':ideal,'totalDps':baseline['total'],
             'target':{'distance':target['distanceMeters'],'signature':target['signatureMeters'],'angular':target['angularRadiansPerSecond'],'speed':target['speedMetersPerSecond']},
-            'yMax':max([1]+[y for s in series for _,y in s['points'] if y is not None]),
+            'yMax':max([1]+[y for s in series for _,y,*_ in s['points'] if y is not None]),
             'scope':'N 引擎静态应用 · 不扣抗性 · 导弹假定成功交付，不推断拦截与飞行时序'+(' · 有限弹量周期，非持续输出' if metric=='appliedLoadedCycleDps' else '')}

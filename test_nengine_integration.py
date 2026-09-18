@@ -14,7 +14,7 @@ class NativeIntegration(unittest.TestCase):
 
     def test_pinned_source_and_resources(self):
         r=analyze(self.fit())
-        self.assertEqual(r['engineVersion'],'0.190.0')
+        self.assertEqual(r['engineVersion'],'0.190.1-ui.1')
         self.assertEqual(r['source']['buildNumber'],3503375)
         self.assertEqual(r['attributes']['cpuAvailable'],r['native']['attributes']['ship/48']['value'])
         self.assertTrue(r['native']['staticCoverageComplete'])

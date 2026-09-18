@@ -176,3 +176,7 @@
 5. catalog_type_details / fit_attributes / 结构化错误，补来源解释与可读诊断；市场树、离线图标另作版本化UI资源。
 
 牺牲来源伤害与代价单独设计，不冒充循环DPS；目标应用与运行时继续按能力状态判定。以上计划不包含用户要求共同设计的脚本战斗沙盒。
+
+## NUI-21：共享比较输出（待用户验收）
+
+引擎本地97f59d7（0.190.1-ui.1 / local r34）新增公开分项/选集/样本比较；UI曲线和悬停消费其比例与差量，保留null及原因。图表百分比仅做ratio→%单位换算。原r33交付和主引擎未改。17项UI专项、当前点比例一致性及独立浏览器验证通过；截图output/local-r34-comparison.png。详细兼容性与未完成项见joint-development.md和引擎docs/ui-local-changes.md。
