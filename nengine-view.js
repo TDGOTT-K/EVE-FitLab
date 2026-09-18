@@ -16,7 +16,7 @@ export function nativeSlotMetrics(report,slot,group){
  const contribution=report.native.outputContributions?.items.find(i=>i.source.instanceId===slot.key&&i.kind==='ship_weapon'),basis=report.baselineOutputSelection?.metric;
  const read=contribution?.metrics[report.outputSelection?.metric],dps=read?.state==='available'?read.value:null,base=contribution?.metrics[basis]?.value;
  const fields=group==='resources'?[['CPU',50,'tf'],['PG',30,'MW']]:[['周期',73,'ms'],['最佳',54,'m'],['失准',158,'m']];
- return fields.map(([label,id,unit])=>{const t=a['module.'+slot.key+'/'+id];return t?`<span class="slot-metric" ${tip(nativeDetail(t,label,unit))}><span class="slot-metric-label">${label}</span><b>${fmt(t.value)}</b><span class="slot-metric-unit">${unit}</span></span>`:''}).join('')+(group!=='resources'&&w?`<span class="slot-metric">DPS <b ${numberAttributes(dps,report.scenarioTarget?base:undefined)}>${fmt(dps)}</b></span><span class="slot-metric">周期 <b>${fmt(w.cycleSeconds,'s')}</b></span>`:'');
+ return fields.map(([label,id,unit])=>{const t=a['module.'+slot.key+'/'+id];return t?`<span class="slot-metric" ${tip(nativeDetail(t,label,unit))}><span class="slot-metric-label">${label}</span><b>${fmt(t.value)}</b><span class="slot-metric-unit">${unit}</span></span>`:''}).join('')+(group!=='resources'&&w?`<span class="slot-metric">${report.attackMode==='edps'?'EDPS':'DPS'} <b ${numberAttributes(dps,report.scenarioTarget?base:undefined)}>${fmt(dps)}</b></span><span class="slot-metric">周期 <b>${fmt(w.cycleSeconds,'s')}</b></span>`:'');
 }
 export function nativeResources(host,report){
  if(!report.native.resources.length){host.innerHTML='<p class="profile-note">当前输入包含未支持效果，资源数值不可用</p>';return;}host.innerHTML=report.native.resources.filter(r=>['cpu','powergrid'].includes(r.id)).map(r=>`<div class="meter ${r.withinCapacity?'':'over'}"><label>${r.id==='cpu'?'CPU':'能量栅格'} 剩余<span>${fmt(r.remaining)} / ${fmt(r.capacity,r.id==='cpu'?'tf':'MW')}</span></label><progress value="${Math.max(0,r.remaining)}" max="${r.capacity||1}"></progress></div>`).join('');
@@ -27,10 +27,12 @@ export function mountNativeStats(root,report,{mode='hp',onMode,onDamageEdit,onOu
  const cap=a.capacitor;
  let html=head('电容',cap?`<b style="color:${cap.stableFromFullInAverageModel?'#79d6ab':'#f18080'}">${cap.stableFromFullInAverageModel?'稳定 · '+fmt(cap.stableFraction*100)+'%':'不稳定'}</b>`:'—');
  html+='<div class="stat-block">'+(cap?row('容量',fmt(cap.recharge.capacity,'GJ'))+row('平均耗电',fmt(cap.averageActiveDrain,'GJ/s'))+row('峰值回充',fmt(cap.recharge.peakRecharge,'GJ/s'))+'<small class="profile-note">平均负载模型 · 非逐周期续航</small>':row('电容','不可计算'))+'</div>';
+ const unit=report.attackMode==='edps'?'EDPS':'DPS';
  const current=report.outputSelection,base=report.baselineOutputSelection,comparison=report.native.outputContributions.comparison;
- const comparisons=report.scenarioTarget?[['无情景基准',outputReading(base)+' DPS'],['差量',fmt(comparison?.delta.value,'DPS')],['相对基准',comparison?.ratio.state==='available'?fmt(comparison.ratio.value*100,'%'):'不可用 · '+(comparison?.ratio.reason||'缺少比较结果')]]:[];
- const damageDetail={title:'已选输出 DPS',result:outputReading(current)+' DPS',resultClass:report.scenarioTarget?deltaClass(current.total,base.total):'',terms:comparisons,conditions:[['口径','不扣目标抗性 · '+(base.metric==='loadedCycleDps'?'有限弹量周期':'名义周期')]],chart:{status:'loading',reason:'正在向 N 引擎查询曲线…',request:report.curveRequest,cacheKey:JSON.stringify([report.curveRequest,report.scenarioTarget,report.source,report.native.outputContributions.fitHash])}};
- html+=head('攻击',`<span class="attack-total" ${tip(damageDetail)}><b ${numberAttributes(current.total,report.scenarioTarget?base.total:undefined)}>${outputReading(current)} DPS</b></span>`)+outputHtml(report,catalog);
+ const comparisons=report.scenarioTarget?[['无情景基准',outputReading(base)+' DPS'],['差量',fmt(comparison?.delta.value,unit)],['相对基准',comparison?.ratio.state==='available'?fmt(comparison.ratio.value*100,'%'):'不可用 · '+(comparison?.ratio.reason||'缺少比较结果')]]:[];
+ const targetConditions=report.scenarioTargetSource?[['目标装配',report.scenarioTargetSource.name],['目标防御层',({shield:'护盾',armor:'装甲',hull:'结构'})[report.scenarioTargetSource.layer]],['目标版本',String(report.scenarioTargetSource.revision??'未保存')]]:[];
+ const damageDetail={title:'已选输出 '+unit,result:outputReading(current)+' '+unit,resultClass:report.scenarioTarget?deltaClass(current.total,base.total):'',terms:comparisons,conditions:[...targetConditions,['口径',(report.attackMode==='edps'?'固定目标层 · 已扣抗性':'不扣目标抗性')+' · '+(base.metric==='loadedCycleDps'?'有限弹量周期':'名义周期')]],chart:{status:'loading',reason:'正在向 N 引擎查询曲线…',request:report.curveRequest,cacheKey:JSON.stringify([report.curveRequest,report.scenarioTarget,report.source,report.native.outputContributions.fitHash])}};
+ html+=head('攻击',`<span class="attack-total" ${tip(damageDetail)}><b ${numberAttributes(current.total,report.scenarioTarget?base.total:undefined)}>${outputReading(current)} ${unit}</b></span>`)+outputHtml(report,catalog);
  const defense=a.defense;
  html+=head('防御')+'<div class="stat-block"><div class="defense-mode-switch">'+[['hp','HP'],['ehp','EHP'],['targeted','针对抗']].map(([key,label])=>`<button data-native-defense="${key}" aria-pressed="${mode===key}">${label}</button>`).join('')+'<button data-native-damage>来伤比例</button></div>';
  if(defense){
@@ -47,6 +49,7 @@ export function mountNativeStats(root,report,{mode='hp',onMode,onDamageEdit,onOu
  if(all.length)html+='<details class="native-status"><summary>计算范围与待处理项 <b>'+all.length+'</b></summary>'+all.map(s=>'<p class="profile-note">'+esc(s)+'</p>').join('')+'</details>';
  root.innerHTML=html;
  root.querySelectorAll('[data-native-defense]').forEach(b=>b.onclick=()=>onMode?.(b.dataset.nativeDefense));
+ root.querySelectorAll('[data-native-attack]').forEach(b=>b.onclick=()=>document.dispatchEvent(new CustomEvent('fitlab-attack-mode',{detail:b.dataset.nativeAttack})));
  root.querySelector('.native-output-metric').onchange=e=>onOutputMetric?.(e.target.value);
  root.querySelector('[data-native-damage]').onclick=()=>onDamageEdit?.();
 }

@@ -2,9 +2,9 @@
 import math
 
 
-def resolve_target(fit, fits, analyze):
+def resolve_context(fit, fits, analyze):
     value=fit.get('scenario') or {}
-    if not value.get('targetFitId'): return None
+    if not value.get('targetFitId'): return None,None
     victim=next((f for f in fits if f.get('id')==value['targetFitId']),None)
     if victim is None: raise ValueError('情景目标装配已删除，请重新选择')
     clean={**victim,'scenario':{},'activeScenarioId':None}
@@ -17,4 +17,20 @@ def resolve_target(fit, fits, analyze):
         if type(n) not in (float,int) or not math.isfinite(n) or not 0<=n<=maximum:
             raise ValueError('情景参数无效：'+old)
         target[new]=n
-    return target
+    layer_name={'structure':'hull','shield':'shield','armor':'armor','hull':'hull'}.get(value.get('targetLayer','shield'))
+    if layer_name is None:raise ValueError('目标防御层无效')
+    layers=(report['native'].get('defense') or {}).get('layers',[])
+    layer=next((x for x in layers if x['layer']==layer_name),None)
+    if layer:
+        target['layer']={'name':layer_name,'resonances':layer['resonances']}
+        receiver=report['native']['attributes'].get('ship/6186',{}).get('value')
+        if receiver is not None:target['layer']['vortonReceiverMultiplier']=receiver
+    elif fit.get('attackMode')=='edps':raise ValueError('目标防御层不可计算，不能显示 EDPS')
+    source={'id':victim['id'],'name':victim['name'],'revision':victim.get('revision'),
+            'fitHash':report['native']['fitHash'],'nativeFit':report['nativeFit'],
+            'source':report['source'],'layer':layer_name}
+    return target,source
+
+
+def resolve_target(fit,fits,analyze):
+    return resolve_context(fit,fits,analyze)[0]

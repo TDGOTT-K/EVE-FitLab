@@ -10,17 +10,18 @@ export function outputReading(selection){
  return '—';
 }
 export function outputHtml(report,catalog){
+ const unit=report.attackMode==='edps'?'EDPS':'DPS';
  const selection=report.outputSelection,output=report.native.outputContributions,metric=selection?.metric||'nominalCycleDps',basis=report.baselineOutputSelection?.metric||metric;
  if(!output)return '<div class="stat-block">输出接口不可用</div>';
  const name=item=>{const type=catalog.find(t=>t.id===item.source.typeId),ability=report.native.fighterEntities[item.source.squadronId]?.abilityMetadata?.abilities?.find(a=>a.abilityId===item.source.officialAbilityId);return (type?.name||report.native.fighterEntities[item.source.squadronId]?.abilityMetadata?.name?.zh||report.native.fighterEntities[item.source.squadronId]?.abilityMetadata?.name?.en||item.source.instanceId)+(ability?' · '+(ability.displayName.zh||ability.displayName.en):'');};
  const selected=new Set(report.outputContext.selection.contributionIds),excluded=new Map((selection.exclusions||[]).map(x=>[x.contributionId,x]));
- let html='<div class="stat-block"><select class="native-output-metric" aria-label="输出计算口径"><option value="nominalCycleDps" '+(basis==='nominalCycleDps'?'selected':'')+'>名义周期 DPS</option><option value="loadedCycleDps" '+(basis==='loadedCycleDps'?'selected':'')+'>有限弹量周期 DPS</option></select>';
+ let html='<div class="stat-block"><div class="attack-modes defense-modes" role="group" aria-label="伤害显示模式">'+['dps','edps'].map(mode=>'<button type="button" data-native-attack="'+mode+'" aria-pressed="'+((report.attackMode||'dps')===mode)+'" '+(mode==='edps'&&!report.scenarioTarget?'disabled title="选择情景目标后查看 EDPS"':'')+'>'+mode.toUpperCase()+'</button>').join('')+'</div><select class="native-output-metric" aria-label="输出计算口径"><option value="nominalCycleDps" '+(basis==='nominalCycleDps'?'selected':'')+'>名义周期 DPS</option><option value="loadedCycleDps" '+(basis==='loadedCycleDps'?'selected':'')+'>有限弹量周期 DPS</option></select>';
  for(const [key,label] of [['weapons','武器'],['drones','无人机'],['fighters','舰载机已选武器']]){
   const value=report.outputBreakdown[key];
-  if(value.groups.length||value.exclusions.length)html+='<div class="stat-row"><span>'+label+' DPS</span><b '+numberAttributes(value.total,report.scenarioTarget?report.baselineOutputBreakdown[key].total:undefined)+'>'+outputReading(value)+'</b></div>';
+  if(value.groups.length||value.exclusions.length)html+='<div class="stat-row"><span>'+label+' '+unit+'</span><b '+numberAttributes(value.total,report.scenarioTarget?report.baselineOutputBreakdown[key].total:undefined)+'>'+outputReading(value)+'</b></div>';
  }
  const explanation=selection.status==='empty_selection'?(output.staticBlockers.length?'计算受限，未取得可选分项':'没有已选输出项'):selection.completeSelection?'仅汇总已选武器':'仅显示可计算小计';
- html+='<small class="profile-note">'+explanation+(report.scenarioTarget?' · 已应用情景':'')+' · 不扣抗性'+(basis==='loadedCycleDps'?' · 假定可发射，非持续输出':'')+'</small>';
+ html+='<small class="profile-note">'+explanation+(report.scenarioTarget?' · 已应用情景':'')+(unit==='EDPS'?' · 固定'+({shield:'护盾',armor:'装甲',hull:'结构'}[report.scenarioTarget?.layer?.name]||'目标')+'层 · 已扣抗性':' · 不扣抗性')+(basis==='loadedCycleDps'?' · 假定可发射，非持续输出':'')+'</small>';
  html+='<details class="native-output-details"><summary>输出分项 <span>'+selected.size+' / '+output.items.length+'</span></summary>';
  for(const item of output.items){
   const reading=item.metrics[metric],missing=excluded.get(item.id),chosen=selected.has(item.id),reason=missing?.reason||reading?.reason;

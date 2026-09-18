@@ -73,8 +73,9 @@ def analyze(f,target=None):
     a=client.call('fit_analyze',{'fit':native,'context':context})['result']
     baseline=a['outputContributions']['selection']
     baseline_items=a['outputContributions']['items']
+    effective=f.get('attackMode')=='edps' and target is not None
     if target is not None:
-        metric='appliedLoadedCycleDps' if metric=='loadedCycleDps' else 'appliedCycleDps'
+        metric=('effectiveLoadedCycleDps' if metric=='loadedCycleDps' else 'effectiveCycleDps') if effective else ('appliedLoadedCycleDps' if metric=='loadedCycleDps' else 'appliedCycleDps')
         context['output']={'selection':{'metric':metric,'contributionIds':contribution_ids},'target':target}
         a=client.call('fit_analyze',{'fit':native,'context':context})['result']
     output=a['outputContributions']
@@ -107,7 +108,7 @@ def analyze(f,target=None):
     if f.get('activeScenarioId') or f.get('scenario'):
         if target is None:notices.append('当前情景未配置目标，显示装配基准输出。')
         if (f.get('scenario') or {}).get('supportFitId') or (f.get('scenario') or {}).get('hostileFitId'):notices.append('传电与毁电尚未接入，电容仍显示自身装配基准。')
-        if target is not None:notices.append('情景按画布相对速度作静态应用参考；目标抗性、拦截及飞行时序未计入。')
+        if target is not None:notices.append('情景按画布相对速度作静态应用参考；拦截及飞行时序未计入；EDPS 为选定固定层期望，不模拟层间推进。')
     if f.get('fighterUiMock') and not f.get('fighterLoadout'):
         notices.append('原舰载机示例保留在草稿中，请重新选择真实型号；示例不参与计算。')
     if f.get('cargo'): notices.append('本批尚未接入货舱库存校验。')
@@ -118,7 +119,7 @@ def analyze(f,target=None):
     return {'provider':'nengine','contract':'fitlab-analysis-v2','engineVersion':status['engineVersion'],
         'fighterDamageSelection':selection,'outputSelection':output['selection'],'outputBreakdown':breakdown,'baselineOutputBreakdown':baseline_breakdown,
         'outputContext':context['output'],'baselineOutputSelection':baseline,'baselineOutputItems':baseline_items,
-        'scenarioTarget':target,'curveRequest':f,
+        'scenarioTarget':target,'attackMode':'edps' if effective else 'dps','curveRequest':f,
         'native':a,'nativeFit':native,'attributes':projection,'snapshot':{'modules':modules},
         'skillCount':len(native['skills']),'isValid':not issues,
         'issues':issues,'integrationNotices':notices,'source':{'buildNumber':build,'revision':client.baseline['revision']}}

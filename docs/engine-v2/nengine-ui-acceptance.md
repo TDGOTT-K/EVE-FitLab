@@ -180,3 +180,13 @@
 ## NUI-21：共享比较输出（待用户验收）
 
 引擎本地97f59d7（0.190.1-ui.1 / local r34）新增公开分项/选集/样本比较；UI曲线和悬停消费其比例与差量，保留null及原因。图表百分比仅做ratio→%单位换算。原r33交付和主引擎未改。17项UI专项、当前点比例一致性及独立浏览器验证通过；截图output/local-r34-comparison.png。详细兼容性与未完成项见joint-development.md和引擎docs/ui-local-changes.md。
+
+## NUI-22：已有固定层 EDPS 接入（待用户验收）
+
+- 本轮不开发游戏机制，复用原有 effectiveCycleDps/effectiveLoadedCycleDps、target.layer 及本地公开比较字段。接口仍0.190.1-ui.1/local-r34。
+- 攻击区恢复DPS/EDPS切换。情景目标的层由画布原护盾/装甲/结构操作决定，structure映射原生hull；从目标实际分析Defense.Layers读取resonances，并传递可用的ship/6186接收倍率。不把来袭伤害比例当目标抗性，不默认补接收倍率1。
+- 返回scenarioTargetSource（原目标ID/名称/保存revision、fitHash、nativeFit、来源版本、选定层），保留重现目标数值所需原始上下文；来源信息在悬停明细显示。源头与攻击者原生输入可通过公开fit_analyze / sde-fit --metrics复算，不依赖UI伤害公式。
+- 摘要、分项、分类小计、装备行和三轴曲线都按选择切换；差量/比例沿用同选集名义基准，曲线百分比仍相对抗性前名义总量。无目标时EDPS禁用并显示DPS，保留用户模式偏好供重新应用目标后恢复。
+- 缺层effective读数保留null与exclusions；目标层本身不可计算时报错，不用默认抗性掩盖。固定层意味着不模拟层推进、维修、生存时间或实战平均。
+
+验证：10项测试通过（EDPS2、情景3、输出5）；新增测试覆盖三层目标、原生配装不变、当前曲线点/比例一致、缺层不可用，以及同一原生fit/context实际CLI与MCP完整outputContributions一致。独立5341浏览器验证DPS10.61→护盾EDPS9.37、曲线单位/比例、移除情景回到基准10.56DPS。截图output/edps-shield-curve.png；没有注入用户库。总体功能仍未全部接入。

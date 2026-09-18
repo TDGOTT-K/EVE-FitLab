@@ -121,9 +121,11 @@ def analyze(f,resolve_links=True):
  if os.environ.get("FITLAB_CALCULATOR", "nengine")=="nengine":
   validate_fit(f)
   from nengine_adapter import analyze as native_analyze
-  from nengine_scenario import resolve_target
-  target=resolve_target(f,read_library()['fits'],native_analyze) if resolve_links else None
-  return native_analyze(f,target=target)
+  from nengine_scenario import resolve_context
+  target,source=resolve_context(f,read_library()['fits'],native_analyze) if resolve_links else (None,None)
+  result=native_analyze(f,target=target)
+  result['scenarioTargetSource']=source
+  return result
  return analyze_legacy(f,resolve_links)
 
 def analyze_legacy(f,resolve_links=True):

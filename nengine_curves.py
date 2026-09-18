@@ -7,7 +7,7 @@ from nengine_catalog import index_metadata
 
 
 def build_curves(report):
-    payload={key:report[key] for key in ('nativeFit','outputContext','outputSelection','baselineOutputSelection','scenarioTarget','source')}
+    payload={key:report[key] for key in ('nativeFit','outputContext','outputSelection','baselineOutputSelection','scenarioTarget','source','attackMode')}
     payload['comparison']=report['native']['outputContributions'].get('comparison')
     payload['items']=report['native']['outputContributions']['items']
     return _build(json.dumps(payload,sort_keys=True))
@@ -46,7 +46,7 @@ def _build(key):
     definitions=[('distance','距离','km','distanceMeters',0,min(1e7,max([1000,target['distanceMeters']*1.5]+[r*1.15 for r in ranges]))),
         ('signature','目标信号半径','m','signatureMeters',.1,min(1e7,max([400,target['signatureMeters']*2]+[r*2 for r in radii]))),
         ('angular','角速度','rad/s','angularRadiansPerSecond',0,min(100,max([.02,target['angularRadiansPerSecond']*2]+[v*3 for v in angular])))]
-    metric='appliedLoadedCycleDps' if baseline['metric']=='loadedCycleDps' else 'appliedCycleDps'
+    metric=selection['metric'] if not ideal else ('appliedLoadedCycleDps' if baseline['metric']=='loadedCycleDps' else 'appliedCycleDps')
     series=[];samples=[];destinations=[]
     for name,label,unit,field,low,high in definitions:
         xs={low+(high-low)*i/32 for i in range(33)}
@@ -77,7 +77,7 @@ def _build(key):
             sample=by_id[target_sample['id']];result=sample['selection'];points,index=destinations[start+offset]
             points[index][1]=result['total'] if result['completeSelection'] else None
             points[index].append((sample.get('comparison') or {}).get('ratio',{}).get('value'))
-    return {'status':'ready','ratiosFromEngine':True,'series':series,'ideal':ideal,'totalDps':baseline['total'],
+    return {'status':'ready','attackMode':report['attackMode'],'ratiosFromEngine':True,'series':series,'ideal':ideal,'totalDps':baseline['total'],
             'target':{'distance':target['distanceMeters'],'signature':target['signatureMeters'],'angular':target['angularRadiansPerSecond'],'speed':target['speedMetersPerSecond']},
             'yMax':max([1]+[y for s in series for _,y,*_ in s['points'] if y is not None]),
-            'scope':'N 引擎静态应用 · 不扣抗性 · 导弹假定成功交付，不推断拦截与飞行时序'+(' · 有限弹量周期，非持续输出' if metric=='appliedLoadedCycleDps' else '')}
+            'scope':('固定'+{'shield':'护盾','armor':'装甲','hull':'结构'}.get(target.get('layer',{}).get('name'),'目标')+'层 EDPS · 已扣抗性' if report['attackMode']=='edps' else 'N 引擎静态应用 · 不扣抗性')+' · 导弹假定成功交付'+(' · 有限弹量周期，非持续输出' if baseline['metric']=='loadedCycleDps' else '')}
