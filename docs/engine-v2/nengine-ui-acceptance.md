@@ -265,3 +265,15 @@
 验证：5项电容专项通过；本舰和外来NOS实际CLI/MCP完整结果相同，原生事件输入和正收益验证；缺电量/超容量/非法初始值保持不可用；情景保存保留0/null并拒绝非法值。独立5346浏览器测试目标未声明→250GJ、本舰10%、保存并刷新恢复；外来吸电未声明→0GJ保存有效。截图output/native-nos-target-control.png。JS语法及diff检查通过，未执行无关全量。
 
 接口仍0.190.1-ui.1/local-r34。这里只对已有静态capacitor_scenario补上下文，没有给缺失机制添加实现。未声明时仍不会声称装配完整稳定。
+
+## NUI-30：按需拟合属性与原生轨迹（待用户验收）
+
+- 物品详情不再从主分析偶然访问过的attributes中截取不完整快照。对舰船、已安装模块/改装件/子系统、已装填弹药和无人机，使用现有fit_attributes按需查询公开属性。弹药使用charge.<slot>，修复原先错误映射到module.<slot>。
+- 新宿主/api/native-attributes只负责UI装配映射与1–256条批次调用，返回原生items/traces/source/fitHash/errors/warnings/coverage及可直接重放的公开请求；合并时校验批次来源一致。无属性求值或游戏公式。
+- 装配参数读取逐项state/trace，恢复此前被旧renderer排除的射速/射程/跟踪等字段。悬停展示baseValue、原生steps的来源/算子/输入/堆叠系数及前后值；色彩仅依据metadata.highIsGood，不推测好坏方向。单位与舍入只做展示。
+- unavailable/requires_policy/blocked_static_dependencies显示原因，不转换成0；不主动允许默认值。校验错误保留诊断说明，不把读得到属性当作合法装配。属性查询失败仍保留基础属性页。原生路径不再走旧的DPS/弹药基础公式；旧引擎路径独立保留。
+- 请求绑定打开详情时的装配快照；切换物品/关闭后丢弃过期响应，保留等待期间用户选择的标签页和滚动位置。
+
+验证：3项Python专项通过：修正轨迹真实CLI/MCP完整相等、charge类型178、缺对象/null、默认值策略、257项分批/顺序及非法查询。JS测试确认blocked不调用数值格式化、真实0正常显示、未知原因保留及highIsGood方向。独立5347浏览器实测炮台23项、弹药11项；弹药所有对象标识为charge.high-0，射程/跟踪可见，CPU 3→2.25tf有技能轨迹，伤害倍率3.3654有原生修正。截图output/native-attribute-details.png。未执行全量或战斗；本批仍不等于全应用接入完成。
+
+接口版本保持0.190.1-ui.1/local-r34，无引擎机制或契约修改。

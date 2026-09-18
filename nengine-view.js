@@ -53,7 +53,3 @@ export function mountNativeStats(root,report,{mode='hp',onMode,onDamageEdit,onOu
  root.querySelector('.native-output-metric').onchange=e=>onOutputMetric?.(e.target.value);
  root.querySelector('[data-native-damage]').onclick=()=>onDamageEdit?.();
 }
-export function nativeItemParameters(calculation,key){
- const prefix=key==='ship'?'ship':key.startsWith('drone-')?'drone.'+key:'module.'+key;
- return {attributeSnapshot:Object.fromEntries(Object.entries(calculation.native.attributes).filter(([k])=>k.startsWith(prefix+'/')).map(([,t])=>[t.name,t.value]))};
-}

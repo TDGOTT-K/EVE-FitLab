@@ -251,6 +251,10 @@ class Handler(SimpleHTTPRequestHandler):
    if self.path in ('/api/booster-plan/analyze','/api/booster-plan/roll','/api/booster-plan/verify'):
     from nengine_booster_plan import analyze_plan,roll_plan,verify_receipt
     return self.reply(verify_receipt(body['receipt']) if self.path.endswith('/verify') else roll_plan(body) if self.path.endswith('/roll') else analyze_plan(body))
+   if self.path=='/api/native-attributes':
+    from nengine_attributes import inspect_attributes
+    validate_fit(body['fit'])
+    return self.reply(inspect_attributes(body['fit'],body['itemId'],body['attributeIds']))
    if self.path=='/api/native-dps-curves':
     from nengine_curves import build_curves
     return self.reply(build_curves(analyze(body)))

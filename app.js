@@ -1,5 +1,5 @@
 import {detachUnmatchedCrystals,exchangeCrystalSlots,mountCrystal,crystalProjection,crystalWearText,crystalErrorText} from './crystal-stock.js';
-import {mountNativeStats,nativeResources,nativeSlotMetrics,nativeItemParameters} from './nengine-view.js';
+import {mountNativeStats,nativeResources,nativeSlotMetrics} from './nengine-view.js';
 import {fighterHull,mountFighters,drawFighterBrowser} from './fighter-ui.js';
 import {installAbyssalLibrary} from './abyssal-library.js';
 import {openLoadoutPicker} from './loadout-manager.js';
@@ -196,7 +196,8 @@ let infoOrigin=null;
 function closeInfo(){const panel=$('#info-window');if(panel.hidden)return;panel.hidden=true;if(infoOrigin?.isConnected)infoOrigin.focus({preventScroll:true})}
 let infoRequest=0;
 async function showInfo(t,slotKey=null,droneIndex=null){infoOrigin=document.activeElement;const request=++infoRequest,panel=$('#info-window'),captured=currentFit(),selected=slotKey?captured.slots.find(s=>s.key===slotKey):null;$('#info-title').textContent=t.path.join(' › ');$('#info-title').title='在装备浏览器中定位此物品';$('#info-title').onclick=e=>{e.preventDefault();if(t.kind!=='loadout')locateItem(t)};if(t.kind==='loadout')$('#info-title').title='脑插与增效剂 · 物品详情';$('#info-content').innerHTML='<p class="profile-note">正在读取物品属性…</p>';panel.hidden=false;if(!panel.style.left){panel.style.left=Math.max(8,(innerWidth-panel.offsetWidth)/2)+'px';panel.style.top='100px'}clampInfo();$('#info-close').focus({preventScroll:true});
- const calculationRequest=selected||droneIndex!==null||t.kind==='ship'?getCalculation(captured):Promise.resolve(null);
+ const useNative=!!t.metadataSource;
+ const calculationRequest=!useNative&&(selected||droneIndex!==null||t.kind==='ship')?getCalculation(captured):Promise.resolve(null);
  // Attach rejection handling immediately, even while item metadata is in flight.
  const settledCalculation=calculationRequest.then(value=>({value}),error=>({error}));
  try{const data=t.kind==='loadout'?(await import('./loadout-item-info.js')).loadoutItemInfo(t.id):await cachedItem(t.id,t.id);if(request!==infoRequest||panel.hidden)return;
@@ -206,7 +207,15 @@ async function showInfo(t,slotKey=null,droneIndex=null){infoOrigin=document.acti
  let touched=false;const remember=()=>{touched=true};$('#info-content').querySelector('.info-tabs').addEventListener('click',remember,{once:true});
  const outcome=await settledCalculation;if(request!==infoRequest||panel.hidden)return;
  if(outcome.error){status.textContent='装配参数暂不可用：'+outcome.error.message;return}
- if(outcome.value?.provider==='nengine'){const key=t.kind==='ship'?'ship':droneIndex!==null?'drone-'+droneIndex+'-0':selected.key;renderItemInfo($('#info-content'),t,data,nativeItemParameters(outcome.value,key),catalog,'N 号引擎 · 加成后属性');clampInfo();return;}
+ if(useNative){
+  const itemId=t.kind==='ship'?'ship':droneIndex!==null?'drone.drone-'+droneIndex+'-0':(t.kind==='ammo'?'charge.':selected.kind==='subsystem'?'subsystem.':'module.')+selected.key;
+  const attributeIds=data.attributes.filter(a=>a.published&&a.displayName).map(a=>a.id);
+  if(!attributeIds.length){status.textContent='该物品未声明可展示的属性';return;}
+  let result;try{result=await api('native-attributes',{fit:captured,itemId,attributeIds})}catch(error){if(request===infoRequest&&!panel.hidden)status.textContent='装配参数暂不可用：'+error.message;return;}if(request!==infoRequest||panel.hidden)return;
+  const selectedTab=touched?$('#info-content [aria-pressed="true"]')?.dataset.infoTab:null,scroll=panel.scrollTop;
+  renderItemInfo($('#info-content'),t,data,{nativeInspection:result.inspection},catalog,'N 号引擎 · 按需属性快照');
+  if(selectedTab)$('#info-content').querySelector('[data-info-tab="'+selectedTab+'"]').click();clampInfo();if(touched)panel.scrollTop=scroll;return;
+ }
  const calculation=outcome.value,group=t.kind==='ship'?[]:droneIndex!==null?calculation.snapshot.droneBay.drones:selected.kind==='rig'?calculation.snapshot.rigs:calculation.snapshot.modules;
  const siblings=selected?captured.slots.filter(s=>s.kind===selected.kind&&s.item===selected.item):[],index=siblings.findIndex(s=>s.key===selected?.key);
  let computed=t.kind==='ship'?{attributeSnapshot:{...calculation.attributes.attributeSnapshot,cpuLoad:calculation.attributes.cpuUsed,powerLoad:calculation.attributes.powergridUsed,baseWarpSpeed:calculation.attributes.attributeSnapshot.warpSpeedMultiplier},attributeTraces:calculation.attributes.attributeTraces}:droneIndex!==null?group[droneIndex]:(group.find(m=>m.workspaceSlotKey===selected.key)||group.filter(m=>m.dogmaTypeId===selected.item)[index]);if(t.kind==='ammo')computed=computed?.charge||null;
