@@ -125,6 +125,8 @@ def analyze(f,resolve_links=True):
   target,source=resolve_context(f,read_library()['fits'],native_analyze) if resolve_links else (None,None)
   result=native_analyze(f,target=target)
   result['scenarioTargetSource']=source
+  from nengine_capacitor import attach_capacitor
+  attach_capacitor(f,result,read_library()['fits'] if resolve_links else [])
   return result
  return analyze_legacy(f,resolve_links)
 

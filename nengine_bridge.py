@@ -79,7 +79,7 @@ class NEngineBridge:
             return reply['result']
 
     def call(self, name, arguments=None):
-        if name not in {'engine_status','catalog_search','catalog_item','catalog_variants','fit_analyze','mutation_rule','mutation_roll','booster_plan_analyze','booster_plan_roll','booster_plan_verify'}:
+        if name not in {'engine_status','catalog_search','catalog_item','catalog_variants','fit_analyze','mutation_rule','mutation_roll','booster_plan_analyze','booster_plan_roll','booster_plan_verify','capacitor_scenario'}:
             raise ValueError('此适配层只开放静态装配和目录查询')
         with self.lock:
             self._start()

@@ -112,7 +112,6 @@ def analyze(f,target=None):
         projection['attributeSnapshot']['maxActiveDrones']=a['droneBay']['maximumActive']
     if f.get('activeScenarioId') or f.get('scenario'):
         if target is None:notices.append('当前情景未配置目标，显示装配基准输出。')
-        if (f.get('scenario') or {}).get('supportFitId') or (f.get('scenario') or {}).get('hostileFitId'):notices.append('传电与毁电尚未接入，电容仍显示自身装配基准。')
         if target is not None:notices.append('情景按画布相对速度作静态应用参考；拦截及飞行时序未计入；EDPS 为选定固定层期望，不模拟层间推进。')
     if f.get('fighterUiMock') and not f.get('fighterLoadout'):
         notices.append('原舰载机示例保留在草稿中，请重新选择真实型号；示例不参与计算。')

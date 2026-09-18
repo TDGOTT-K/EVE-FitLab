@@ -1,3 +1,4 @@
+import {capacitorHtml} from './native-capacitor-view.js';
 import {numberAttributes,deltaClass} from './scenario-display.js';
 import {outputHtml,outputReading} from './nengine-output-view.js';
 // Native report presenter: formatting and layout only; values belong to NEngine.
@@ -21,12 +22,10 @@ export function nativeSlotMetrics(report,slot,group){
 export function nativeResources(host,report){
  if(!report.native.resources.length){host.innerHTML='<p class="profile-note">当前输入包含未支持效果，资源数值不可用</p>';return;}host.innerHTML=report.native.resources.filter(r=>['cpu','powergrid'].includes(r.id)).map(r=>`<div class="meter ${r.withinCapacity?'':'over'}"><label>${r.id==='cpu'?'CPU':'能量栅格'} 剩余<span>${fmt(r.remaining)} / ${fmt(r.capacity,r.id==='cpu'?'tf':'MW')}</span></label><progress value="${Math.max(0,r.remaining)}" max="${r.capacity||1}"></progress></div>`).join('');
 }
-export function mountNativeStats(root,report,{mode='hp',onMode,onDamageEdit,onOutputMetric,catalog=[]}={}){
+export function mountNativeStats(root,report,{mode='hp',onMode,onDamageEdit,onOutputMetric,onCapHorizon,catalog=[]}={}){
  const a=report.native,attrs=a.attributes;
  const attr=(label,id,unit='',scale=1)=>{const t=attrs['ship/'+id];return row(label,fmt(t? t.value/scale : null,unit),nativeDetail(t,label))};
- const cap=a.capacitor;
- let html=head('电容',cap?`<b style="color:${cap.stableFromFullInAverageModel?'#79d6ab':'#f18080'}">${cap.stableFromFullInAverageModel?'稳定 · '+fmt(cap.stableFraction*100)+'%':'不稳定'}</b>`:'—');
- html+='<div class="stat-block">'+(cap?row('容量',fmt(cap.recharge.capacity,'GJ'))+row('平均耗电',fmt(cap.averageActiveDrain,'GJ/s'))+row('峰值回充',fmt(cap.recharge.peakRecharge,'GJ/s'))+'<small class="profile-note">平均负载模型 · 非逐周期续航</small>':row('电容','不可计算'))+'</div>';
+ let html=capacitorHtml(report);
  const unit=report.attackMode==='edps'?'EDPS':'DPS';
  const current=report.outputSelection,base=report.baselineOutputSelection,comparison=report.native.outputContributions.comparison;
  const comparisons=report.scenarioTarget?[['无情景基准',outputReading(base)+' DPS'],['差量',fmt(comparison?.delta.value,unit)],['相对基准',comparison?.ratio.state==='available'?fmt(comparison.ratio.value*100,'%'):'不可用 · '+(comparison?.ratio.reason||'缺少比较结果')]]:[];
@@ -50,6 +49,7 @@ export function mountNativeStats(root,report,{mode='hp',onMode,onDamageEdit,onOu
  root.innerHTML=html;
  root.querySelectorAll('[data-native-defense]').forEach(b=>b.onclick=()=>onMode?.(b.dataset.nativeDefense));
  root.querySelectorAll('[data-native-attack]').forEach(b=>b.onclick=()=>document.dispatchEvent(new CustomEvent('fitlab-attack-mode',{detail:b.dataset.nativeAttack})));
+ root.querySelector('[data-cap-horizon]').onchange=e=>onCapHorizon?.(Number(e.target.value));
  root.querySelector('.native-output-metric').onchange=e=>onOutputMetric?.(e.target.value);
  root.querySelector('[data-native-damage]').onclick=()=>onDamageEdit?.();
 }
