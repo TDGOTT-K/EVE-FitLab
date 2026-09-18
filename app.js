@@ -1,4 +1,5 @@
 import {effectiveModuleState} from './module-state.js';
+import {planAttributeInspection} from './plan-attribute-inspection.js';
 import {detachUnmatchedCrystals,exchangeCrystalSlots,mountCrystal,crystalProjection,crystalWearText,crystalErrorText} from './crystal-stock.js';
 import {mountNativeStats,nativeResources,nativeSlotMetrics} from './nengine-view.js';
 import {fighterHull,mountFighters,drawFighterBrowser} from './fighter-ui.js';
@@ -197,17 +198,26 @@ let infoOrigin=null;
 function closeInfo(){const panel=$('#info-window');if(panel.hidden)return;panel.hidden=true;if(infoOrigin?.isConnected)infoOrigin.focus({preventScroll:true})}
 let infoRequest=0;
 async function showInfo(t,slotKey=null,droneIndex=null,fittedObject=null){infoOrigin=document.activeElement;const request=++infoRequest,panel=$('#info-window'),captured=currentFit(),selected=slotKey?captured.slots.find(s=>s.key===slotKey):null;$('#info-title').textContent=t.path.join(' › ');$('#info-title').title='在装备浏览器中定位此物品';$('#info-title').onclick=e=>{e.preventDefault();if(t.kind!=='loadout')locateItem(t)};if(t.kind==='loadout')$('#info-title').title='脑插与增效剂 · 物品详情';$('#info-content').innerHTML='<p class="profile-note">正在读取物品属性…</p>';panel.hidden=false;if(!panel.style.left){panel.style.left=Math.max(8,(innerWidth-panel.offsetWidth)/2)+'px';panel.style.top='100px'}clampInfo();$('#info-close').focus({preventScroll:true});
- const useNative=!!t.metadataSource||!!fittedObject;
+ const useNative=!!t.metadataSource||!!fittedObject||!!t.planContext;
  const calculationRequest=!useNative&&(selected||droneIndex!==null||t.kind==='ship')?getCalculation(captured):Promise.resolve(null);
  // Attach rejection handling immediately, even while item metadata is in flight.
  const settledCalculation=calculationRequest.then(value=>({value}),error=>({error}));
  try{const data=await cachedItem(t.id,t.id);if(request!==infoRequest||panel.hidden)return;
  renderItemInfo($('#info-content'),t,data,null,catalog,'');clampInfo();
- if(!selected&&droneIndex===null&&t.kind!=='ship'&&!fittedObject){say('已读取物品详情');return}
+ if(!selected&&droneIndex===null&&t.kind!=='ship'&&!fittedObject&&!t.planContext){say('已读取物品详情');return}
  const status=document.createElement('p');status.className='profile-note';status.textContent='装配参数计算中 · 可先查看基础属性';$('#info-content').append(status);
  let touched=false;const remember=()=>{touched=true};$('#info-content').querySelector('.info-tabs').addEventListener('click',remember,{once:true});
  const outcome=await settledCalculation;if(request!==infoRequest||panel.hidden)return;
  if(outcome.error){status.textContent='装配参数暂不可用：'+outcome.error.message;return}
+ if(t.planContext){
+  const {plan,kind,slot}=t.planContext;
+  let result;try{result=await api('booster-plan/analyze',plan)}catch(error){if(request===infoRequest&&!panel.hidden)status.textContent='方案参数暂不可用：'+error.message;return;}
+  if(request!==infoRequest||panel.hidden)return;
+  const selectedTab=touched?$('#info-content [aria-pressed="true"]')?.dataset.infoTab:null,scroll=panel.scrollTop;
+  const inspection=planAttributeInspection(result,kind,slot,data.attributes.filter(a=>a.published&&a.displayName));
+  renderItemInfo($('#info-content'),t,data,{nativeInspection:inspection},catalog,(plan.pilot?.name||'无技能 · 基础对照')+' · 独立方案参数（不含舰船作用）');
+  if(selectedTab)$('#info-content').querySelector('[data-info-tab="'+selectedTab+'"]').click();clampInfo();if(touched)panel.scrollTop=scroll;return;
+ }
  if(useNative){
   const itemId=fittedObject||(t.kind==='ship'?'ship':droneIndex!==null?'drone.drone-'+droneIndex+'-0':(t.kind==='ammo'?'charge.':selected.kind==='subsystem'?'subsystem.':'module.')+selected.key);
   const attributeIds=data.attributes.filter(a=>a.published&&a.displayName).map(a=>a.id);
@@ -253,10 +263,10 @@ function openMenu(e,id,type){e.preventDefault();e.stopPropagation();menuOrigin=e
  if(type==='item'&&abyssalLibrary.eligible(t))entries.push(['在深渊库中寻找',()=>abyssalLibrary.locate(t)]);
  if(t)entries.push(['查看信息',()=>showInfo(t,s?.key)]);const menu=$('#menu');if(!entries.length){closeMenu(false);return}menu.innerHTML=`<div class="menu-title">${esc(t?.name||(type==='ammo'?'空弹药槽':labels[s?.kind]+' · 空槽'))}</div>`;for(const [label,fn,enabled=true,cls=''] of entries){const b=document.createElement('button');b.type='button';b.role='menuitem';const checked=label.startsWith('✓ '),text=checked?label.slice(2):label;b.setAttribute('aria-label',text);b.innerHTML=menuIcon(text)+`<span class="menu-action-label">${esc(text)}</span>${checked?'<svg class="menu-selected-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>':''}`;if(checked)b.setAttribute('aria-current','true');b.disabled=!enabled;b.className=cls;b.onclick=()=>{closeMenu();fn()};menu.append(b)}menu.hidden=false;const r=menuOrigin.getBoundingClientRect();const x=e.type==='keydown'?r.left:e.clientX,y=e.type==='keydown'?r.bottom:e.clientY;menu.style.left=Math.max(8,Math.min(x,innerWidth-menu.offsetWidth-8))+'px';menu.style.top=Math.max(8,Math.min(y,innerHeight-menu.offsetHeight-8))+'px';menu.querySelector('button:not(:disabled)')?.focus({preventScroll:true});}
 document.addEventListener('fitlab-loadout-menu',event=>{
- const {event:e,item,origin,entries,header,showDetails=true}=event.detail;menuOrigin=origin;
+ const {event:e,item,origin,entries,header,showDetails=true,planContext}=event.detail;menuOrigin=origin;
  const menu=$('#menu');menu.innerHTML='<div class="menu-title">'+esc(item.name)+'</div>';
  if(header)menu.querySelector('.menu-title').replaceWith(header);
- const actions=[...entries,...(showDetails?[['详细信息',()=>showInfo({...item,kind:'loadout',path:['脑插与增效剂',...(item.benefitLabels||[])],attrs:{}})]]:[])];
+ const actions=[...entries,...(showDetails?[['详细信息',()=>showInfo({...item,planContext,kind:'loadout',path:['脑插与增效剂',...(item.benefitLabels||[])],attrs:{}})]]:[])];
  for(const [label,fn,options={}] of actions){const b=document.createElement('button');b.type='button';b.role='menuitem';b.disabled=!!options.disabled;b.title=options.title||'';b.setAttribute('aria-label',label);b.innerHTML=menuIcon(label==='详细信息'?'查看信息':label==='卸下'?'卸载装备':label)+'<span class="menu-action-label">'+esc(label)+'</span>';if(options.description){const small=document.createElement('small');small.className='set-action-summary';small.textContent=options.description;b.append(small);}if(label==='卸下')b.className='danger';b.onclick=()=>{closeMenu();fn()};menu.append(b);}
  menu.hidden=false;const r=origin.getBoundingClientRect(),keyboard=e.type==='keydown';menu.style.left=Math.max(8,Math.min(keyboard?r.left:e.clientX,innerWidth-menu.offsetWidth-8))+'px';menu.style.top=Math.max(8,Math.min(keyboard?r.bottom:e.clientY,innerHeight-menu.offsetHeight-8))+'px';menu.querySelector('button:not(:disabled)')?.focus({preventScroll:true});
 });
