@@ -1,3 +1,4 @@
+import {effectiveModuleState} from './module-state.js';
 import {withoutScenario} from './scenario-presets.js';
 import {OFFICIAL_SITE_URL,OFFICIAL_SITE_HOST} from './site-config.js';
 import {t,getLocale,gameName,translateFor} from './i18n.js';
@@ -9,7 +10,7 @@ const number=v=>Number.isFinite(v)?v.toLocaleString(getLocale(),{maximumFraction
 const state=s=>s.state||(s.online===false?'Offline':'Online');
 const stateName=s=>({Offline:'离线',Online:'在线',Active:'启动',Overload:'超载'})[state(s)]||state(s);
 export function shareGroups(fit,byId,options){
- fit={...fit,slots:(fit.slots||[]).map(s=>({...s,state:s.state||(s.online===false?'Offline':byId(s.item)?.canActivate?'Active':'Online')}))};
+ fit={...fit,slots:(fit.slots||[]).map(s=>({...s,state:effectiveModuleState(s,byId(s.item))}))};
  const groups=[];
  for(const [kind,label] of Object.entries({subsystem:'子系统',high:'高槽',mid:'中槽',low:'低槽',rig:'改装件'})){
   const rows=new Map();for(const s of fit.slots||[]){if(s.kind!==kind||!s.item)continue;const key=JSON.stringify([s.item,s.ammo,state(s)]);const old=rows.get(key);if(old)old.quantity++;else rows.set(key,{id:s.item,ammo:s.ammo,key:s.key,quantity:1,title:byId(s.item)?.name||String(s.item),note:(byId(s.item)?.canActivate?stateName(s):(state(s)==='Offline'?'离线':'被动'))+(s.ammo?' · '+(byId(s.ammo)?.name||s.ammo):'')});}

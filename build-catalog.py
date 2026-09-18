@@ -16,7 +16,9 @@ for t in read('types'):
  if not kind:continue
  if kind in ['high','mid','low','rig'] and category!=7:continue
  path=marketpath(t.get('marketGroupID'));names=[x['name'].get('zh',x['name']['en']) for x in path]
- out.append(dict(id=t['_key'],name=t['name'].get('zh',t['name']['en']),en=t['name']['en'],group=t['groupID'],kind=kind,meta=metas.get(t.get('metaGroupID',1),'科技 I'),path=names or ['未列入市场'],capacity=t.get('capacity'),volume=t.get('volume'),attrs=attrs,effects=effects,canActivate=any(effect_categories.get(e) in [1,2,3] for e in effects),canOverload=any(effect_categories.get(e)==5 for e in effects)))
+ defaults=[e for e in d.get('dogmaEffects',[]) if e.get('isDefault')]
+ active=len(defaults)==1 and effect_categories.get(defaults[0]['effectID']) in [1,2,3]
+ out.append(dict(id=t['_key'],name=t['name'].get('zh',t['name']['en']),en=t['name']['en'],group=t['groupID'],kind=kind,meta=metas.get(t.get('metaGroupID',1),'科技 I'),path=names or ['未列入市场'],capacity=t.get('capacity'),volume=t.get('volume'),attrs=attrs,effects=effects,canActivate=active,canOverload=active and any(effect_categories.get(e)==5 for e in effects)))
  for i,g in enumerate(path):
   icon=g.get('iconID');src=Path(r'D:/IT/EVE/EdenOsRewrite/src/hosts/web/EdenOS.Hosts.Web/wwwroot/assets/market-icons')/f'{icon}.png'
   if src.exists():

@@ -22,6 +22,28 @@ def index_metadata():
     data['source']={'buildNumber':manifest['source']['buildNumber'],'indexSha256':manifest['indexSha256'],'archiveSha256':manifest['source']['sha256'],'sourceUrl':manifest['source']['sourceUrl'],'releaseDate':manifest['source']['releaseDate'],'scope':'source_metadata_not_gameplay_coverage','navigation':'legacy-market-tree-or-pinned-category-group'}
     return data
 
+@lru_cache(maxsize=None)
+def activation_capabilities(type_id):
+    data=index_metadata()
+    references=data['typeDogma'].get(type_id,{}).get('dogmaEffects',[])
+    defaults=[r for r in references if r.get('isDefault')]
+    default=defaults[0] if len(defaults)==1 else None
+    effect=data['dogmaEffects'].get(default['effectID'],{}) if default else {}
+    active=bool(default and effect.get('effectCategoryID') in (1,2,3))
+    return {'canActivate':active,'canOverload':active and any(data['dogmaEffects'].get(r['effectID'],{}).get('effectCategoryID')==5 for r in references),
+        'activationEffectId':default['effectID'] if active else None,
+        'activationSource':'unique_default_effect_category_not_online_effect'}
+
+
+def effective_module_state(slot):
+    capability=activation_capabilities(slot.get('item'))
+    state=slot.get('state') or ('Offline' if slot.get('online') is False else 'Active' if capability['canActivate'] else 'Online')
+    if state not in ('Offline','Online','Active','Overload'):raise ValueError('无效装备状态')
+    # Old FitLab catalogs treated non-default online effect 16 as activation.
+    if state=='Active' and not capability['canActivate']:return 'Online'
+    return state
+
+
 def catalog_kind(category,effects):
     if category in {6,8,16,18,32}:return {6:'ship',8:'ammo',16:'skill',18:'drone',32:'subsystem'}[category]
     if category==7:
@@ -54,8 +76,7 @@ def refresh_catalog(catalog):
             'path':path,'marketGroupId':t.get('marketGroupID'),
             'navigationSource':'fitlab-market-tree-sde-3248221' if old.get('path') else 'pinned-category-group',
             'metadataSource':{'typeId':ident,'table':'types','dogmaTable':'typeDogma','buildNumber':data['source']['buildNumber'],'indexSha256':data['source']['indexSha256']},
-            'canActivate':any(data['dogmaEffects'].get(e,{}).get('effectCategoryID') in (1,2,3) for e in effects),
-            'canOverload':any(data['dogmaEffects'].get(e,{}).get('effectCategoryID')==5 for e in effects)})
+            **activation_capabilities(ident)})
     return result
 
 

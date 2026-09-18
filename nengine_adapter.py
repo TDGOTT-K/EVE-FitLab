@@ -2,6 +2,7 @@
 from functools import lru_cache
 import json
 from nengine_bridge import NEngineBridge
+from nengine_catalog import effective_module_state
 from nengine_output import METRICS, selected_ids, grouped_reading
 
 @lru_cache(maxsize=1)
@@ -13,14 +14,7 @@ def native_fit(f, build):
         if not s.get('item'): continue
         if s['kind']=='subsystem':
             subsystems.append({'id':s['key'],'typeId':s['item']}); continue
-        if s.get('state'): state=s['state']
-        elif not s.get('online',True): state='Offline'
-        else:
-            from nengine_catalog import index_metadata
-            metadata=index_metadata()
-            effects=metadata['typeDogma'].get(s['item'],{}).get('dogmaEffects',[])
-            active=any(metadata['dogmaEffects'].get(e['effectID'],{}).get('effectCategoryID') in (1,2,3) for e in effects)
-            state='Active' if active else 'Online'
+        state=effective_module_state(s)
         item={'id':s['key'],'typeId':s['item'],'chargeTypeId':s.get('ammo'),
               'slotIndex':int(s['key'].split('-')[-1]),'online':state!='Offline',
               'active':state in ('Active','Overload'),'overheated':state=='Overload'}
@@ -104,10 +98,11 @@ def analyze(f,target=None):
         projection[old+'Used']=r.get('used');projection[old+'Available']=r.get('capacity')
     # Existing slot rows consume this thin shape until they migrate to native traces.
     modules=[{'workspaceSlotKey':s['key'],'slotKind':s['kind'].capitalize(),
-        'dogmaTypeId':s['item'],'state':s.get('state','Online'),
+        'dogmaTypeId':s['item'],'state':effective_module_state(s),
         'cpuUsage':value('module.'+s['key']+'/50'),'powergridUsage':value('module.'+s['key']+'/30')}
         for s in f.get('slots',[]) if s.get('item')]
-    notices=[]
+    corrected=[s['key'] for s in f.get('slots',[]) if s.get('item') and s.get('state')=='Active' and effective_module_state(s)=='Online']
+    notices=['已修正被动装备的旧启用状态为在线：'+', '.join(corrected)] if corrected else []
     if a.get('droneBay'):
         projection['attributeSnapshot']['maxActiveDrones']=a['droneBay']['maximumActive']
     if f.get('activeScenarioId') or f.get('scenario'):

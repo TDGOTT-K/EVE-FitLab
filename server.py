@@ -82,6 +82,9 @@ def save_character(body,lib):
  lib['characters']=[x for x in lib['characters'] if x['id']!=c['id']]+[c];write_library(lib);return c
 
 def module_state(slot):
+ if os.environ.get('FITLAB_CALCULATOR','nengine')=='nengine':
+  from nengine_catalog import effective_module_state
+  return effective_module_state(slot)
  t=TYPES.get(slot.get('item'),{})
  return slot.get('state') or ('Offline' if slot.get('online') is False else 'Active' if t.get('canActivate') else 'Online')
 def validate_fit(f):
@@ -116,6 +119,8 @@ def validate_fit(f):
    if kind=='drones' and (TYPES[e['item']]['kind']!='drone' or type(e.get('active',0)) is not int or not 0<=e.get('active',0)<=e['quantity']):raise ValueError('无人机出动数量无效')
  for s in f.get('skills',[]):
   if s.get('skillTypeId') not in TYPES or TYPES[s['skillTypeId']]['kind']!='skill' or type(s.get('level')) is not int or not 0<=s['level']<=5:raise ValueError('技能等级或类型无效')
+ if os.environ.get('FITLAB_CALCULATOR','nengine')=='nengine':
+  return {**f,'slots':[{**v,'state':module_state(v),'online':module_state(v)!='Offline'} if v.get('item') else dict(v) for v in f['slots']]}
  return f
 def analyze(f,resolve_links=True):
  if os.environ.get("FITLAB_CALCULATOR", "nengine")=="nengine":

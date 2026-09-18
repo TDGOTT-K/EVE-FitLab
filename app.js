@@ -1,3 +1,4 @@
+import {effectiveModuleState} from './module-state.js';
 import {detachUnmatchedCrystals,exchangeCrystalSlots,mountCrystal,crystalProjection,crystalWearText,crystalErrorText} from './crystal-stock.js';
 import {mountNativeStats,nativeResources,nativeSlotMetrics} from './nengine-view.js';
 import {fighterHull,mountFighters,drawFighterBrowser} from './fighter-ui.js';
@@ -50,7 +51,7 @@ function abyssalItem(record){const type=byId(record.resultTypeId);return type&&r
 const acceptsAmmo=(mod,ammo)=>mod&&ammo?.kind==='ammo'&&[604,605,606,609,610].some(a=>mod.attrs[a]===ammo.group)&&(!mod.attrs['128']||mod.attrs['128']===ammo.attrs['128']);
 const needsAmmo=mod=>mod&&[604,605,606,609,610].some(a=>mod.attrs[a]);
 function say(text){$('#message').textContent=text}
-function currentFit(){return {...fitRecord,shipId:ship.id,slots:structuredClone(slots)}}
+function currentFit(){return {...fitRecord,shipId:ship.id,slots:structuredClone(slots).map(s=>s.item?{...s,state:moduleState(s),online:moduleState(s)!=='Offline'}:s)}}
 function save(){try{localStorage.setItem('fitlab-working-draft',JSON.stringify(currentFit()));$('#save').textContent='草稿已保留 · 待保存到装配库'}catch{$('#save').textContent='草稿存储失败，请保存装配'}scheduleAnalysis()}
 function mutate(fn,msg){cancelInstallPreview();redoHistory=[];$('#redo').disabled=true;history.push(editSnapshot());if(history.length>30)history.shift();fn();const detached=detachUnmatchedCrystals({...fitRecord,slots});if(detached)msg+=' · 晶体已移至货舱';if(filter?.ammo&&!needsAmmo(byId(slots.find(s=>s.key===filter.key)?.item)))filter=null;save();renderSlots();renderResources();renderShipStats();renderTree();$('#undo').disabled=false;say(msg)}
 function undo(){cancelInstallPreview();if(!history.length)return;redoHistory.push(editSnapshot());applyEditSnapshot(history.pop());$('#redo').disabled=false;filter=null;save();renderSlots();renderResources();renderShipStats();renderTree();$('#undo').disabled=!history.length;say('已撤销最近一次操作')}
@@ -60,7 +61,7 @@ $('#redo').onclick=redo;
 $('#undo').onclick=undo;
 function toggleFilter(key,ammo=false){cancelInstallPreview();filter=filter?.key===key&&filter.ammo===ammo?null:{key,ammo};renderSlots();renderTree()}
 const stateLabels={Offline:'离线',Online:'关闭',Active:'启用',Overload:'超载'};
-function moduleState(s){return s.state||(s.online===false?'Offline':byId(s.item)?.canActivate?'Active':'Online')}
+function moduleState(s){return effectiveModuleState(s,byId(s.item))}
 function changeModuleState(key,state){const s=slots.find(s=>s.key===key);mutate(()=>{s.state=state;s.online=state!=='Offline'},'装备状态：'+stateLabels[state])}
 function slotMetrics(s,group='details',displayReport=report){
  if(displayReport?.provider==='nengine')return reportVersion===analysisVersion?nativeSlotMetrics(displayReport,s,group):'';

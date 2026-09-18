@@ -25,3 +25,13 @@ const many=await encodeFitCodes({...source,notes:longNotes},{notes:true});assert
 const raw=packFit(source,{notes:true});assert.throws(()=>unpackFit(raw.slice(0,-1)));assert.throws(()=>unpackFit(Uint8Array.from([...raw,0])),/尾部/);assert.throws(()=>unpackFit(Uint8Array.of(255,255,255,255,255)),/溢出|无效/);
 assert.equal(parseCode('EVFB:AAAA'),null);
 console.log('EVF2: legacy compatibility, multipart, reordering, duplicates, truncation and overflow passed');
+// Old image payloads must recover with the corrected runtime catalog.
+const correctedCatalog=catalog.map(t=>t.id===10190?{...t,canActivate:false,canOverload:false}:t);
+const oldPassive={...source,slots:[{key:'low-0',kind:'low',item:10190,ammo:null,state:'Active',online:true}]};
+for(const encode of [encodeFitCodes,encodeLegacyFitCodes]){
+ const imported=await decodeFitCodes(await encode(oldPassive,{}),correctedCatalog);
+ assert.equal(imported.slots[0].state,'Online');
+ const offline=await decodeFitCodes(await encode({...oldPassive,slots:[{...oldPassive.slots[0],state:'Offline',online:false}]},{}),correctedCatalog);
+ assert.equal(offline.slots[0].state,'Offline');
+}
+console.log('Passive state: legacy/modern image repair and offline preservation passed');
