@@ -276,6 +276,12 @@ class Handler(SimpleHTTPRequestHandler):
     with LOCK:
      directory,backup=storage_location.migrate(STATE,body.get('directory'));STATE=directory
     return self.reply({'directory':str(directory),'backup':str(backup) if backup else None})
+   if self.path.startswith('/api/native-session/'):
+    from nengine_sessions import request
+    from nengine_bridge import NEngineError
+    try:return self.reply(request(self.path.removeprefix('/api/native-session/'),body))
+    except NEngineError as error:
+     return self.reply(error.payload,409 if error.error.get('code') in ('STALE_REVISION','REQUEST_CONFLICT') else 400)
    if self.path=='/api/fit-valuation':
     from nengine_valuation import value_fit
     return self.reply(value_fit(body['fit']))

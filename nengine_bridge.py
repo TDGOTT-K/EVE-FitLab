@@ -1,6 +1,6 @@
 """FitLab-owned, serialized MCP client for the pinned, independent NEngine copy.
 
-No battle tools are exposed. Engine source and engine-owned state are never edited.
+No battle tools are exposed. Durable state is modified only through engine tools.
 """
 import atexit
 import json
@@ -11,6 +11,13 @@ import subprocess
 import threading
 
 DEFAULT_ROOT = Path(__file__).resolve().parent.parent / 'N号引擎-UI接入-0.190-r33'
+
+class NEngineError(ValueError):
+    """Keep the engine diagnostic intact for transaction conflict handling."""
+    def __init__(self,payload):
+        self.payload=payload
+        self.error=payload.get('error',{})
+        super().__init__(json.dumps(payload,ensure_ascii=False))
 
 class NEngineBridge:
     def __init__(self, root=None, state=None):
@@ -79,7 +86,7 @@ class NEngineBridge:
             return reply['result']
 
     def call(self, name, arguments=None):
-        if name not in {'engine_status','catalog_search','catalog_item','catalog_type_details','catalog_variants','fit_analyze','fit_valuation','fit_output_curves','fit_attributes','mutation_rule','mutation_roll','booster_plan_analyze','booster_plan_roll','booster_plan_verify','capacitor_scenario'}:
+        if name not in {'fit_create','fit_inspect','fit_preview','fit_execute','fit_export','fit_import','engine_status','catalog_search','catalog_item','catalog_type_details','catalog_variants','fit_analyze','fit_valuation','fit_output_curves','fit_attributes','mutation_rule','mutation_roll','booster_plan_analyze','booster_plan_roll','booster_plan_verify','capacitor_scenario'}:
             raise ValueError('此适配层只开放静态装配和目录查询')
         with self.lock:
             self._start()
@@ -89,7 +96,7 @@ class NEngineBridge:
                 content='\n'.join(x.get('text','') for x in result.get('content',[]) if x.get('type')=='text')
                 try: payload=json.loads(content)
                 except json.JSONDecodeError: payload={'message':content}
-            if result.get('isError'): raise ValueError(json.dumps(payload,ensure_ascii=False))
+            if result.get('isError'): raise NEngineError(payload)
             return payload
 
     def discover(self):

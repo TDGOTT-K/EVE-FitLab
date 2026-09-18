@@ -147,3 +147,11 @@ NUI-40续：原生长图和实际PNG导入保存已完成，报告结果往返�
 本批已完成公开估价接入，原生事务、Windows打包及全量覆盖等仍待继续；不涉及战斗沙盒。引擎/UI分别提交，升级副本前须保留LOCAL-005查询与来源契约。
 
 LOCAL-005提交对应：引擎7b18749；UI 88291a3。用户验收项NUI-43，上游尚未合入。
+
+## NUI-44a：原生事务通道（基础接入，UI尚未切换）
+
+增加/api/native-session/create、import、inspect、preview、execute、export，只转发公开引擎对象；通过现有固定副本MCP持久化，宿主不直写引擎会话。NEngineError保留结构化code/details/issues；STALE_REVISION和REQUEST_CONFLICT转为HTTP409。无自动重试，无新请求ID替代失败事务，不开放战斗工具。
+
+test_native_sessions在临时状态目录验证创建、只读预览、提交hash、进程重连后的同请求重放、版本冲突、请求冲突、撤销、CLI重做、保存、导出和导入；CLI/MCP预览/检查/导出/重放结果一致。非法高槽7候选preview不可提交，apply拒绝且原会话完全不变。Python语法检查通过。未向用户库写测试数据。
+
+发现的集成边界：EveEditor.Create/Validate/Execute/Export要求静态覆盖完整，并拒绝非SKILL_REQUIRED错误；现有UI允许不完整草稿。尚不能直接替换本地history或/api/save，否则改变现有草稿能力。后续需明确持久化草稿与游戏准入的界限、分析条件与编辑分离、UI元数据存储和并发保存，完成后才切UI。此条不代表事务功能用户验收完成。引擎仍r38，无引擎源码改动，无新增机制。
