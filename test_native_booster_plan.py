@@ -9,6 +9,20 @@ class BoosterPlans(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):bridge().close()
 
+    def test_implant_only_attributes_cli_mcp(self):
+        body={'implants':[{'typeId':27147,'slot':10}],'boosters':[],
+              'pilot':{'name':'Implant QA','skills':[{'skillTypeId':3411,'level':5}]}}
+        response=analyze_plan(body);analysis=response['analysis']
+        self.assertTrue(analysis['projectionComplete'])
+        self.assertTrue(any(k.startswith('implant.implants-10/') for k in analysis['attributes']))
+        self.assertFalse(any(k.startswith('ship/') for k in analysis['attributes']))
+        b=bridge()
+        with tempfile.TemporaryDirectory() as directory:
+            p=Path(directory);(p/'plan.json').write_text(json.dumps(response['nativePlan']),encoding='utf-8')
+            subprocess.run([str(b.root/'.tools/dotnet/dotnet.exe'),str(b.root/'src/NEngine.Cli/bin/Debug/net10.0/NEngine.Cli.dll'),
+                'sde-booster-plan','--data',str(b.root/b.baseline['dataDirectory']),'--plan',str(p/'plan.json'),'--out',str(p/'result.json')],check=True,capture_output=True)
+            self.assertEqual(json.loads((p/'result.json').read_text(encoding='utf-8-sig')),analysis)
+
     def plan(self):return {'name':'test','implants':[],'boosters':[{'slot':1,'typeId':9950,'enabledSideEffects':[]}], 'seed':123}
 
     def test_native_roll_replay_storage_and_cli(self):
@@ -43,3 +57,4 @@ class BoosterPlans(unittest.TestCase):
 
 
 if __name__=='__main__':unittest.main()
+
