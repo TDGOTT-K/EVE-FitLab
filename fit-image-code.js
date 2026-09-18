@@ -1,3 +1,4 @@
+import {shareFitExtension,applyShareFitExtension} from './share-fit-extension.js';
 import {effectiveModuleState} from './module-state.js';
 import {packFit,unpackFit} from './fit-binary.js';
 import {QRCode,jsQR} from './qr-vendor.js';
@@ -14,27 +15,28 @@ export async function encodeLegacyFitCodes(fit,options={}){
 }
 // Base64 is only an in-memory transport key; QR receives raw binary bytes.
 export async function encodeFitCodes(fit,options={}){
- const raw=packFit(fit,options),zipped=await streamBytes(new Blob([raw]).stream().pipeThrough(new CompressionStream('gzip')),24000);
+ const raw=new TextEncoder().encode(JSON.stringify({base:encode64(packFit(fit,options)),extra:shareFitExtension(fit,options)}));if(raw.length>200000)throw Error('装配数据过大');const zipped=await streamBytes(new Blob([raw]).stream().pipeThrough(new CompressionStream('gzip')),24000);
  const compressed=zipped.length<raw.length,body=compressed?zipped:raw,hash=decodeHex(await digest(body));const total=Math.ceil(body.length/600);if(total>16)throw Error('装配码超过 16 张，请缩短备注');
- return Array.from({length:total},(_,i)=>{const part=body.slice(i*600,(i+1)*600),packet=new Uint8Array(39+part.length);packet.set([69,86,70,50,compressed?1:0,i+1,total]);packet.set(hash,7);packet.set(part,39);return 'EVFB:'+encode64(packet)});
+ return Array.from({length:total},(_,i)=>{const part=body.slice(i*600,(i+1)*600),packet=new Uint8Array(39+part.length);packet.set([69,86,70,51,compressed?1:0,i+1,total]);packet.set(hash,7);packet.set(part,39);return 'EVFB:'+encode64(packet)});
 }
 const decodeHex=s=>Uint8Array.from(s.match(/../g),b=>parseInt(b,16));
-export function qrResultCode(result){const b=result.binaryData;if(b?.length>=39&&b[0]===69&&b[1]===86&&b[2]===70&&b[3]===50)return 'EVFB:'+encode64(Uint8Array.from(b));return result.data;}
-export function parseCode(text){if(typeof text!=='string')return null;if(text.startsWith('EVFB:')){try{if(text.length>1000)return null;const b=decode64(text.slice(5));if(b.length<40||b.length>639||b[0]!==69||b[1]!==86||b[2]!==70||b[3]!==50||b[4]>1||b[5]<1||b[5]>b[6]||b[6]>16)return null;return {version:2,compressed:b[4]===1,hash:[...b.slice(7,39)].map(n=>n.toString(16).padStart(2,'0')).join(''),index:b[5],total:b[6],data:encode64(b.slice(39))}}catch{return null}}const m=/^EVFL1:([a-f0-9]{64}):(\d{1,2}):(\d{1,2}):([A-Za-z0-9+/=]{1,950})$/.exec(text);if(!m)return null;const index=+m[2],total=+m[3];if(index<1||index>total||total>16)return null;return {hash:m[1],index,total,data:m[4]}}
+export function qrResultCode(result){const b=result.binaryData;if(b?.length>=39&&b[0]===69&&b[1]===86&&b[2]===70&&(b[3]===50||b[3]===51))return 'EVFB:'+encode64(Uint8Array.from(b));return result.data;}
+export function parseCode(text){if(typeof text!=='string')return null;if(text.startsWith('EVFB:')){try{if(text.length>1000)return null;const b=decode64(text.slice(5));if(b.length<40||b.length>639||b[0]!==69||b[1]!==86||b[2]!==70||(b[3]!==50&&b[3]!==51)||b[4]>1||b[5]<1||b[5]>b[6]||b[6]>16)return null;return {version:b[3]===51?3:2,compressed:b[4]===1,hash:[...b.slice(7,39)].map(n=>n.toString(16).padStart(2,'0')).join(''),index:b[5],total:b[6],data:encode64(b.slice(39))}}catch{return null}}const m=/^EVFL1:([a-f0-9]{64}):(\d{1,2}):(\d{1,2}):([A-Za-z0-9+/=]{1,950})$/.exec(text);if(!m)return null;const index=+m[2],total=+m[3];if(index<1||index>total||total>16)return null;return {hash:m[1],index,total,data:m[4]}}
 export async function decodeFitCodes(codes,catalog){
  const parts=codes.map(parseCode).filter(Boolean);if(!parts.length)throw Error('没有识别到 EVE FitLab 装配码；旧版图片不含可导入数据');const {hash,total}=parts[0];if(parts.some(p=>p.hash!==hash||p.total!==total||p.version!==parts[0].version||p.compressed!==parts[0].compressed))throw Error('图片中包含不同装配，请分别导入');const map=new Map();for(const p of parts){if(map.has(p.index)&&map.get(p.index)!==p.data)throw Error('二维码数据冲突');map.set(p.index,p.data)}if(map.size!==total)throw Error(`装配码不完整：已读取 ${map.size}/${total} 张。请补充包含其余二维码的图片`);
  let bytes;
- if(parts[0].version===2){const chunks=Array.from({length:total},(_,i)=>decode64(map.get(i+1)));bytes=new Uint8Array(chunks.reduce((n,c)=>n+c.length,0));let at=0;for(const c of chunks){bytes.set(c,at);at+=c.length}}
+ if(parts[0].version>=2){const chunks=Array.from({length:total},(_,i)=>decode64(map.get(i+1)));bytes=new Uint8Array(chunks.reduce((n,c)=>n+c.length,0));let at=0;for(const c of chunks){bytes.set(c,at);at+=c.length}}
  else bytes=decode64(Array.from({length:total},(_,i)=>map.get(i+1)).join(''));
  if(await digest(bytes)!==hash)throw Error('二维码校验失败，请使用更清晰的图片');
- const raw=parts[0].version===2&&!parts[0].compressed?bytes:await streamBytes(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip')),200000);
- const p=parts[0].version===2?unpackFit(raw):JSON.parse(new TextDecoder().decode(raw));if(p.v!==1)throw Error('不支持此分享版本');
+ const raw=parts[0].version>=2&&!parts[0].compressed?bytes:await streamBytes(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip')),200000);
+ const extension=parts[0].version===3?JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(raw)):null;
+ const p=extension?unpackFit(decode64(extension.base)):parts[0].version===2?unpackFit(raw):JSON.parse(new TextDecoder().decode(raw));if(p.v!==1)throw Error('不支持此分享版本');
  if(p.skillGroups){if(!Array.isArray(p.skillGroups)||p.skillGroups.length>6)throw Error('技能分组无效');p.skills=[];for(const group of p.skillGroups){if(!Array.isArray(group)||!Array.isArray(group[1])||group[1].length>2000)throw Error('技能分组无效');let id=0;for(const delta of group[1]){if(!Number.isInteger(delta)||delta<0)throw Error('技能编码无效');id+=delta;p.skills.push([id,group[0]])}}}
  const types=new Map(catalog.map(t=>[t.id,t]));if(types.get(p.ship)?.kind!=='ship'||typeof p.name!=='string'||!p.name.trim()||p.name.length>120)throw Error('装配名称或舰船无效');for(const [key,max] of [['slots',100],['drones',200],['cargo',200],['skills',2000]])if(!Array.isArray(p[key])||p[key].length>max||p[key].some(e=>!Array.isArray(e)))throw Error('装配数据结构无效');if(!Array.isArray(p.tags)||p.tags.length>100||p.tags.some(t=>typeof t!=='string'||t.length>120)||typeof p.notes!=='string'||p.notes.length>4000||typeof p.pilot!=='string'||p.pilot.length>200)throw Error('分享文字无效');
  const keys=new Set();const slots=p.slots.map(([key,item,ammo,state])=>{if(typeof key!=='string'||! /^(high|mid|low|rig|subsystem)-\d{1,3}$/.test(key)||keys.has(key))throw Error('槽位无效');keys.add(key);const kind=key.split('-')[0];if(item!==null&&types.get(item)?.kind!==kind||ammo!==null&&types.get(ammo)?.kind!=='ammo')throw Error('装备或弹药类型无效');state=effectiveModuleState({state,item},types.get(item));if(!['Active','Overload','Online','Offline'].includes(state))throw Error('装备状态无效');return {key,kind,item,ammo,state,online:state!=='Offline'}});
  const bay=(rows,drone)=>rows.map(([item,quantity,active=0])=>{if(!types.has(item)||drone&&types.get(item).kind!=='drone'||!Number.isInteger(quantity)||quantity<1||quantity>100000||!Number.isInteger(active)||active<0||active>quantity)throw Error('舱内物品无效');return {item,quantity,...(drone?{active}:{})}});
  const skills=p.skills.map(([skillTypeId,level])=>{if(types.get(skillTypeId)?.kind!=='skill'||!Number.isInteger(level)||level<0||level>5)throw Error('技能数据无效');return {skillTypeId,level}});
- return {shipId:p.ship,name:p.name,tags:p.tags,notes:p.notes,characterName:p.pilot||'分享图技能快照',slots,drones:bay(p.drones,true),cargo:bay(p.cargo,false),skills,scenario:{}};
+ const fit={shipId:p.ship,name:p.name,tags:p.tags,notes:p.notes,characterName:p.pilot||'分享图技能快照',slots,drones:bay(p.drones,true),cargo:bay(p.cargo,false),skills,scenario:{}};return extension?applyShareFitExtension(fit,extension.extra):fit;
 }
 export async function qrCanvas(code){const canvas=document.createElement('canvas');await QRCode.toCanvas(canvas,code.startsWith('EVFB:')?[{data:decode64(code.slice(5)),mode:'byte'}]:code,{errorCorrectionLevel:'Q',margin:4,scale:8,color:{dark:'#000000',light:'#ffffff'}});return canvas}
 export async function scanFitImage(file){
