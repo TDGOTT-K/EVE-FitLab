@@ -4,7 +4,7 @@ import {mountNativeStats,nativeResources,nativeSlotMetrics} from './nengine-view
 import {fighterHull,mountFighters,drawFighterBrowser} from './fighter-ui.js';
 import {installAbyssalLibrary} from './abyssal-library.js';
 import {openLoadoutPicker} from './loadout-manager.js';
-import {implantCatalog} from './implant-catalog.js';
+import {implantCatalog} from './loadout-catalog.js';
 import {mountTacticalMode} from './tactical-mode.js';
 import {transferSlots} from './slot-transfer.js';
 import {installationLimitReason} from './installation-limits.js';

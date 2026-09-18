@@ -202,6 +202,9 @@ class Handler(SimpleHTTPRequestHandler):
    if self.path=='/api/engine-status':
     from nengine_adapter import bridge
     return self.reply({'provider':os.environ.get('FITLAB_CALCULATOR','nengine'),'status':bridge().discover()})
+   if self.path=='/api/loadout-catalog':
+    from nengine_loadout_catalog import loadout_catalog
+    return self.reply(loadout_catalog())
    if self.path=='/api/fighters':
     from nengine_adapter import fighter_catalog
     return self.reply(fighter_catalog())

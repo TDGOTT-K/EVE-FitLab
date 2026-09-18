@@ -2,7 +2,8 @@ import json,unittest
 from pathlib import Path
 
 def catalog(name):
- s=Path(name+'-catalog.js').read_text(encoding='utf-8');return json.loads(s[s.index('['):].rstrip(';\n'))
+ from nengine_loadout_catalog import loadout_catalog
+ return loadout_catalog()['implants' if name=='implant' else 'boosters']
 class Benefits(unittest.TestCase):
  def test_white_only_attributes(self):
   items=catalog('implant');white=[t for t in items if ['训练与其他','白板'] in t['benefitPaths']]

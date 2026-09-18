@@ -1,4 +1,4 @@
-import {implantCatalog} from './implant-catalog.js';
+import {implantCatalog} from './loadout-catalog.js';
 import {escapeHtml as esc} from './scenario-display.js';
 const catalog=implantCatalog.filter(t=>t.slot>=1&&t.slot<=10);
 const byId=id=>catalog.find(t=>t.id===id);

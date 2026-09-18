@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import {implantCatalog} from './implant-catalog.js';
+import {execFileSync} from 'node:child_process';
+const implantCatalog=JSON.parse(execFileSync('python',['-c','import json;from nengine_loadout_catalog import loadout_catalog;print(json.dumps(loadout_catalog()["implants"]))'],{encoding:'utf8',maxBuffer:8*1024*1024}));
 import {buildImplantSets,implantSetChanges,applyImplantSet,implantSetPreview} from './implant-sets.js';
 const {sets,byItem}=buildImplantSets(implantCatalog);
 const nirvana=sets.get('High-grade Nirvana'),snake=sets.get('High-grade Snake');assert(nirvana&&snake);

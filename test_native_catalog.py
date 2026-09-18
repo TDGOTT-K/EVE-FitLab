@@ -7,6 +7,30 @@ class NativeCatalog(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):bridge().close()
 
+    def test_pilot_catalog_public_coverage_and_booster_effects(self):
+        from nengine_loadout_catalog import loadout_catalog,description_text
+        from nengine_catalog import index_metadata
+        from nengine_booster_plan import analyze_plan
+        data=index_metadata();catalog=loadout_catalog();ids=set();cursor=None
+        while True:
+            page=bridge().call('catalog_search',{'query':{'categoryId':20,'limit':100,'cursor':cursor}})['result']
+            ids.update(row['typeId'] for row in page['items']);cursor=page['nextCursor']
+            if not cursor:break
+        expected=set()
+        for ident in ids:
+            attributes={r['attributeID']:r['value'] for r in data['typeDogma'].get(ident,{}).get('dogmaAttributes',[])}
+            if attributes.get(331,attributes.get(1087,0))>0:expected.add(ident)
+        self.assertEqual(expected,{row['id'] for kind in ('implants','boosters') for row in catalog[kind]})
+        for kind in ('implants','boosters'):
+            for row in catalog[kind]:
+                source=description_text(data['types'][row['id']].get('description',{}))
+                if source:
+                    for line in row['benefitTooltip'].splitlines():self.assertIn(line,source)
+        for ident in (9950,10151,3898):
+            row=next(t for t in catalog['boosters'] if t['id']==ident)
+            result=analyze_plan({'implants':[],'boosters':[{'typeId':ident,'slot':row['slot'],'enabledSideEffects':[]}]})['analysis']
+            self.assertEqual({r['id'] for r in row['sideEffects']},{r['effectId'] for r in result['boosters'][0]['sideEffects']})
+
     def test_loadout_details_match_public_metadata(self):
         from nengine_catalog import indexed_item,item_metadata
         b=bridge()
