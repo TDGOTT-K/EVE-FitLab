@@ -47,7 +47,7 @@ def native_fit(f, build):
                 'memberIds':[f'{ident}-{j}' for j in range(row['quantity'])],
                 'deployed':location=='tubes' and row.get('active',True)})
     if len(fighters)>200: raise ValueError('本适配层一次最多分析 200 个舰载机中队')
-    return {'id':f.get('id') or 'fitlab-draft','name':f.get('name'),'buildNumber':build,
+    result={'id':f.get('id') or 'fitlab-draft','name':f.get('name'),'buildNumber':build,
         'shipTypeId':f['shipId'],'omittedSkills':'untrained',
         'skills':{str(s['skillTypeId']):s['level'] for s in f.get('skills',[])},
         'tacticalModeTypeId':f.get('tacticalModeTypeId'),'items':items,'subsystems':subsystems,
@@ -55,6 +55,11 @@ def native_fit(f, build):
         'implants':[{'id':f'implant-{i}','typeId':x['typeId']} for i,x in enumerate(implants)],
         'boosters':[{'id':f'booster-{i}','typeId':x['typeId'],
             'enabledSideEffects':x.get('enabledSideEffects',[])} for i,x in enumerate(plan.get('boosters',[]))]}
+    if 'cargo' in f or any('loadedCharges' in s for s in f.get('slots',[])) or 'crystals' in f:
+        result['inventory']={'cargo':[{'id':e.get('id') or 'cargo-'+str(i),'typeId':e['item'],'quantity':e['quantity']} for i,e in enumerate(f.get('cargo',[]))],
+            'magazines':[{'moduleId':s['key'],'typeId':s['ammo'],'loaded':s['loadedCharges']} for s in f.get('slots',[]) if s.get('item') and s.get('ammo') and 'loadedCharges' in s],
+            'crystals':f.get('crystals',[])}
+    return result
 
 def analyze(f,target=None):
     client=bridge(); status=client.discover()
@@ -111,7 +116,7 @@ def analyze(f,target=None):
         if target is not None:notices.append('情景按画布相对速度作静态应用参考；拦截及飞行时序未计入；EDPS 为选定固定层期望，不模拟层间推进。')
     if f.get('fighterUiMock') and not f.get('fighterLoadout'):
         notices.append('原舰载机示例保留在草稿中，请重新选择真实型号；示例不参与计算。')
-    if f.get('cargo'): notices.append('本批尚未接入货舱库存校验。')
+    if 'inventory' in native:notices.append('静态库存已声明；未填写装弹量的模块仍为未知，不默认满弹或无限备弹。')
     issues=list(a['errors'])
     if not a['staticCoverageComplete']:
         issues.append({'code':'STATIC_COVERAGE_INCOMPLETE','message':'当前引擎副本未覆盖部分效果；分项是否可用以各自状态为准，完整装配尚未通过校验。'})

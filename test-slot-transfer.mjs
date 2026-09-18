@@ -11,3 +11,8 @@ assert.equal(transferSlots(slots,'a','b',false,(id,key)=>id===1),null); // rever
 const moved=transferSlots(slots,'a','c',false,compatible);assert.equal(moved[0].item,null);assert.equal(moved[2].state,'Offline');
 assert.deepEqual(swap.filter(s=>s.item).map(s=>s.item).sort(),slots.filter(s=>s.item).map(s=>s.item).sort()); // no new fitted modules at full limits
 console.log('Slot transfer cases passed');
+const withCounts=structuredClone(slots);withCounts[0].loadedCharges=0;withCounts[1].loadedCharges=17;
+const swappedCounts=transferSlots(withCounts,'a','b',true,compatible);
+assert.equal(swappedCounts[0].loadedCharges,17);assert.equal(swappedCounts[1].loadedCharges,0);
+const unknownCounts=transferSlots(withCounts,'a','c',true,compatible);
+assert.equal(unknownCounts[2].loadedCharges,0);assert.equal('loadedCharges' in unknownCounts[0],false);
