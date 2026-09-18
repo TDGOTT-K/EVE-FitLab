@@ -591,3 +591,5 @@ label:has(>input[type="checkbox"]:disabled){cursor:default;color:var(--muted)}
 
 /* Native mutation bands: numerical order, independent of benefit direction. */
 .mutation-range{background:#211c24}.mutation-allowed{position:absolute;top:0;height:100%;background:#97635788;border-radius:2px}.mutation-baseline{z-index:1}.abyssal-instance[draggable=true]{cursor:grab}
+
+.mutation-plasmid-icon{width:44px;height:44px;flex:none;object-fit:contain}
