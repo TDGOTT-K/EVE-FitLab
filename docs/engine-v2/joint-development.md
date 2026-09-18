@@ -183,3 +183,5 @@ LOCAL-006提交对应：引擎2129773；UI 7490e6a。
 验证29项引擎编辑/舰载机专项、3项契约通过；UI新专项验证普通舰船→夜神及逆向的MCP/CLI完整结果一致，机库缺失为null、CPU真实0为available，baselineAnalysis与独立fit_analyze一致。无新增游戏机制、无全量/Windows打包。
 
 原生UI会话控制器/保存仍未完成，这次先排除了接入会导致的缺值冒充0问题。上游移交登记LOCAL-007，旧r39冻结契约保留。
+
+LOCAL-007提交对应：引擎dbb3fb4；UI 1f94c3c。
