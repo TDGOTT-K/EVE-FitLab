@@ -245,3 +245,13 @@ LOCAL-007提交对应：引擎dbb3fb4；UI 1f94c3c。
 统一检查入口 python scripts/check-phase1.py，在临时数据目录执行并逐命令保存日志。output/phase1-gate-20260918T162557Z/result.json：84 项 Python 测试、10 个 JS 专项、61 模块检查全部通过，releaseReady 明确为 false。随后扩展跨来源属性/估价/预览检查并单独重跑 source_binding 和空值显示专项通过。旧 integration 测试写死 0.190.1-ui.1，修正为核对当前固定基线并增加接口 revision 检查，不放宽源校验。
 
 实际 5208 页面显示“装配合法 · 当前结果完整”，原赫卡特 468.3 DPS 不变；仅临时只读标签，无用户装配修改。未改引擎，无新增上游引擎补丁；未重打包或对外发布。
+
+## NUI-50：第一阶段引擎专项审计（只读）
+
+当前独立副本 0.190.8-ui.1/r41、规则 v54、SDE3503375；未检查或修改主引擎/历史副本。使用511项当前技能V，17种装备各在线/主动共34个原生fit_analyze查询，另2个错误槽位查询。17个主动案例及2个槽位案例CLI完整结果/错误对象与MCP一致。
+
+确认3项引擎P0：零速度模式导致EVE_MOTION_PARAMETERS整份分析失败；特殊主动模块因电容效果元数据要求导致EVE_CAPACITOR_EFFECT整份失败；未知主动效果提前返回导致资源全空，甚至已知SLOT_UNAVAILABLE错误消失。详见phase1-engine-audit-r41.md，附请求、回执、源码定位、验收条件。未将运行时采矿/骇客等机制列为必做，也不靠把未知值补0规避问题。没有新确认的公开接口缺失；已有LOCAL补丁不得重复报缺。
+
+证据包output/phase1-engine-audit-r41.zip（3,862,662字节，SHA256 b86781409c3658d934eef87e9731e2dc5b503e1c41a57ec57d64a057bef124ab）；精简证据归档evidence/phase1-r41-summary.json；复现脚本scripts/audit-phase1-engine.py。本批无运行时代码或引擎更改，不向其他任务发送消息。17类并非全目录/全组合穷尽证明；可以立即把3项确认问题交给引擎冲刺。
+
+补记用户最新关卡：技术能力闭环之后，用户还要亲自主导UI重构和交互设计，完成验收后才能准备发布。技术检查不代表产品发布资格。

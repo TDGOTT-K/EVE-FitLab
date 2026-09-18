@@ -1,0 +1,565 @@
+{
+  "engineVersion": "0.190.8-ui.1",
+  "revision": 41,
+  "engineCommit": "3b02db6a36572501ebe4e6bdf18f2142d6a846cb",
+  "skills": 511,
+  "cases": [
+    {
+      "case": "33400-online",
+      "name": "Bastion Module I",
+      "hull": "Paladin",
+      "active": false,
+      "coverage": true,
+      "unsupported": [],
+      "errors": [],
+      "resources": 6,
+      "attributes": 5837
+    },
+    {
+      "case": "33400-active",
+      "name": "Bastion Module I",
+      "hull": "Paladin",
+      "active": true,
+      "error": {
+        "code": "EVE_CAPACITOR_EFFECT",
+        "message": "module-1 lacks verified activation timing or discharge metadata.",
+        "details": null,
+        "issues": null
+      }
+    },
+    {
+      "case": "20280-online",
+      "name": "Siege Module I",
+      "hull": "Revelation",
+      "active": false,
+      "coverage": true,
+      "unsupported": [],
+      "errors": [],
+      "resources": 6,
+      "attributes": 5839
+    },
+    {
+      "case": "20280-active",
+      "name": "Siege Module I",
+      "hull": "Revelation",
+      "active": true,
+      "error": {
+        "code": "EVE_MOTION_PARAMETERS",
+        "message": "Explicit finite positive mass, inertia and speed required for the from-rest percentage threshold.",
+        "details": null,
+        "issues": null
+      }
+    },
+    {
+      "case": "28583-online",
+      "name": "Capital Industrial Core I",
+      "hull": "Rorqual",
+      "active": false,
+      "coverage": true,
+      "unsupported": [],
+      "errors": [],
+      "resources": 6,
+      "attributes": 5852
+    },
+    {
+      "case": "28583-active",
+      "name": "Capital Industrial Core I",
+      "hull": "Rorqual",
+      "active": true,
+      "error": {
+        "code": "EVE_MOTION_PARAMETERS",
+        "message": "Explicit finite positive mass, inertia and speed required for the from-rest percentage threshold.",
+        "details": null,
+        "issues": null
+      }
+    },
+    {
+      "case": "42529-online",
+      "name": "Shield Command Burst I",
+      "hull": "Rorqual",
+      "active": false,
+      "coverage": true,
+      "unsupported": [],
+      "errors": [],
+      "resources": 6,
+      "attributes": 5855
+    },
+    {
+      "case": "42529-active",
+      "name": "Shield Command Burst I",
+      "hull": "Rorqual",
+      "active": true,
+      "coverage": false,
+      "unsupported": [
+        {
+          "sourceId": "module.module-1",
+          "effectId": 6733,
+          "name": "moduleBonusWarfareLinkShield",
+          "status": "unsupported_static",
+          "reason": "IMPERATIVE_EFFECT_ADAPTER_MISSING",
+          "matchedTargets": null
+        }
+      ],
+      "errors": [],
+      "resources": 0,
+      "attributes": 0
+    },
+    {
+      "case": "483-online",
+      "name": "Miner I",
+      "hull": "Rifter",
+      "active": false,
+      "coverage": true,
+      "unsupported": [],
+      "errors": [],
+      "resources": 6,
+      "attributes": 5804
+    },
+    {
+      "case": "483-active",
+      "name": "Miner I",
+      "hull": "Rifter",
+      "active": true,
+      "coverage": false,
+      "unsupported": [
+        {
+          "sourceId": "module.module-1",
+          "effectId": 67,
+          "name": "miningLaser",
+          "status": "unsupported_static",
+          "reason": "IMPERATIVE_EFFECT_ADAPTER_MISSING",
+          "matchedTargets": null
+        }
+      ],
+      "errors": [],
+      "resources": 0,
+      "attributes": 0
+    },
+    {
+      "case": "17482-online",
+      "name": "Strip Miner I",
+      "hull": "Retriever",
+      "active": false,
+      "coverage": true,
+      "unsupported": [],
+      "errors": [],
+      "resources": 6,
+      "attributes": 5815
+    },
+    {
+      "case": "17482-active",
+      "name": "Strip Miner I",
+      "hull": "Retriever",
+      "active": true,
+      "coverage": false,
+      "unsupported": [
+        {
+          "sourceId": "module.module-1",
+          "effectId": 67,
+          "name": "miningLaser",
+          "status": "unsupported_static",
+          "reason": "IMPERATIVE_EFFECT_ADAPTER_MISSING",
+          "matchedTargets": null
+        }
+      ],
+      "errors": [],
+      "resources": 0,
+      "attributes": 0
+    },
+    {
+      "case": "11370-online",
+      "name": "Prototype Cloaking Device I",
+      "hull": "Rifter",
+      "active": false,
+      "coverage": true,
+      "unsupported": [],
+      "errors": [],
+      "resources": 6,
+      "attributes": 5799
+    },
+    {
+      "case": "11370-active",
+      "name": "Prototype Cloaking Device I",
+      "hull": "Rifter",
+      "active": true,
+      "error": {
+        "code": "EVE_CAPACITOR_EFFECT",
+        "message": "module-1 lacks verified activation timing or discharge metadata.",
+        "details": null,
+        "issues": null
+      }
+    },
+    {
+      "case": "4383-online",
+      "name": "Large Micro Jump Drive",
+      "hull": "Raven",
+      "active": false,
+      "coverage": true,
+      "unsupported": [],
+      "errors": [],
+      "resources": 6,
+      "attributes": 5803
+    },
+    {
+      "case": "4383-active",
+      "name": "Large Micro Jump Drive",
+      "hull": "Raven",
+      "active": true,
+      "coverage": false,
+      "unsupported": [
+        {
+          "sourceId": "module.module-1",
+          "effectId": 4921,
+          "name": "microJumpDrive",
+          "status": "unsupported_static",
+          "reason": "IMPERATIVE_EFFECT_ADAPTER_MISSING",
+          "matchedTargets": null
+        }
+      ],
+      "errors": [],
+      "resources": 0,
+      "attributes": 0
+    },
+    {
+      "case": "27951-online",
+      "name": "Triage Module I",
+      "hull": "Apostle",
+      "active": false,
+      "coverage": true,
+      "unsupported": [],
+      "errors": [],
+      "resources": 6,
+      "attributes": 5843
+    },
+    {
+      "case": "27951-active",
+      "name": "Triage Module I",
+      "hull": "Apostle",
+      "active": true,
+      "error": {
+        "code": "EVE_MOTION_PARAMETERS",
+        "message": "Explicit finite positive mass, inertia and speed required for the from-rest percentage threshold.",
+        "details": null,
+        "issues": null
+      }
+    },
+    {
+      "case": "34593-online",
+      "name": "Entosis Link I",
+      "hull": "Rifter",
+      "active": false,
+      "coverage": true,
+      "unsupported": [],
+      "errors": [],
+      "resources": 6,
+      "attributes": 5811
+    },
+    {
+      "case": "34593-active",
+      "name": "Entosis Link I",
+      "hull": "Rifter",
+      "active": true,
+      "coverage": false,
+      "unsupported": [
+        {
+          "sourceId": "module.module-1",
+          "effectId": 6063,
+          "name": "entosisLink",
+          "status": "unsupported_static",
+          "reason": "IMPERATIVE_EFFECT_ADAPTER_MISSING",
+          "matchedTargets": null
+        }
+      ],
+      "errors": [],
+      "resources": 0,
+      "attributes": 0
+    },
+    {
+      "case": "22175-online",
+      "name": "Data Analyzer I",
+      "hull": "Rifter",
+      "active": false,
+      "coverage": true,
+      "unsupported": [],
+      "errors": [],
+      "resources": 6,
+      "attributes": 5802
+    },
+    {
+      "case": "22175-active",
+      "name": "Data Analyzer I",
+      "hull": "Rifter",
+      "active": true,
+      "coverage": false,
+      "unsupported": [
+        {
+          "sourceId": "module.module-1",
+          "effectId": 1738,
+          "name": "doHacking",
+          "status": "unsupported_static",
+          "reason": "IMPERATIVE_EFFECT_ADAPTER_MISSING",
+          "matchedTargets": null
+        }
+      ],
+      "errors": [],
+      "resources": 0,
+      "attributes": 0
+    },
+    {
+      "case": "22177-online",
+      "name": "Relic Analyzer I",
+      "hull": "Rifter",
+      "active": false,
+      "coverage": true,
+      "unsupported": [],
+      "errors": [],
+      "resources": 6,
+      "attributes": 5802
+    },
+    {
+      "case": "22177-active",
+      "name": "Relic Analyzer I",
+      "hull": "Rifter",
+      "active": true,
+      "coverage": false,
+      "unsupported": [
+        {
+          "sourceId": "module.module-1",
+          "effectId": 1738,
+          "name": "doHacking",
+          "status": "unsupported_static",
+          "reason": "IMPERATIVE_EFFECT_ADAPTER_MISSING",
+          "matchedTargets": null
+        }
+      ],
+      "errors": [],
+      "resources": 0,
+      "attributes": 0
+    },
+    {
+      "case": "17938-online",
+      "name": "Core Probe Launcher I",
+      "hull": "Rifter",
+      "active": false,
+      "coverage": true,
+      "unsupported": [],
+      "errors": [],
+      "resources": 6,
+      "attributes": 5806
+    },
+    {
+      "case": "17938-active",
+      "name": "Core Probe Launcher I",
+      "hull": "Rifter",
+      "active": true,
+      "coverage": true,
+      "unsupported": [],
+      "errors": [],
+      "resources": 6,
+      "attributes": 5806
+    },
+    {
+      "case": "19660-online",
+      "name": "Festival Launcher",
+      "hull": "Rifter",
+      "active": false,
+      "coverage": true,
+      "unsupported": [],
+      "errors": [],
+      "resources": 6,
+      "attributes": 5799
+    },
+    {
+      "case": "19660-active",
+      "name": "Festival Launcher",
+      "hull": "Rifter",
+      "active": true,
+      "coverage": true,
+      "unsupported": [],
+      "errors": [],
+      "resources": 6,
+      "attributes": 5800
+    },
+    {
+      "case": "23735-online",
+      "name": "Clone Vat Bay I",
+      "hull": "Rorqual",
+      "active": false,
+      "coverage": true,
+      "unsupported": [],
+      "errors": [],
+      "resources": 6,
+      "attributes": 5835
+    },
+    {
+      "case": "23735-active",
+      "name": "Clone Vat Bay I",
+      "hull": "Rorqual",
+      "active": true,
+      "error": {
+        "code": "EVE_CAPACITOR_EFFECT",
+        "message": "module-1 lacks verified activation timing or discharge metadata.",
+        "details": null,
+        "issues": null
+      }
+    },
+    {
+      "case": "25861-online",
+      "name": "Salvager I",
+      "hull": "Rifter",
+      "active": false,
+      "coverage": true,
+      "unsupported": [],
+      "errors": [],
+      "resources": 6,
+      "attributes": 5799
+    },
+    {
+      "case": "25861-active",
+      "name": "Salvager I",
+      "hull": "Rifter",
+      "active": true,
+      "coverage": false,
+      "unsupported": [
+        {
+          "sourceId": "module.module-1",
+          "effectId": 2757,
+          "name": "salvaging",
+          "status": "unsupported_static",
+          "reason": "IMPERATIVE_EFFECT_ADAPTER_MISSING",
+          "matchedTargets": null
+        }
+      ],
+      "errors": [],
+      "resources": 0,
+      "attributes": 0
+    },
+    {
+      "case": "28654-online",
+      "name": "Warp Disruption Field Generator I",
+      "hull": "Devoter",
+      "active": false,
+      "coverage": true,
+      "unsupported": [],
+      "errors": [],
+      "resources": 6,
+      "attributes": 5815
+    },
+    {
+      "case": "28654-active",
+      "name": "Warp Disruption Field Generator I",
+      "hull": "Devoter",
+      "active": true,
+      "coverage": true,
+      "unsupported": [],
+      "errors": [],
+      "resources": 6,
+      "attributes": 5816
+    }
+  ],
+  "cli": [
+    {
+      "case": "33400-active",
+      "exitCode": 2,
+      "sameAsMcp": true
+    },
+    {
+      "case": "20280-active",
+      "exitCode": 2,
+      "sameAsMcp": true
+    },
+    {
+      "case": "28583-active",
+      "exitCode": 2,
+      "sameAsMcp": true
+    },
+    {
+      "case": "42529-active",
+      "exitCode": 0,
+      "sameAsMcp": true
+    },
+    {
+      "case": "483-active",
+      "exitCode": 0,
+      "sameAsMcp": true
+    },
+    {
+      "case": "17482-active",
+      "exitCode": 0,
+      "sameAsMcp": true
+    },
+    {
+      "case": "11370-active",
+      "exitCode": 2,
+      "sameAsMcp": true
+    },
+    {
+      "case": "4383-active",
+      "exitCode": 0,
+      "sameAsMcp": true
+    },
+    {
+      "case": "27951-active",
+      "exitCode": 2,
+      "sameAsMcp": true
+    },
+    {
+      "case": "34593-active",
+      "exitCode": 0,
+      "sameAsMcp": true
+    },
+    {
+      "case": "22175-active",
+      "exitCode": 0,
+      "sameAsMcp": true
+    },
+    {
+      "case": "22177-active",
+      "exitCode": 0,
+      "sameAsMcp": true
+    },
+    {
+      "case": "17938-active",
+      "exitCode": 0,
+      "sameAsMcp": true
+    },
+    {
+      "case": "19660-active",
+      "exitCode": 0,
+      "sameAsMcp": true
+    },
+    {
+      "case": "23735-active",
+      "exitCode": 2,
+      "sameAsMcp": true
+    },
+    {
+      "case": "25861-active",
+      "exitCode": 0,
+      "sameAsMcp": true
+    },
+    {
+      "case": "28654-active",
+      "exitCode": 0,
+      "sameAsMcp": true
+    }
+  ],
+  "slotDiagnostics": [
+    {
+      "case": "483-online-slot7",
+      "errors": [
+        "SLOT_UNAVAILABLE"
+      ],
+      "resources": 6,
+      "sameAsMcp": true
+    },
+    {
+      "case": "483-active-slot7",
+      "errors": [],
+      "resources": 0,
+      "sameAsMcp": true
+    }
+  ],
+  "evidenceZip": "output/phase1-engine-audit-r41.zip",
+  "evidenceZipSha256": "b86781409c3658d934eef87e9731e2dc5b503e1c41a57ec57d64a057bef124ab"
+}
