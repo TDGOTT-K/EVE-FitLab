@@ -11,7 +11,7 @@ export function openScenarioEditor({fit,fits,shipName,calculate,onSave}){
  const icons={rename:'M4 16l-1 5 5-1L20 8l-4-4Z M14 6l4 4',new:'M12 4v16 M4 12h16',copy:'M8 8h12v12H8Z M16 8V4H4v12h4',delete:'M4 7h16 M9 7V4h6v3 M6 7l1 14h10l1-14 M10 11v6 M14 11v6'};
  for(const [key,path] of Object.entries(icons))dialog.querySelector('[data-'+key+']').innerHTML='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+path+'"/></svg>';
  document.body.append(dialog);const $=s=>dialog.querySelector(s),select=$('select'),status=$('[role=status]');
- function capture(){const item=state.scenarios.find(s=>s.id===state.activeScenarioId);if(!item||!form)return;const data=new FormData(form);item.name=$('[data-name]').value.trim()||'未命名情景';item.value={...item.value,...Object.fromEntries(['targetFitId','supportFitId','hostileFitId','targetLayer'].map(k=>[k,data.get(k)])),...Object.fromEntries(['supportDistance','hostileDistance'].map(k=>[k,Number(data.get(k))])),...plane.value(),targetHealth:controls.health()};}
+ function capture(){const item=state.scenarios.find(s=>s.id===state.activeScenarioId);if(!item||!form)return;const data=new FormData(form);item.name=$('[data-name]').value.trim()||'未命名情景';item.value={...item.value,...Object.fromEntries(['targetFitId','supportFitId','hostileFitId','targetLayer'].map(k=>[k,data.get(k)])),...Object.fromEntries(['supportDistance','hostileDistance'].map(k=>[k,Number(data.get(k))])),...Object.fromEntries(['ownCapacitorFraction','targetCapacitorGj','hostileCapacitorGj'].map(k=>[k,data.get(k)===''?null:Number(data.get(k))])),...plane.value(),targetHealth:controls.health()};}
  function changed(){dirty=true;status.classList.add('unsaved');status.setAttribute('aria-label','情景修改未保存');status.title='情景修改未保存';}
  function draw(){
   plane?.destroy();revision++;form=null;
@@ -19,14 +19,14 @@ export function openScenarioEditor({fit,fits,shipName,calculate,onSave}){
   const item=state.scenarios.find(s=>s.id===state.activeScenarioId);$('[data-copy]').disabled=$('[data-delete]').disabled=$('[data-rename]').disabled=!item;$('[data-name]').value=item?.name||'';$('[data-name]').hidden=true;select.hidden=false;
   if(!item){$('.scenario-editor-body').innerHTML='<div class="scenario-empty"><span class="scenario-empty-orbit" aria-hidden="true">＋</span><button type="button" data-create-empty>新建情景</button></div>';$('[data-create-empty]').onclick=()=>$('[data-new]').click();return;}
   const value=item.value;
-  $('.scenario-editor-body').innerHTML='<form>'+ ['targetFitId','supportFitId','hostileFitId','targetLayer','supportDistance','hostileDistance'].map(k=>'<input type="hidden" name="'+k+'" value="'+esc(value[k]??(k==='targetLayer'?'shield':k.endsWith('Distance')?10000:''))+'">').join('')+'<div class="scenario-map"></div></form>';
+  $('.scenario-editor-body').innerHTML='<form>'+ ['targetFitId','supportFitId','hostileFitId','targetLayer','supportDistance','hostileDistance','ownCapacitorFraction','targetCapacitorGj','hostileCapacitorGj'].map(k=>'<input type="hidden" name="'+k+'" value="'+esc(value[k]??(k==='ownCapacitorFraction'?1:k==='targetLayer'?'shield':k.endsWith('Distance')?10000:''))+'">').join('')+'<div class="scenario-map"></div></form>';
   form=$('form');form.onsubmit=e=>e.preventDefault();form.oninput=changed;
   const root=$('.scenario-map');plane=mountTargetPlane(root,value);const currentPlane=plane;
   async function speedLimit(){const request=++revision,id=form.elements.targetFitId.value;currentPlane.setSpeedLimit(null,id?'正在读取速度上限…':'右键空地放置目标');if(!id)return;
    try{const enemy=fits.find(f=>f.id===id);if(!enemy)throw Error('目标装配已删除，请重新选择');const [a,b]=await Promise.all([calculate(withoutScenario(fit)),calculate(withoutScenario(enemy))]);if(request!==revision||!dialog.open)return;if(!Number.isFinite(a.attributes.maxVelocity)||!Number.isFinite(b.attributes.maxVelocity))throw Error('速度数据缺失');const limit=a.attributes.maxVelocity+b.attributes.maxVelocity;currentPlane.setSpeedLimit(limit,'相对速度上限 '+limit.toFixed(1)+' m/s');}
    catch(e){if(request===revision&&dialog.open)currentPlane.setSpeedLimit(null,'速度上限不可用；已有矢量保留，位置仍可调整。');}
   }
-  controls=installTargetMapControls(root,{form,fits,ownShipId:fit.shipId,shipName,onTargetChange:()=>{changed();speedLimit()},health:value.targetHealth,plane});
+  controls=installTargetMapControls(root,{form,fits,ownFit:fit,calculate,ownShipId:fit.shipId,shipName,onTargetChange:()=>{changed();speedLimit()},health:value.targetHealth,plane});
   root.addEventListener('scenario-change',changed);speedLimit();
  }
  $('[data-rename]').onclick=()=>{select.hidden=true;const input=$('[data-name]');input.hidden=false;input.focus();input.select()};

@@ -18,6 +18,9 @@ def validate_presets(body):
   for key in ['supportDistance','hostileDistance']:
    v=value.get(key,10000)
    if type(v) not in (int,float) or not math.isfinite(v) or not 0<=v<=500000:raise ValueError('来源距离超出范围')
+  for key,maximum in [('ownCapacitorFraction',1),('targetCapacitorGj',1e12),('hostileCapacitorGj',1e12)]:
+   v=value.get(key)
+   if v is not None and (type(v) not in (int,float) or not math.isfinite(v) or not 0<=v<=maximum):raise ValueError('情景电容条件无效：'+key)
   for key in ['geometry','supportGeometry','hostileGeometry']:
    if key not in value:continue
    g=value[key];keys=['x','y','vx','vy'] if key=='geometry' else ['x','y']

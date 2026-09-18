@@ -33,6 +33,45 @@ class CapacitorScenario(unittest.TestCase):
                 '--query',str(p/'query.json'),'--out',str(p/'result.json')],check=True,capture_output=True)
             self.assertEqual(json.loads((p/'result.json').read_text(encoding='utf-8-sig')),cap['result'])
 
+    def test_local_and_incoming_nos_use_declared_boundaries(self):
+        native=self.fixture('local-nos-fit.json');source=self.ui(native);source.update(id='nos-source',name='吸电来源')
+        target=self.ui({**native,'items':[]});target.update(id='target',name='吸电目标')
+        local={**source,'capacitorHorizon':1,'scenario':{'targetFitId':'target','distance':1000,'targetCapacitorGj':200,'ownCapacitorFraction':.1}}
+        incoming={**target,'capacitorHorizon':1,'scenario':{'hostileFitId':'nos-source','hostileDistance':1000,'hostileCapacitorGj':100}}
+        for fit in (local,incoming):
+            report=analyze(fit);attach_capacitor(fit,report,[source,target]);cap=report['capacitorScenario']
+            self.assertEqual(cap['state'],'available',cap.get('reason'))
+            self.assertFalse(cap['result']['average']['complete'])
+            energy=next(e for e in cap['result']['events'] if e['energy'] is not None)
+            self.assertGreater(energy['energy']['applied'],0)
+            if fit is local:
+                self.assertEqual(cap['request']['query']['nosTargets']['high-0']['amountGj'],200)
+                self.assertEqual(energy['inputs']['targetAmountGj'],200)
+                self.assertEqual(energy['inputs']['sourceFraction'],.1)
+            else:
+                self.assertEqual(energy['inputs']['sourceAmountGj'],100)
+            b=bridge()
+            with tempfile.TemporaryDirectory() as directory:
+                p=Path(directory)
+                for key in ('fit','query'):(p/(key+'.json')).write_text(json.dumps(cap['request'][key]),encoding='utf-8')
+                subprocess.run([str(b.root/'.tools/dotnet/dotnet.exe'),str(b.root/'src/NEngine.Cli/bin/Debug/net10.0/NEngine.Cli.dll'),
+                    'sde-capacitor-scenario','--data',str(b.root/b.baseline['dataDirectory']),'--fit',str(p/'fit.json'),
+                    '--query',str(p/'query.json'),'--out',str(p/'result.json')],check=True,capture_output=True)
+                self.assertEqual(json.loads((p/'result.json').read_text(encoding='utf-8-sig')),cap['result'])
+        for field,bad in [('targetCapacitorGj',None),('targetCapacitorGj',1e10),('ownCapacitorFraction',-1)]:
+            fit={**local,'scenario':{**local['scenario'],field:bad}};report=analyze(fit);attach_capacitor(fit,report,[target])
+            self.assertEqual(report['capacitorScenario']['state'],'unavailable')
+            self.assertNotIn('result',report['capacitorScenario'])
+
+    def test_nos_conditions_survive_preset_storage(self):
+        from scenario_presets import validate_presets
+        conditions={'ownCapacitorFraction':.1,'targetCapacitorGj':0,'hostileCapacitorGj':None}
+        body={'activeScenarioId':'nos','scenarios':[{'id':'nos','name':'NOS','value':conditions}]}
+        self.assertEqual(validate_presets(body)['scenario'],conditions)
+        for value in [-1,True,float('nan')]:
+            body['scenarios'][0]['value']={**conditions,'targetCapacitorGj':value}
+            with self.assertRaises(ValueError):validate_presets(body)
+
     def test_missing_source_is_not_green_stability(self):
         native=self.fixture('sampled-fit.json');fit=self.ui({**native,'items':[]})
         fit['scenario']={'supportFitId':'missing'};report=analyze(fit);attach_capacitor(fit,report,[])

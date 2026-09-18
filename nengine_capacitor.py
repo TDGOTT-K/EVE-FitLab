@@ -12,22 +12,47 @@ def attach_capacitor(fit,report,fits):
            'sampleTimesSeconds':[horizon*i/60 for i in range(61)]}
     sources=[];scenario=fit.get('scenario') or {}
     try:
+        initial=scenario.get('ownCapacitorFraction',1)
+        if type(initial) not in (int,float) or not math.isfinite(initial) or not 0<=initial<=1:raise ValueError('本舰初始电量比例必须为0–1')
+        query['initialFraction']=initial
+        def source_fit(identity):
+            if not identity:raise ValueError('请在情景画布选择吸电目标装配')
+            source=next((f for f in fits if f.get('id')==identity),None)
+            if source is None:raise ValueError('能量来源或吸电目标已删除，请重新选择')
+            result=analyze({**source,'scenario':{},'activeScenarioId':None})
+            if not result['isValid']:raise ValueError(source['name']+' 尚未通过原生装配校验')
+            return source,result
+        def amount(field):
+            value=scenario.get(field)
+            if value is None:raise ValueError('请在情景画布右键声明'+('目标' if field=='targetCapacitorGj' else '敌方来源')+'固定电量')
+            if type(value) not in (int,float) or not math.isfinite(value) or value<0:raise ValueError('固定电量必须为非负有限GJ数值')
+            return value
+        local_nos=[e for e in report['native'].get('energy',{}).values() if e['active'] and e['operation']=='nosferatu']
+        if local_nos:
+            target,target_report=source_fit(scenario.get('targetFitId'))
+            native=target_report['native'];capacity=(native.get('capacitor') or {}).get('recharge',{}).get('capacity')
+            resistance=native.get('energyWarfareMultiplier')
+            if capacity is None or resistance is None:raise ValueError('吸电目标容量或能量抗性不可计算')
+            fixed=amount('targetCapacitorGj');distance=scenario.get('distance',10000)
+            query['nosTargets']={e['instanceId']:{'capacityGj':capacity,'amountGj':fixed,'warfareMultiplier':resistance,'distanceMeters':distance} for e in local_nos}
+            sources.append({'id':target['id'],'name':target['name'],'revision':target.get('revision'),'fitHash':native['fitHash'],
+                'nativeFit':target_report['nativeFit'],'source':target_report['source'],'operation':'nos_target','distanceMeters':distance,'amountGj':fixed})
         for field,operation in [('supportFitId','transmit'),('hostileFitId','neutralize')]:
             identity=scenario.get(field)
             if not identity:continue
-            source=next((f for f in fits if f.get('id')==identity),None)
-            if source is None:raise ValueError('传电或毁电来源已删除，请重新选择')
-            source_report=analyze({**source,'scenario':{},'activeScenarioId':None})
+            source,source_report=source_fit(identity)
             distance=scenario.get('supportDistance' if field=='supportFitId' else 'hostileDistance',10000)
             if type(distance) not in (int,float) or not math.isfinite(distance) or not 0<=distance<=1e7:
                 raise ValueError('能量来源距离无效')
-            matching=[e for e in source_report['native'].get('energy',{}).values() if e['active'] and e['operation']==operation]
-            if not matching:raise ValueError(source['name']+' 没有可用的已启用'+('传电' if operation=='transmit' else '毁电')+'模块')
+            matching=[e for e in source_report['native'].get('energy',{}).values() if e['active'] and e['operation'] in (('neutralize','nosferatu') if operation=='neutralize' else ('transmit',))]
+            if not matching:raise ValueError(source['name']+' 没有可用的已启用'+('传电' if operation=='transmit' else '毁电/吸电')+'模块')
             for energy in matching:
-                query['external'].append({'id':field+'-'+energy['instanceId'],
-                    'sourceFit':source_report['nativeFit'],'moduleId':energy['instanceId'],'distanceMeters':distance})
+                entry={'id':field+'-'+energy['instanceId'],'sourceFit':source_report['nativeFit'],'moduleId':energy['instanceId'],'distanceMeters':distance}
+                if energy['operation']=='nosferatu':entry['sourceAmountGj']=amount('hostileCapacitorGj')
+                query['external'].append(entry)
             sources.append({'id':identity,'name':source['name'],'revision':source.get('revision'),
-                'fitHash':source_report['native']['fitHash'],'operation':operation,'distanceMeters':distance})
+                'fitHash':source_report['native']['fitHash'],'operation':operation,'distanceMeters':distance,'operations':sorted({e['operation'] for e in matching}),
+                'amountGj':scenario.get('hostileCapacitorGj') if any(e['operation']=='nosferatu' for e in matching) else None})
         result=bridge().call('capacitor_scenario',{'fit':report['nativeFit'],'query':query})['result']
         report['capacitorScenario']={'state':'available','result':result,'sources':sources,
             'request':{'fit':report['nativeFit'],'query':query}}

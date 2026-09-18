@@ -20,10 +20,10 @@ export function capacitorHtml(report){
  const path=samples.map((s,i)=>(i?'L':'M')+(10+220*s.timeSeconds/end).toFixed(2)+' '+(90-75*s.amountGj/high).toFixed(2)).join(' ');
  html+='<path d="M10 10V90H230" fill="none" stroke="currentColor" opacity=".3"/><path d="'+path+'" fill="none" stroke="#79c8d3" stroke-width="1.5"/><text x="10" y="110">0 s</text><text x="230" y="110" text-anchor="end">'+fmt(r.query.horizonSeconds,'s')+'</text>';
  for(const sample of samples)html+='<circle cx="'+(10+220*sample.timeSeconds/end)+'" cy="'+(90-75*sample.amountGj/high)+'" r="2" fill="#79c8d3"><title>'+fmt(sample.timeSeconds,'s')+' · '+fmt(sample.amountGj,'GJ')+'</title></circle>';
- html+='</svg><p class="profile-note">初始满电 · 使用已声明弹仓与共享货舱 · 付款失败后停止该消费者。平均稳定不保证每次付款；窗口结束不等于无限续航。</p>';
- for(const s of data.sources)html+=row(s.operation==='transmit'?'传电来源':'毁电来源',s.name+' · '+fmt(s.distanceMeters/1000,'km'));
- if(data.sources.length)html+='<p class="profile-note">仅计算本舰。外部来源按固定周期持续作用，不联算对方付款或资源变化。</p>';
- for(const e of average.exclusions)html+='<p class="profile-note">平均模型未计入：'+esc(e.id)+' · '+esc(e.reason)+'</p>';
+ html+='</svg><p class="profile-note">初始电量 '+fmt(r.query.initialFraction*100,'%')+' · 使用已声明弹仓与共享货舱 · 付款失败后停止该消费者。平均稳定不保证每次付款；窗口结束不等于无限续航。</p>';
+ for(const s of data.sources)html+=row(s.operation==='nos_target'?'吸电目标':s.operation==='transmit'?'传电来源':'毁电/吸电来源',s.name+' · '+fmt(s.distanceMeters/1000,'km')+(s.amountGj!=null?' · 固定 '+fmt(s.amountGj,'GJ'):''));
+ if(data.sources.length)html+='<p class="profile-note">仅计算本舰。对方电量为固定边界，外部模块按固定周期作用；不联算对方付款或资源变化。</p>';
+ for(const e of average.exclusions)html+='<p class="profile-note">平均模型未计入：'+esc(e.id)+' · '+esc(e.reason==='RESOURCE_AND_CONDITION_DEPENDENT_NOS'?'吸电收益依赖双方电量':e.reason)+'</p>';
  for(const supply of r.supplies)html+=row('注电器 '+supply.id,'弹仓 '+supply.loaded+(supply.cargoKey?' · 使用共享货舱':' · 私有储备 '+supply.reserve)+(supply.reserved?' · 已预约 '+supply.reserved:''));
  for(const [key,amount] of Object.entries(r.sharedCargo))html+=row('共享备弹 '+key,String(amount));
  html+='<p class="profile-note">同刻按来源 ID 顺序结算；不模拟非注电器弹药、动态热量及其他模块效果。</p></details></div>';
