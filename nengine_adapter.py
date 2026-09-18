@@ -111,7 +111,9 @@ def analyze(f,target=None):
     if f.get('fighterUiMock') and not f.get('fighterLoadout'):
         notices.append('原舰载机示例保留在草稿中，请重新选择真实型号；示例不参与计算。')
     if 'inventory' in native:notices.append('静态库存已声明；未填写装弹量的模块仍为未知，不默认满弹或无限备弹。')
-    issues=list(a['errors'])
+    # Native admission treats resource warnings as blocking, although fitting
+    # analysis intentionally retains diagnostic attributes for over-limit drafts.
+    issues=[*a['errors'],*(w for w in a['warnings'] if w['code']=='RESOURCE_EXCEEDED')]
     if not a['staticCoverageComplete']:
         issues.append({'code':'STATIC_COVERAGE_INCOMPLETE','message':'当前引擎副本未覆盖部分效果；分项是否可用以各自状态为准，完整装配尚未通过校验。'})
     selection=fighter_damage_selection(f,a)

@@ -378,3 +378,11 @@ plan-attribute-inspection 只映射公开 Attributes/Issues/ProjectionComplete �
 新增装配库及工作台入口、文本框/文件选择、角色选择、逐行解析与检查预览、保存新装配。解析服务/api/import/eft基于固定SDE精确名称映射，仅转换输入；所有业务计算/合法性由现有原生analyze完成。解析失败不部分导入；原生机制/条件问题允许明确保存草稿。支持范围、缺失信息的显式处理及网络核对来源见eft-text-import.md。
 
 验证：4项解析/原生分析专项通过（英文、中英文名称、空槽、离线、弹药、库存、重复模块、错误行、数量边界、脑插/药剂、舰载机备用）；应用内浏览器5352隔离库验证粘贴→全技能V→校验→保存→装配库出现新记录，未知装备显示第2行且保存禁用；对话框视觉检查通过。未写入用户5208库。最初Playwright CLI验证被自动审批拦截，已改用内置浏览器公开控制接口完成验证，没有绕过该命令限制。接口本地r37不变，未改引擎/增加游戏机制，未重打包Windows。
+
+## NUI-42：资源超限与原生准入口径一致（待用户验收）
+
+发现适配器isValid只检查native.errors，忽略引擎为了保留草稿诊断数值而放在warnings中的RESOURCE_EXCEEDED。原生电容/药剂准入实际均把该警告视为阻断，导致UI“合法”而电容拒绝的矛盾。
+
+现将原生RESOURCE_EXCEEDED原样加入UI issues（含details资源ID、used、limit、依赖和路径），isValid据此返回false；不重算资源、不修改引擎告警等级、不把其他非阻断警告一律升级。保留原始native对象及可用属性/输出。详情列表按完整文字去重，避免同一原生警告在issues和warnings中重复展示。工作台、EFT/图片导入、分享图和外部能量来源校验都消费同一isValid。
+
+验证：2项准入专项+4项EFT回归通过。全技能V裂谷装中型四联轻型集束激光器：引擎errors为空，但RESOURCE_EXCEEDED明确72.9>51.25，UI判为false，诊断DPS仍有值，电容返回CAP_SCENARIO_FIT；CLI/MCP资源和警告相等。正常装配isValid=true且电容available，缺技能isValid=false。5352隔离浏览器EFT预览显示可导入草稿与powergrid超限，不再声称校验通过。仅UI适配/展示变化，引擎及本地r37契约未变；未重打包Windows。

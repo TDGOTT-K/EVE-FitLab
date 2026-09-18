@@ -44,7 +44,7 @@ export function mountNativeStats(root,report,{mode='hp',onMode,onDamageEdit,onOu
  html+='<div class="stat-block">'+row('起步至 75%',fmt(a.motion?.fromRestTo75PercentSeconds,'s'))+attr('信号半径',552,'m')+attr('跃迁速度',600,'AU/s')+'</div>';
  html+=head('锁定',`<b>${fmt(attrs['ship/76']?attrs['ship/76'].value/1000:null,'km')}</b>`)+'<div class="stat-block">'+attr('扫描分辨率',564,'mm')+row('锁定目标数',fmt(a.targetCountLimits?.maximum))+'</div>';
  if(a.droneBay&&a.droneBay.capacityCubicMeters>0)html+=head('无人机')+'<div class="stat-block">'+row('控制距离',fmt(a.droneBay.controlRangeMeters/1000,'km'))+row('最多出动',fmt(a.droneBay.maximumActive))+'</div>';
- const all=[...report.integrationNotices,...report.issues.map(e=>e.code+' · '+e.message),...a.warnings.map(e=>e.code+' · '+e.message),...a.coverage.filter(c=>c.status==='unsupported_static').map(c=>c.name+' · '+c.reason)];
+ const all=[...new Set([...report.integrationNotices,...report.issues.map(e=>e.code+' · '+e.message),...a.warnings.map(e=>e.code+' · '+e.message),...a.coverage.filter(c=>c.status==='unsupported_static').map(c=>c.name+' · '+c.reason)])];
  if(all.length)html+='<details class="native-status"><summary>计算范围与待处理项 <b>'+all.length+'</b></summary>'+all.map(s=>'<p class="profile-note">'+esc(s)+'</p>').join('')+'</details>';
  root.innerHTML=html;
  root.querySelectorAll('[data-native-defense]').forEach(b=>b.onclick=()=>onMode?.(b.dataset.nativeDefense));
