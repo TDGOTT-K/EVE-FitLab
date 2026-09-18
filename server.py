@@ -319,6 +319,15 @@ class Handler(SimpleHTTPRequestHandler):
      if body.get('revision')!=previous['revision']:raise ValueError('方案已修改，请重新加载')
      lib['loadoutPlans']=[p for p in lib['loadoutPlans'] if p['id']!=previous['id']];write_library(lib);return self.reply({'deleted':True})
     if self.path=='/api/save':
+     if os.environ.get('FITLAB_CALCULATOR','nengine')=='nengine':
+      from nengine_persistence import save_to_library,SaveConflict
+      from nengine_bridge import NEngineError
+      f=validate_fit(body);f['name']=f['name'].strip()
+      if 'scenarios' in f:f.update(validate_presets(f))
+      f.setdefault('_saveRequestId',str(uuid.uuid4()))
+      try:return self.reply(save_to_library(f,lib,write_library,now()))
+      except SaveConflict as error:return self.reply({'error':str(error)},409)
+      except NEngineError as error:return self.reply({'error':error.error.get('message'),'diagnostic':error.error},409 if error.error.get('code') in ('STALE_REVISION','REQUEST_CONFLICT') else 400)
      f=validate_fit(body);previous=next((x for x in lib['fits'] if x['id']==f.get('id')),None)
      if previous and f.get('revision')!=previous['revision']:return self.reply({'error':'此装配已在另一窗口修改，请重新打开后再编辑。'},409)
      if 'scenarios' in f:f.update(validate_presets(f))

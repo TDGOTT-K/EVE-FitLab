@@ -12,11 +12,11 @@ assert.equal(writes[0].name,'A');
 // Two clicks capture different snapshots but allocate only one new fit identity.
 current={name:'C',slots:[]};saver.reset();
 const second=saver.save();current={...current,name:'C edited'};const third=saver.save();await next();
-resolveWrite({id:'c',revision:1});await second;await next();
+const allocated=writes[1].id;resolveWrite({id:allocated,revision:1});await second;await next();
 assert.equal(writes[1].name,'C');assert.equal(writes[2].name,'C edited');
-assert.equal(writes[2].id,'c');assert.equal(writes[2].revision,1);
+assert.equal(writes[2].id,allocated);assert.equal(writes[2].revision,1);
 assert.equal(receipts[0].state.unchanged,false);
-resolveWrite({id:'c',revision:2});await third;assert.equal(receipts[1].state.unchanged,true);
+resolveWrite({id:allocated,revision:2});await third;assert.equal(receipts[1].state.unchanged,true);
 
 // An implant edit during saving remains visibly unsaved.
 current={name:'D',slots:[],loadoutPlan:{implants:[]}};saver.reset();
@@ -27,7 +27,7 @@ assert.equal(sameSavedContent({name:'x',tags:['a']},{tags:['a'],name:'x',id:'1',
 assert.equal(sameSavedContent({cargo:[]},{cargo:[{item:185,quantity:1}]}),false);
 
 // A failed write does not poison later saves or acknowledge a nonexistent revision.
-let calls=0,accepted=0;
-const failing=createFitSaver({read:()=>({name:'Retry'}),write:async input=>{assert.equal(input.revision,undefined);if(++calls===1)throw Error('offline');return {id:'retry',revision:1};},accept:()=>accepted++});
+let calls=0,accepted=0,failedInput;
+const failing=createFitSaver({read:()=>({name:'Retry'}),write:async input=>{assert.equal(input.revision,undefined);if(++calls===1){failedInput=structuredClone(input);throw Error('offline');}assert.deepEqual(input,failedInput);return {id:input.id,revision:1};},accept:()=>accepted++});
 await assert.rejects(failing.save());await failing.save();assert.equal(accepted,1);
 console.log('Save races: selection, queued snapshots, assigned identity, implant dirty state, failure recovery passed');
