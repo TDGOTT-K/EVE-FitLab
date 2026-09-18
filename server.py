@@ -20,7 +20,7 @@ from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 ROOT=Path(os.environ.get('FITLAB_WEB_ROOT',Path(__file__).resolve().parent))
 STATE=storage_location.read_location(Path(os.environ.get('FITLAB_DEFAULT_STATE',ROOT/'state'))); STATE.mkdir(parents=True,exist_ok=True)
-os.environ.setdefault('FITLAB_NENGINE_STATE',str(STATE/'nengine-ui-local-r37'))
+os.environ.setdefault('FITLAB_NENGINE_STATE',str(STATE/'nengine-ui-local-r38'))
 CATALOG=json.loads((ROOT/'data/full-catalog.json').read_text(encoding='utf-8'))
 if os.environ.get('FITLAB_CALCULATOR','nengine')=='nengine':
  from nengine_catalog import refresh_catalog
@@ -276,6 +276,9 @@ class Handler(SimpleHTTPRequestHandler):
     with LOCK:
      directory,backup=storage_location.migrate(STATE,body.get('directory'));STATE=directory
     return self.reply({'directory':str(directory),'backup':str(backup) if backup else None})
+   if self.path=='/api/fit-valuation':
+    from nengine_valuation import value_fit
+    return self.reply(value_fit(body['fit']))
    if self.path=='/api/import/eft':
     from eft_import import parse_eft
     return self.reply(parse_eft(body.get('text')))

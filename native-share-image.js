@@ -3,6 +3,7 @@ import {encodeFitCodes,qrCanvas} from './fit-image-code.js';
 import {implantCatalog,boosterCatalog} from './loadout-catalog.js';
 import {effectiveModuleState} from './module-state.js';
 import {OFFICIAL_SITE_HOST} from './site-config.js';
+import {valuationSummary,valuationReason} from './valuation-view.js';
 import {translateFor,getLocale} from './i18n.js';
 
 const labels={high:'高槽',mid:'中槽',low:'低槽',rig:'改装件',subsystem:'子系统'};
@@ -26,7 +27,7 @@ export function nativeShareStats(report,catalog,options){
  return rows;
 }
 
-export async function renderNativeShareImage(fit,report,catalog,options){
+export async function renderNativeShareImage(fit,report,catalog,options,valuation=null){
  if(report.provider!=='nengine'||report.scenarioTarget||fit.activeScenarioId||Object.keys(fit.scenario||{}).length)throw Error('分享图片必须使用无情景原生装配结果');
  const language=options.language||getLocale(),T=text=>translateFor(language,String(text)),fmt=n=>Number.isFinite(n)?n.toLocaleString(language,{maximumFractionDigits:3}):'—';
  const types=new Map([...catalog,...implantCatalog,...boosterCatalog].map(t=>[t.id,t]));
@@ -79,6 +80,8 @@ export async function renderNativeShareImage(fit,report,catalog,options){
  line(options.pilot?(fit.characterName||'自定义技能'):'已应用技能快照 · 隐藏驾驶员名称',{size:20,color:'#91aebb',raw:!!options.pilot});
  line('无情景装配 · DPS 不扣目标抗性 · '+(fit.outputMetric==='loadedCycleDps'?'有限弹量周期':'名义周期'),{size:20,color:'#91aebb'});
  line('N '+report.engineVersion+' · SDE '+report.source.buildNumber+' · 本地接口 r'+report.source.revision,{size:19,color:'#91aebb'});
+ if(valuation){const summary=valuationSummary(valuation,language);line(summary.label+' · '+summary.value,{size:24,bold:true,color:'#e9b479'});line(summary.source,{size:18,color:'#91aebb'});line(summary.scope,{size:18,color:'#91aebb'});}
+ else line('参考估价暂不可用',{size:20,color:'#91aebb'});
  if(!report.isValid)line('装配存在校验或机制覆盖问题，以下保留可用分项；不代表装配已合法。',{size:21,color:'#edaf83'});
  heading('装配配置');let previous='';
  for(const row of config){
@@ -92,6 +95,8 @@ export async function renderNativeShareImage(fit,report,catalog,options){
  }
  heading('装配资源');for(const r of report.native.resources){const resource={cpu:['CPU','tf'],powergrid:['能量栅格','MW'],droneBay:['无人机机库','m³'],droneBandwidth:['无人机带宽','Mbit/s'],calibration:['校准','']}[r.id]||[r.id,''];pair(resource[0],'已用 '+fmt(r.used)+' / '+fmt(r.capacity)+' '+resource[1]+' · 剩余 '+fmt(r.remaining));}
  if(!report.native.resources.length)line('资源查询不可用',{color:'#edaf83'});
+ if(valuation&&!valuation.complete){heading('估价缺项');for(const message of new Set(valuation.lines.filter(l=>l.state!=='available').map(l=>(l.name||'库存')+' · '+valuationReason(l.reason))))line(message,{size:19,color:'#edaf83'});}
+ if(valuation)line('价格快照 '+valuation.snapshotHash,{size:16,color:'#91aebb'});
  if(options.notes&&fit.notes){heading('备注');line(fit.notes,{raw:true})}
  heading('装配导入码');line('保存全部二维码可恢复装配输入。情景和本地关联不包含在图片中。',{size:20});
  line('二维码始终包含全部库存与技能快照；上方货舱开关仅控制可见清单。',{size:18,color:'#9eb7c4'});

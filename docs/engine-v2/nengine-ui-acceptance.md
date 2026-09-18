@@ -386,3 +386,9 @@ plan-attribute-inspection 只映射公开 Attributes/Issues/ProjectionComplete �
 现将原生RESOURCE_EXCEEDED原样加入UI issues（含details资源ID、used、limit、依赖和路径），isValid据此返回false；不重算资源、不修改引擎告警等级、不把其他非阻断警告一律升级。保留原始native对象及可用属性/输出。详情列表按完整文字去重，避免同一原生警告在issues和warnings中重复展示。工作台、EFT/图片导入、分享图和外部能量来源校验都消费同一isValid。
 
 验证：2项准入专项+4项EFT回归通过。全技能V裂谷装中型四联轻型集束激光器：引擎errors为空，但RESOURCE_EXCEEDED明确72.9>51.25，UI判为false，诊断DPS仍有值，电容返回CAP_SCENARIO_FIT；CLI/MCP资源和警告相等。正常装配isValid=true且电容available，缺技能isValid=false。5352隔离浏览器EFT预览显示可导入草稿与powergrid超限，不再声称校验通过。仅UI适配/展示变化，引擎及本地r37契约未变；未重打包Windows。
+
+## NUI-43：同口径估价与来源（待用户验收）
+
+验收入口：装配工作台底部估价、装配库估价、生成图片。可展开分项与缺项；未声明弹量显示已知部分，声明后更新完整估价。真实零报价与缺报价区分，深渊实例不使用基底价格。ESI均价附时间、缓存状态和快照哈希，不承诺即时成交价格。
+
+实现及验证详见valuation.md。5352隔离库实际装弹修改和分享生成通过；3项Python测试包含6种MCP/CLI完整结果对照，4项引擎估价与3项契约测试通过，JS显示边界与57模块检查通过。未重打包Windows，等待用户逐项验收。

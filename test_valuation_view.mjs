@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {valuationSummary,valuationMarkup,createValuationReader} from './valuation-view.js';
+const base={complete:false,total:null,knownSubtotal:null,reason:'NO_AVAILABLE_SUBTOTALS',marketSource:{provider:'ESI',fetchedAt:null,cacheState:'unavailable',url:'https://example.test'},lines:[],snapshotHash:'abc'};
+assert.equal(valuationSummary(base).value,'—');
+assert.equal(valuationSummary({...base,complete:true,total:0}).value,'0 ISK');
+assert.equal(valuationSummary({...base,knownSubtotal:20}).label,'已知部分估价');
+assert.match(valuationSummary({...base,marketSource:{...base.marketSource,cacheState:'stale'}}).source,/过期缓存/);
+assert.ok(!valuationMarkup({...base,lines:[{name:'<img onerror=x>',quantity:null,state:'unavailable',reason:'PRICE_UNAVAILABLE'}]}).includes('<img'));
+let calls=0;const read=createValuationReader(async()=>{calls++;return {valuation:base};});
+await Promise.all([read({shipId:1}),read({shipId:1})]);assert.equal(calls,1);
+await read({shipId:2});assert.equal(calls,2);
+let attempts=0;const retry=createValuationReader(async()=>{if(++attempts===1)throw Error('offline');return {valuation:base};});
+await assert.rejects(retry({}));assert.equal(await retry({}),base);
+console.log('Valuation presentation: null/zero, partial/stale, escaping, cache and retry passed');

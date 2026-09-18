@@ -1,3 +1,4 @@
+import {createValuationReader,valuationSummary,valuationMarkup} from './valuation-view.js';
 import {showTextImport} from './text-import.js';
 import {effectiveModuleState} from './module-state.js';
 import {planAttributeInspection} from './plan-attribute-inspection.js';
@@ -304,7 +305,7 @@ const flow=document.createElement('dialog');flow.id='flow-dialog';document.body.
 function openFlow(title,body){flow.innerHTML=`<div class="flow-head"><b>${esc(title)}</b><button aria-label="关闭">×</button></div><div class="flow-body">${body}</div><p id="flow-error"></p>`;flow.querySelector('.flow-head button').onclick=()=>flow.close();flow.showModal()}
 function guarded(fn){return async()=>{try{await fn()}catch(e){say(e.message);if(flow.open)$('#flow-error').textContent=e.message}}}
 $('#save-fit').onclick=guarded(persistFit);
-function exportFitImage(fit){return showShareImage(withoutScenario(fit),{calculate:getCalculation,catalog,getPrice:async f=>{marketPricePromise??=api('prices').catch(e=>{marketPricePromise=null;throw e});return estimateFitPrice(f,await marketPricePromise)}})}
+function exportFitImage(fit){return showShareImage(withoutScenario(fit),{calculate:getCalculation,catalog,getPrice:getValuation})}
 $('#share-fit').onclick=()=>exportFitImage(currentFit());
 const importText=()=>showTextImport({api,calculate:getCalculation,onSaved:record=>{libraryFits.unshift(record);refreshLibraryRows();location.hash='library';libraryMessage('已导入新装配：'+record.name)}});
 for(const id of ['import-fit-text','import-editor-text'])$('#'+id).onclick=importText;
@@ -478,16 +479,10 @@ function syncEngineSlots(){
 }
 
 
-let marketPricePromise=null;
+const getValuation=createValuationReader(api);
 async function renderFitPrice(){
  const anchor=document.createElement('div');anchor.className='stat-block';anchor.textContent='估价读取中…';$('#ship-stats').insertAdjacentHTML('beforeend','<div class="panel-title">装配估价</div>');$('#ship-stats').append(anchor);
- const fit=currentFit();
- try{
-  marketPricePromise??=api('prices').catch(e=>{marketPricePromise=null;throw e});
-  const data=await marketPricePromise;if(!anchor.isConnected)return;
-  const {total,missing}=estimateFitPrice(fit,data);
-  anchor.innerHTML='<div class="stat-row"><span>'+(missing?'已知部分':'参考总价')+'</span><b>'+total.toLocaleString(getLocale(),{maximumFractionDigits:0})+' ISK</b></div><p class="profile-note">ESI 市场均价 · '+new Date(data.updatedAt*1000).toLocaleString()+(missing?' · '+missing+' 种物品无报价':'')+'<br>含船体、装备、满弹夹、无人机与普通货舱；不是即时采购价。</p>';
- }catch{if(anchor.isConnected)anchor.textContent='市场均价暂不可用'}
+ try{const result=await getValuation(currentFit());if(anchor.isConnected)anchor.innerHTML=valuationMarkup(result,getLocale())}catch(error){if(anchor.isConnected){anchor.textContent='估价暂不可用';anchor.title=error.message}}
 }
 
 
@@ -699,20 +694,9 @@ function libraryMenu(e,fit=null){
  menu.hidden=false;const r=menuOrigin.getBoundingClientRect();menu.style.left=Math.max(8,Math.min(e.type==='keydown'?r.left:e.clientX,innerWidth-menu.offsetWidth-8))+'px';menu.style.top=Math.max(8,Math.min(e.type==='keydown'?r.bottom:e.clientY,innerHeight-menu.offsetHeight-8))+'px';menu.querySelector('button:not(:disabled)')?.focus();
 }
 
-function estimateFitPrice(fit,data){
-  const quantities=new Map([[fit.shipId,1]]),add=(id,n)=>quantities.set(id,(quantities.get(id)||0)+n);
-  for(const s of fit.slots||[]){if(s.item)add(s.item,1);if(s.ammo){const n=magazine(byId(s.item),byId(s.ammo));if(Number.isFinite(n))add(s.ammo,n)}}
-  for(const e of [...(fit.drones||[]),...(fit.cargo||[])])add(e.item,e.quantity);
-  let total=0,missing=0;for(const [id,n] of quantities){const price=data.prices[id];if(price)total+=price*n;else missing++}
-  return {total,missing};
-}
-
 async function renderLibraryPrices(){
  const rows=[...$('#library-list').querySelectorAll('[data-fit-price]')].map(el=>({el,fit:libraryFits[Number(el.dataset.fitPrice)]}));
- if(!rows.length)return;
- try{marketPricePromise??=api('prices').catch(e=>{marketPricePromise=null;throw e});const data=await marketPricePromise;
- for(const {el,fit} of rows){if(!el.isConnected)continue;const {total,missing}=estimateFitPrice(fit,data);el.innerHTML='<small>'+(missing?'已知部分估价':'参考估价')+'</small><b>'+total.toLocaleString(getLocale(),{maximumFractionDigits:0})+' <small class="isk-unit">ISK</small></b>';el.title='ESI 市场均价 · '+new Date(data.updatedAt*1000).toLocaleString()+'；含船体、装备、满弹夹、无人机与货舱'+(missing?'；'+missing+' 种物品暂无报价':'')}
- }catch{for(const {el} of rows)if(el.isConnected)el.innerHTML='<small>参考估价</small><b>暂不可用</b>'}
+ await Promise.all(rows.map(async({el,fit})=>{try{const result=await getValuation(fit);if(!el.isConnected)return;const s=valuationSummary(result,getLocale());el.innerHTML='<small>'+esc(s.label)+'</small><b>'+esc(s.value)+'</b>';el.title=s.source+'；'+s.scope+(s.reason?'；'+s.reason:'')}catch(error){if(el.isConnected){el.innerHTML='<small>参考估价</small><b>暂不可用</b>';el.title=error.message}}}));
 }
 
 function capturePageScroll(page){const selectors=page==='editor'?['.fitting','.inspector','#tree']:page==='library'?['#library-list','.library-tree-scroll']:['#character-list','#character-skills'];pageScrollStates.set(page,{windowY:window.scrollY,positions:selectors.map(selector=>({selector,top:$(selector)?.scrollTop||0,left:$(selector)?.scrollLeft||0}))})}

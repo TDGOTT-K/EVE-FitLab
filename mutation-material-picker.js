@@ -36,7 +36,7 @@ export function mountMutationMaterialPicker(host,{options,value,api,onChange}){
   priceRequest??=api('prices').catch(e=>{priceRequest=null;throw e});
   const current=()=>token===revision&&hovered===item.id&&popup.isConnected;
   descriptions.get(item.id).then(data=>{if(!current())return;const raw=data.description;detail.querySelector('.material-description-text').textContent=plainDescription(typeof raw==='string'?raw:raw?.zh||raw?.en)||'暂无物品介绍';}).catch(()=>{if(current())detail.querySelector('.material-description-text').textContent='介绍暂时不可用，重新悬停可重试';});
-  priceRequest.then(data=>{if(!current())return;const price=data.prices?.[item.id];detail.querySelector('.material-price b').textContent=Number.isFinite(price)&&price>0?price.toLocaleString('zh-CN',{maximumFractionDigits:2})+' ISK':'暂无参考价格';detail.querySelector('.material-price-source').textContent='ESI 市场均价 · 非实时成交价'+(data.updatedAt?'\n获取于 '+new Date(data.updatedAt*1000).toLocaleString('zh-CN'):'');}).catch(()=>{if(current())detail.querySelector('.material-price b').textContent='价格暂时不可用';});
+  priceRequest.then(data=>{if(['stale','unavailable'].includes(data.source?.cacheState))priceRequest=null;if(!current())return;const price=data.prices?.[item.id];detail.querySelector('.material-price b').textContent=Number.isFinite(price)&&price>=0?price.toLocaleString('zh-CN',{maximumFractionDigits:2})+' ISK':'暂无参考价格';detail.querySelector('.material-price-source').textContent='ESI 市场均价 · 非实时成交价'+(data.source?.fetchedAt?'\n获取于 '+new Date(data.source.fetchedAt).toLocaleString('zh-CN'):'')+(data.source?.cacheState==='stale'?' · 过期缓存':'');}).catch(()=>{if(current())detail.querySelector('.material-price b').textContent='价格暂时不可用';});
  }
  function position(){
   if(!popup.matches(':popover-open'))return;
