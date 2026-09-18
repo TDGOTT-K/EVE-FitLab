@@ -1,3 +1,4 @@
+import {showTextImport} from './text-import.js';
 import {effectiveModuleState} from './module-state.js';
 import {planAttributeInspection} from './plan-attribute-inspection.js';
 import {detachUnmatchedCrystals,exchangeCrystalSlots,mountCrystal,crystalProjection,crystalWearText,crystalErrorText} from './crystal-stock.js';
@@ -305,6 +306,8 @@ function guarded(fn){return async()=>{try{await fn()}catch(e){say(e.message);if(
 $('#save-fit').onclick=guarded(persistFit);
 function exportFitImage(fit){return showShareImage(withoutScenario(fit),{calculate:getCalculation,catalog,getPrice:async f=>{marketPricePromise??=api('prices').catch(e=>{marketPricePromise=null;throw e});return estimateFitPrice(f,await marketPricePromise)}})}
 $('#share-fit').onclick=()=>exportFitImage(currentFit());
+const importText=()=>showTextImport({api,calculate:getCalculation,onSaved:record=>{libraryFits.unshift(record);refreshLibraryRows();location.hash='library';libraryMessage('已导入新装配：'+record.name)}});
+for(const id of ['import-fit-text','import-editor-text'])$('#'+id).onclick=importText;
 $('#import-fit-image').onclick=()=>showImageImport({catalog,calculate:getCalculation,save:fit=>api('save',fit),onSaved:record=>{libraryFits.unshift(record);refreshLibraryRows();libraryMessage('已导入新装配：'+record.name)}});
 let libraryFits=[],pageMode=null,navigationVersion=0,lastWorkPage='library',libraryLoaded=false;const pageScrollStates=new Map();let editorFitDeleted=false;let fitClipboard=null;try{fitClipboard=JSON.parse(sessionStorage.getItem('fitlab-fit-clipboard'))}catch{}
 const libraryTree=createLibraryTree($('#library-nav'),catalog,drawFitLibrary);

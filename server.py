@@ -276,6 +276,9 @@ class Handler(SimpleHTTPRequestHandler):
     with LOCK:
      directory,backup=storage_location.migrate(STATE,body.get('directory'));STATE=directory
     return self.reply({'directory':str(directory),'backup':str(backup) if backup else None})
+   if self.path=='/api/import/eft':
+    from eft_import import parse_eft
+    return self.reply(parse_eft(body.get('text')))
    if self.path=='/api/analyze':
     with LOCK:return self.reply(analyze(body))
    if self.path=='/api/eve/login':
