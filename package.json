@@ -12,7 +12,8 @@
     "build:qr": "esbuild desktop/qr-vendor-entry.js --bundle --format=esm --platform=browser --minify --outfile=qr-vendor.js",
     "test:share-code": "node test_fit_image_code.mjs",
     "build:locale-vendor": "esbuild desktop/locale-vendor-entry.js --bundle --format=esm --platform=browser --minify --outfile=locale-vendor.js",
-    "check:locales": "python scripts/check-locales.py"
+    "check:locales": "python scripts/check-locales.py",
+    "check:ui": "node scripts/check-ui.cjs"
   },
   "devDependencies": {
     "@babel/generator": "^7.29.8",
