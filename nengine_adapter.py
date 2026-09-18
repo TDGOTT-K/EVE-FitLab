@@ -1,4 +1,4 @@
-"""FitLab v1 -> pinned NEngine r24. Mapping only; no duplicate fitting formulas."""
+"""FitLab v1 -> pinned NEngine r33. Mapping only; no duplicate fitting formulas."""
 from functools import lru_cache
 import json
 from nengine_bridge import NEngineBridge
@@ -134,7 +134,7 @@ def fighter_damage_selection(f,analysis):
             if row: rows[row.get('id') or f'fighter-{location}-{i}']=row
     output=analysis['outputContributions']
     ids=set(selected_ids(f,output))
-    primaries=[item for item in output['items'] if item['kind']=='fighter_primary' and item['source'].get('deployed')]
+    primaries=[item for item in output['items'] if item['kind'] in ('fighter_primary','fighter_missile_primary') and item['source'].get('deployed')]
     selected=[item for item in primaries if item['id'] in ids]
     reading=grouped_reading(selected,'nominalCycleDps')
     return {'primaryDps':reading['total'],

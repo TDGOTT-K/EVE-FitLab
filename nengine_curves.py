@@ -46,7 +46,7 @@ def _build(key):
         ('signature','目标信号半径','m','signatureMeters',.1,min(1e7,max([400,target['signatureMeters']*2]+[r*2 for r in radii]))),
         ('angular','角速度','rad/s','angularRadiansPerSecond',0,min(100,max([.02,target['angularRadiansPerSecond']*2]+[v*3 for v in angular])))]
     metric='appliedLoadedCycleDps' if baseline['metric']=='loadedCycleDps' else 'appliedCycleDps'
-    series=[]
+    series=[];samples=[];destinations=[]
     for name,label,unit,field,low,high in definitions:
         xs={low+(high-low)*i/32 for i in range(33)}
         if not ideal:xs.add(target[field])
@@ -58,12 +58,23 @@ def _build(key):
                 if boundary is not None and low<=boundary<=high:xs.update([boundary,math.nextafter(boundary,math.inf)])
         points=[]
         for x in sorted(xs):
-            context={'output':{'selection':{'metric':metric,'contributionIds':ids},'target':{**target,field:x}}}
-            result=bridge().call('fit_analyze',{'fit':report['nativeFit'],'context':context})['result']['outputContributions']['selection']
-            points.append([x,result['total'] if result['completeSelection'] else None])
+            samples.append({**target,field:x,'id':'curve-'+str(len(samples))})
+            points.append([x,None]);destinations.append((points,len(points)-1))
         series.append({'key':name,'label':label,'unit':unit,'min':low,'max':high,'points':points,
                        'currentX':target[field],'currentY':selection['total'],
                        'fixed':'静止目标 · 其余条件理想化 · 参考信号半径 '+str(target['signatureMeters'])+' m'})
+    # Respect both the target count and the total contribution-row contract bound.
+    inventory_count=max(1,len(report['items']))
+    batch_size=min(256,16384//inventory_count-1)
+    if batch_size<1:return {'status':'unavailable','reason':'当前输出分项过多，超出曲线批量查询范围。'}
+    for start in range(0,len(samples),batch_size):
+        batch=samples[start:start+batch_size]
+        context={'output':{'selection':{'metric':metric,'contributionIds':ids},'targets':batch}}
+        output=bridge().call('fit_analyze',{'fit':report['nativeFit'],'context':context})['result']['outputContributions']
+        by_id={sample['target']['id']:sample['selection'] for sample in output['samples']}
+        for offset,target_sample in enumerate(batch):
+            result=by_id[target_sample['id']];points,index=destinations[start+offset]
+            points[index][1]=result['total'] if result['completeSelection'] else None
     return {'status':'ready','series':series,'ideal':ideal,'totalDps':baseline['total'],
             'target':{'distance':target['distanceMeters'],'signature':target['signatureMeters'],'angular':target['angularRadiansPerSecond'],'speed':target['speedMetersPerSecond']},
             'yMax':max([1]+[y for s in series for _,y in s['points'] if y is not None]),

@@ -1,4 +1,4 @@
-"""Real read-only calculations against the independent r24 copy; never battle jobs."""
+"""Real read-only calculations against the independent r33 copy; never battle jobs."""
 import copy
 import json
 from pathlib import Path
@@ -14,7 +14,7 @@ class NativeIntegration(unittest.TestCase):
 
     def test_pinned_source_and_resources(self):
         r=analyze(self.fit())
-        self.assertEqual(r['engineVersion'],'0.181.0')
+        self.assertEqual(r['engineVersion'],'0.190.0')
         self.assertEqual(r['source']['buildNumber'],3503375)
         self.assertEqual(r['attributes']['cpuAvailable'],r['native']['attributes']['ship/48']['value'])
         self.assertTrue(r['native']['staticCoverageComplete'])
@@ -70,9 +70,9 @@ class NativeIntegration(unittest.TestCase):
     def test_full_skill_coverage_is_not_silently_filtered(self):
         c=json.loads(Path('data/full-catalog.json').read_text(encoding='utf-8'))
         f=self.fit();f['skills']=[{'skillTypeId':t['id'],'level':5} for t in c if t['kind']=='skill']
-        r=analyze(f);self.assertFalse(r['isValid']);self.assertIsNone(r['native']['nominalDps'])
+        r=analyze(f);self.assertTrue(r['isValid']);self.assertTrue(r['native']['staticCoverageComplete'])
         self.assertEqual(len(r['nativeFit']['skills']),len(f['skills']))
-        self.assertEqual(r['attributes']['slotUsage'],[])
+        self.assertTrue(r['attributes']['slotUsage'])
 
     def test_scenario_is_explicitly_unapplied(self):
         f=self.fit();f['scenario']={'distanceMeters':1000}

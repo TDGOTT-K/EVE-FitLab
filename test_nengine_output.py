@@ -47,6 +47,21 @@ class OutputIntegration(unittest.TestCase):
         self.assertEqual(off['outputSelection']['status'],'empty_selection')
         self.assertIsNone(off['outputSelection']['total'])
 
+    def test_r33_missile_primary_and_support_entity(self):
+        from nengine_adapter import fighter_catalog
+        self.assertEqual(len(fighter_catalog()['items']),53)
+        fit=self.fighter_fit()
+        fit['fighterLoadout']['tubes']=[{'id':'missile','typeId':40358,'quantity':3,'active':True},
+            {'id':'support','typeId':40347,'quantity':3,'active':True}]
+        on=analyze(fit)
+        self.assertIn('support',on['native']['fighterEntities'])
+        self.assertEqual(on['outputContext']['selection']['contributionIds'],['fighter.missile/primary'])
+        self.assertGreater(on['outputSelection']['total'],0)
+        fit['fighterLoadout']['tubes'][0]['excludedAbilities']=[29]
+        off=analyze(fit)
+        self.assertEqual(off['nativeFit'],on['nativeFit'])
+        self.assertEqual(off['outputSelection']['status'],'empty_selection')
+
     def test_handoff_examples(self):
         root=bridge().root/'examples/output-contributions'
         for name in ['mixed','mixed-applied','drone','bomb','sustained']:

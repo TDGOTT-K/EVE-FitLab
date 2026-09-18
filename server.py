@@ -20,7 +20,7 @@ from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 ROOT=Path(os.environ.get('FITLAB_WEB_ROOT',Path(__file__).resolve().parent))
 STATE=storage_location.read_location(Path(os.environ.get('FITLAB_DEFAULT_STATE',ROOT/'state'))); STATE.mkdir(parents=True,exist_ok=True)
-os.environ.setdefault('FITLAB_NENGINE_STATE',str(STATE/'nengine-ui-r24'))
+os.environ.setdefault('FITLAB_NENGINE_STATE',str(STATE/'nengine-ui-r33'))
 CATALOG=json.loads((ROOT/'data/full-catalog.json').read_text(encoding='utf-8'))
 if os.environ.get('FITLAB_CALCULATOR','nengine')=='nengine':
  from nengine_catalog import refresh_catalog

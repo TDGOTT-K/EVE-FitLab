@@ -20,7 +20,7 @@ def selected_ids(fit, output):
         if kind.startswith('fighter_'):
             row = rows.get(source.get('squadronId'), {})
             ability = source.get('officialAbilityId')
-            if kind == 'fighter_primary':
+            if kind in ('fighter_primary','fighter_missile_primary'):
                 if ability in row.get('excludedAbilities', []): continue
             elif ability not in row.get('includedSecondaryAbilities', []): continue
         selected.append(item['id'])

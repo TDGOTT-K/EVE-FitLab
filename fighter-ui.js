@@ -41,7 +41,7 @@ export function mountFighters(root,{ship,fit,report,mutate,browse,say,validate,o
   change(s=>Object.assign(s,next));
  };
  function weaponHeader(t,entry,list,index){
-  const ident=entry.id||'fighter-'+list+'-'+index,projection=report?.native?.fighters?.[ident];
+  const ident=entry.id||'fighter-'+list+'-'+index,projection=report?.native?.fighterEntities?.[ident];
   const abilities=projection?.abilityMetadata?.abilities?.filter(a=>[2233,2182,2401].includes(a.duration?.source?.attributeId))||[];
   if(!abilities.length)return null;
   const header=document.createElement('div');header.className='menu-title fighter-weapon-header';
@@ -49,8 +49,8 @@ export function mountFighters(root,{ship,fit,report,mutate,browse,say,validate,o
   const name=document.createElement('span');name.textContent=t.name;const label=document.createElement('small');label.textContent='计入已选输出';caption.append(name,label);header.append(caption);
   const bar=document.createElement('div');bar.className='fighter-weapon-bar';header.append(bar);
   for(const a of abilities){
-   const primary=a.duration.source.attributeId===2233,metric=fit.outputMetric||'nominalCycleDps';
-   const contribution=report.native.outputContributions?.items.find(item=>item.source.squadronId===ident&&item.source.officialAbilityId===a.abilityId),reading=contribution?.metrics[metric];
+   const metric=fit.outputMetric||'nominalCycleDps';
+   const contribution=report.native.outputContributions?.items.find(item=>item.source.squadronId===ident&&item.source.officialAbilityId===a.abilityId),reading=contribution?.metrics[metric],primary=['fighter_primary','fighter_missile_primary'].includes(contribution?.kind);
    const enabled=primary?!(entry.excludedAbilities||[]).includes(a.abilityId):(entry.includedSecondaryAbilities||[]).includes(a.abilityId),available=reading?.state==='available'&&Number.isFinite(reading.value)&&!!reading.aggregationKey;
    const button=document.createElement('button');button.type='button';button.role='menuitemcheckbox';button.disabled=(!available&&!enabled)||host._busy;button.setAttribute('aria-checked',String(enabled));button.setAttribute('aria-label',(a.displayName.zh||a.displayName.en)+'计入DPS');
    button.title=available?(list==='reserve'||!entry.active?'当前中队未参战；此选择在参战后生效':'只改变显示选择，不改变部署或消耗弹药'):reading?.reason==='FINITE_ABILITY_USE_LOADED_CYCLE_BASIS'?'请先在攻击区域切换为有限弹量周期 DPS':reading?.reason||'此能力没有可用的周期输出';

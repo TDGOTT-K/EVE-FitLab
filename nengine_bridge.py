@@ -10,7 +10,7 @@ import queue
 import subprocess
 import threading
 
-DEFAULT_ROOT = Path(__file__).resolve().parent.parent / 'N号引擎-UI接入-0.181-r24'
+DEFAULT_ROOT = Path(__file__).resolve().parent.parent / 'N号引擎-UI接入-0.190-r33'
 
 class NEngineBridge:
     def __init__(self, root=None, state=None):
@@ -20,7 +20,7 @@ class NEngineBridge:
         self.baseline = json.loads((self.root / 'UI-BASELINE.json').read_text(encoding='utf-8-sig'))
         if not self.baseline.get('independentClone'):
             raise ValueError('拒绝连接非独立引擎副本')
-        self.state = Path(state or os.environ.get('FITLAB_NENGINE_STATE',Path(__file__).resolve().parent / 'state/nengine-ui-r24')).resolve()
+        self.state = Path(state or os.environ.get('FITLAB_NENGINE_STATE',Path(__file__).resolve().parent / 'state/nengine-ui-r33')).resolve()
         self.lock = threading.RLock()
         self.process = None
         self.sequence = 0
@@ -99,6 +99,7 @@ class NEngineBridge:
                     raise ValueError('引擎工具清单与交付基线不一致')
                 contract=self.status['publicContract']
                 if (self.status['engineVersion']!=self.baseline['engineVersion'] or contract['revision']!=self.baseline['revision']
+                    or (self.baseline.get('staticRule') and self.status['ruleVersion']!=self.baseline['staticRule'])
                     or self.status['source']['indexSha256']!=self.baseline['indexSha256']):
                     self.status=None
                     raise ValueError('引擎副本版本与锁定基线不一致，请先验收新契约')
