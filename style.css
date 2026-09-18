@@ -593,3 +593,5 @@ label:has(>input[type="checkbox"]:disabled){cursor:default;color:var(--muted)}
 .mutation-range{background:#211c24}.mutation-allowed{position:absolute;top:0;height:100%;background:#97635788;border-radius:2px}.mutation-baseline{z-index:1}.abyssal-instance[draggable=true]{cursor:grab}
 
 .mutation-plasmid-icon{width:44px;height:44px;flex:none;object-fit:contain}
+
+.native-output-metric{width:100%;margin:3px 0 8px;background:#111d26;border:1px solid #29404d;color:#a5ced7;font-size:11px;padding:5px}.native-output-details{font-size:11px;margin-top:8px}.native-output-details summary{cursor:pointer;color:#80a6b5}.native-output-details summary span{float:right}.native-output-item{display:grid;grid-template-columns:1fr auto;gap:4px;padding:8px 0;border-bottom:1px solid #20313b}.native-output-item small{grid-column:1/-1;color:#93a0a9}.native-output-item b{color:#bad5df;font-variant-numeric:tabular-nums}

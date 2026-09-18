@@ -6,7 +6,7 @@ import shutil
 
 ROOT=Path(__file__).resolve().parent.parent
 parser=argparse.ArgumentParser()
-parser.add_argument('--engine',default=str(ROOT.parent/'N号引擎-UI接入-0.180-r23'))
+parser.add_argument('--engine',default=str(ROOT.parent/'N号引擎-UI接入-0.181-r24'))
 args=parser.parse_args()
 source=Path(args.engine).resolve()
 baseline=json.loads((source/'UI-BASELINE.json').read_text(encoding='utf-8-sig'))

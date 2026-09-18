@@ -1,4 +1,4 @@
-"""Real read-only calculations against the independent r23 copy; never battle jobs."""
+"""Real read-only calculations against the independent r24 copy; never battle jobs."""
 import copy
 import json
 from pathlib import Path
@@ -14,7 +14,7 @@ class NativeIntegration(unittest.TestCase):
 
     def test_pinned_source_and_resources(self):
         r=analyze(self.fit())
-        self.assertEqual(r['engineVersion'],'0.180.0')
+        self.assertEqual(r['engineVersion'],'0.181.0')
         self.assertEqual(r['source']['buildNumber'],3503375)
         self.assertEqual(r['attributes']['cpuAvailable'],r['native']['attributes']['ship/48']['value'])
         self.assertTrue(r['native']['staticCoverageComplete'])
@@ -60,7 +60,8 @@ class NativeIntegration(unittest.TestCase):
         f['fighterLoadout']['tubes'][0]['excludedAbilities']=[22]
         off=analyze(f)
         self.assertGreater(on['fighterDamageSelection']['primaryDps'],0)
-        self.assertEqual(off['fighterDamageSelection']['primaryDps'],0)
+        self.assertIsNone(off['fighterDamageSelection']['primaryDps'])
+        self.assertEqual(off['outputSelection']['status'],'empty_selection')
         self.assertEqual(on['nativeFit'],off['nativeFit'])
         self.assertEqual(on['native']['resources'],off['native']['resources'])
         self.assertEqual(off['native']['fighterPrimaryNominalDps'],on['native']['fighterPrimaryNominalDps'])

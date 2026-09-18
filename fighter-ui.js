@@ -46,17 +46,19 @@ export function mountFighters(root,{ship,fit,report,mutate,browse,say,validate,o
   if(!abilities.length)return null;
   const header=document.createElement('div');header.className='menu-title fighter-weapon-header';
   const caption=document.createElement('div');caption.className='fighter-weapon-caption';
-  const name=document.createElement('span');name.textContent=t.name;const label=document.createElement('small');label.textContent='计入 DPS';caption.append(name,label);header.append(caption);
+  const name=document.createElement('span');name.textContent=t.name;const label=document.createElement('small');label.textContent='计入已选输出';caption.append(name,label);header.append(caption);
   const bar=document.createElement('div');bar.className='fighter-weapon-bar';header.append(bar);
   for(const a of abilities){
-   const primary=a.duration.source.attributeId===2233,enabled=primary&&!(entry.excludedAbilities||[]).includes(a.abilityId);
-   const button=document.createElement('button');button.type='button';button.role='menuitemcheckbox';button.disabled=!primary||host._busy;button.setAttribute('aria-checked',String(enabled));button.setAttribute('aria-label',(a.displayName.zh||a.displayName.en)+'计入DPS');
-   button.title=primary?(list==='reserve'||!entry.active?'当前中队未参战；此选择在参战后生效':'点击切换是否计入此中队的主武器输出'):'当前引擎副本尚未提供此武器的静态 DPS，暂不能计入';
+   const primary=a.duration.source.attributeId===2233,metric=fit.outputMetric||'nominalCycleDps';
+   const contribution=report.native.outputContributions?.items.find(item=>item.source.squadronId===ident&&item.source.officialAbilityId===a.abilityId),reading=contribution?.metrics[metric];
+   const enabled=primary?!(entry.excludedAbilities||[]).includes(a.abilityId):(entry.includedSecondaryAbilities||[]).includes(a.abilityId),available=reading?.state==='available'&&Number.isFinite(reading.value)&&!!reading.aggregationKey;
+   const button=document.createElement('button');button.type='button';button.role='menuitemcheckbox';button.disabled=(!available&&!enabled)||host._busy;button.setAttribute('aria-checked',String(enabled));button.setAttribute('aria-label',(a.displayName.zh||a.displayName.en)+'计入DPS');
+   button.title=available?(list==='reserve'||!entry.active?'当前中队未参战；此选择在参战后生效':'只改变显示选择，不改变部署或消耗弹药'):reading?.reason==='FINITE_ABILITY_USE_LOADED_CYCLE_BASIS'?'请先在攻击区域切换为有限弹量周期 DPS':reading?.reason||'此能力没有可用的周期输出';
    const glyph=document.createElement('span');glyph.className='fighter-weapon-symbol';glyph.textContent=primary?'◎':a.duration.source.attributeId===2401?'✹':'↗';
    const text=document.createElement('span');text.className='fighter-weapon-name';text.textContent=a.displayName.zh||a.displayName.en;
-   const stateLabel=document.createElement('small');stateLabel.textContent=!primary?'待接入':enabled?'已计入':'不计入';if(primary&&(list==='reserve'||!entry.active))stateLabel.textContent=enabled?'已选 · 待命':'不计入';
+   const stateLabel=document.createElement('small');stateLabel.textContent=!available?(reading?.reason==='FINITE_ABILITY_USE_LOADED_CYCLE_BASIS'?'需有限弹量口径':'当前不可计入'):enabled?'已计入':'不计入';if(available&&(list==='reserve'||!entry.active))stateLabel.textContent=enabled?'已选 · 待命':'不计入';
    button.append(glyph,text,stateLabel);
-   button.onclick=()=>{document.querySelector('#menu').hidden=true;change(s=>{const row=s[list][index],excluded=new Set(row.excludedAbilities||[]);if(excluded.has(a.abilityId))excluded.delete(a.abilityId);else excluded.add(a.abilityId);row.excludedAbilities=[...excluded]})};bar.append(button);
+   button.onclick=()=>{document.querySelector('#menu').hidden=true;const next=structuredClone(state),row=next[list][index],field=primary?'excludedAbilities':'includedSecondaryAbilities',set=new Set(row[field]||[]);if(set.has(a.abilityId))set.delete(a.abilityId);else set.add(a.abilityId);row[field]=[...set];mutate(()=>{fit.fighterLoadout=next},'已更新输出选择 · 部署与库存不变')};bar.append(button);
   }
   return header;
  }

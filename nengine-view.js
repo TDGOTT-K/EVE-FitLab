@@ -1,3 +1,4 @@
+import {outputHtml,outputReading} from './nengine-output-view.js';
 // Native report presenter: formatting and layout only; values belong to NEngine.
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=(n,u='')=>Number.isFinite(n)?n.toLocaleString('zh-CN',{maximumFractionDigits:2})+(u?' '+u:''):'—';
@@ -17,18 +18,13 @@ export function nativeSlotMetrics(report,slot,group){
 export function nativeResources(host,report){
  if(!report.native.resources.length){host.innerHTML='<p class="profile-note">当前输入包含未支持效果，资源数值不可用</p>';return;}host.innerHTML=report.native.resources.filter(r=>['cpu','powergrid'].includes(r.id)).map(r=>`<div class="meter ${r.withinCapacity?'':'over'}"><label>${r.id==='cpu'?'CPU':'能量栅格'} 剩余<span>${fmt(r.remaining)} / ${fmt(r.capacity,r.id==='cpu'?'tf':'MW')}</span></label><progress value="${Math.max(0,r.remaining)}" max="${r.capacity||1}"></progress></div>`).join('');
 }
-export function mountNativeStats(root,report,{mode='hp',onMode,onDamageEdit,catalog=[]}={}){
+export function mountNativeStats(root,report,{mode='hp',onMode,onDamageEdit,onOutputMetric,catalog=[]}={}){
  const a=report.native,attrs=a.attributes;
  const attr=(label,id,unit='',scale=1)=>{const t=attrs['ship/'+id];return row(label,fmt(t? t.value/scale : null,unit),nativeDetail(t,label))};
  const cap=a.capacitor;
  let html=head('电容',cap?`<b style="color:${cap.stableFromFullInAverageModel?'#79d6ab':'#f18080'}">${cap.stableFromFullInAverageModel?'稳定 · '+fmt(cap.stableFraction*100)+'%':'不稳定'}</b>`:'—');
  html+='<div class="stat-block">'+(cap?row('容量',fmt(cap.recharge.capacity,'GJ'))+row('平均耗电',fmt(cap.averageActiveDrain,'GJ/s'))+row('峰值回充',fmt(cap.recharge.peakRecharge,'GJ/s'))+'<small class="profile-note">平均负载模型 · 非逐周期续航</small>':row('电容','不可计算'))+'</div>';
- html+=head('攻击',`<b>${fmt(a.nominalDps)} DPS</b>`)+'<div class="stat-block">';
- html+=row('武器 DPS',fmt(a.weaponNominalDps))+row('无人机 DPS',fmt(a.droneNominalDps));
- if(Object.keys(a.fighters).length)html+=row('舰载机已选武器 DPS',fmt(report.fighterDamageSelection?.primaryDps??a.fighterPrimaryNominalDps));
- html+=row('含换弹 DPS',fmt(a.coldSustainedDps));
- if(a.nominalDpsUnavailableReason)html+='<p class="profile-note">'+esc(a.nominalDpsUnavailableReason==='FIGHTER_TOTAL_DPS_POLICY_REQUIRED'?'舰载机主武器单列；特殊攻击未计入总 DPS。':a.nominalDpsUnavailableReason)+'</p>';
- html+='<small class="profile-note">不扣目标抗性 · 应用曲线 / EDPS 待接入</small></div>';
+ html+=head('攻击',`<b title="已选输出">${outputReading(report.outputSelection)} DPS</b>`)+outputHtml(report,catalog);
  const defense=a.defense;
  html+=head('防御')+'<div class="stat-block"><div class="defense-mode-switch">'+[['hp','HP'],['ehp','EHP'],['targeted','针对抗']].map(([key,label])=>`<button data-native-defense="${key}" aria-pressed="${mode===key}">${label}</button>`).join('')+'<button data-native-damage>来伤比例</button></div>';
  if(defense){
@@ -45,6 +41,7 @@ export function mountNativeStats(root,report,{mode='hp',onMode,onDamageEdit,cata
  if(all.length)html+='<details class="native-status"><summary>计算范围与待处理项 <b>'+all.length+'</b></summary>'+all.map(s=>'<p class="profile-note">'+esc(s)+'</p>').join('')+'</details>';
  root.innerHTML=html;
  root.querySelectorAll('[data-native-defense]').forEach(b=>b.onclick=()=>onMode?.(b.dataset.nativeDefense));
+ root.querySelector('.native-output-metric').onchange=e=>onOutputMetric?.(e.target.value);
  root.querySelector('[data-native-damage]').onclick=()=>onDamageEdit?.();
 }
 export function nativeItemParameters(calculation,key){

@@ -1,7 +1,8 @@
-"""FitLab v1 -> pinned NEngine r23. Mapping only; no duplicate fitting formulas."""
+"""FitLab v1 -> pinned NEngine r24. Mapping only; no duplicate fitting formulas."""
 from functools import lru_cache
 import json
 from nengine_bridge import NEngineBridge
+from nengine_output import METRICS, selected_ids, grouped_reading
 
 @lru_cache(maxsize=1)
 def bridge(): return NEngineBridge()
@@ -64,6 +65,17 @@ def analyze(f):
     if f.get('defenseMode')=='targeted' and isinstance(profile,list) and len(profile)==4:
         context['incomingDamage']=dict(zip(('em','thermal','kinetic','explosive'),profile))
     a=client.call('fit_analyze',{'fit':native,'context':context})['result']
+    metric=f.get('outputMetric','nominalCycleDps')
+    if metric not in METRICS: raise ValueError('输出口径无效')
+    if 'outputContributions' not in a: raise ValueError('当前适配器需要 r24 分项输出接口，请检查独立副本路径')
+    contribution_ids=selected_ids(f,a['outputContributions'])
+    context['output']={'selection':{'metric':metric,'contributionIds':contribution_ids}}
+    a=client.call('fit_analyze',{'fit':native,'context':context})['result']
+    output=a['outputContributions']
+    selected=[item for item in output['items'] if item['id'] in contribution_ids]
+    breakdown={kind:grouped_reading([item for item in selected if (
+        item['kind'].startswith('fighter_') if kind=='fighters' else item['kind']=='drone' if kind=='drones' else item['kind'].startswith('ship_'))],metric)
+        for kind in ('weapons','drones','fighters')}
     attrs=a['attributes']
     def value(key):return attrs.get(key,{}).get('value')
     resources={r['id']:r for r in a['resources']}
@@ -89,10 +101,11 @@ def analyze(f):
     if f.get('cargo'): notices.append('本批尚未接入货舱库存校验。')
     issues=list(a['errors'])
     if not a['staticCoverageComplete']:
-        issues.append({'code':'STATIC_COVERAGE_INCOMPLETE','message':'当前引擎副本未覆盖部分装备或技能效果，数值不可用；未删减输入。'})
+        issues.append({'code':'STATIC_COVERAGE_INCOMPLETE','message':'当前引擎副本未覆盖部分效果；分项是否可用以各自状态为准，完整装配尚未通过校验。'})
     selection=fighter_damage_selection(f,a)
     return {'provider':'nengine','contract':'fitlab-analysis-v2','engineVersion':status['engineVersion'],
-        'fighterDamageSelection':selection,
+        'fighterDamageSelection':selection,'outputSelection':output['selection'],'outputBreakdown':breakdown,
+        'outputContext':context['output'],
         'native':a,'nativeFit':native,'attributes':projection,'snapshot':{'modules':modules},
         'skillCount':len(native['skills']),'isValid':not issues,
         'issues':issues,'integrationNotices':notices,'source':{'buildNumber':build,'revision':client.baseline['revision']}}
@@ -106,17 +119,14 @@ def fighter_damage_selection(f,analysis):
     for location in ('tubes','reserve'):
         for i,row in enumerate((f.get('fighterLoadout') or {}).get(location,[])):
             if row: rows[row.get('id') or f'fighter-{location}-{i}']=row
-    included=[];excluded=[]
-    for ident,projection in analysis['fighters'].items():
-        if not projection['deployed']: continue
-        abilities=projection['abilityMetadata']['abilities']
-        primary=next((x for x in abilities if (x.get('duration') or {}).get('source',{}).get('attributeId')==2233),None)
-        disabled=rows.get(ident,{}).get('excludedAbilities',[])
-        if not isinstance(disabled,list) or len(disabled)>16 or any(type(x) is not int for x in disabled):
-            raise ValueError('舰载机武器选择无效')
-        (excluded if primary and primary['abilityId'] in disabled else included).append(ident)
-    return {'primaryDps':sum(analysis['fighters'][i]['primaryNominalDps'] for i in included) if analysis['staticCoverageComplete'] else None,
-        'includedSquadrons':included,'excludedSquadrons':excluded,
+    output=analysis['outputContributions']
+    ids=set(selected_ids(f,output))
+    primaries=[item for item in output['items'] if item['kind']=='fighter_primary' and item['source'].get('deployed')]
+    selected=[item for item in primaries if item['id'] in ids]
+    reading=grouped_reading(selected,'nominalCycleDps')
+    return {'primaryDps':reading['total'],
+        'includedSquadrons':[item['source']['squadronId'] for item in selected],
+        'excludedSquadrons':[item['source']['squadronId'] for item in primaries if item['id'] not in ids],
         'scope':'selected_engine_primary_contributions_only'}
 
 @lru_cache(maxsize=1)
