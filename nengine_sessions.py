@@ -6,7 +6,7 @@ UI layout, scenarios and analysis selection do not become fitting commands.
 from nengine_adapter import bridge
 
 OPERATIONS={
-    'create':('fit_create',{'sessionId','fit'}),
+    'create':('fit_create',{'sessionId','fit','allowIncompleteDraft'}),
     'import':('fit_import',{'sessionId','document'}),
     'inspect':('fit_inspect',{'sessionId','context'}),
     'preview':('fit_preview',{'sessionId','revision','commands','context'}),

@@ -58,4 +58,30 @@ class NativeSessions(unittest.TestCase):
         with self.assertRaises(ValueError):self.call('inspect',sessionId='qa',unexpected=True)
         with self.assertRaises(ValueError):request('battle',{},self.client)
 
+    def test_diagnostic_draft_policy_public_parity_and_import(self):
+        fit={**self.fit,'items':[{'id':'bad','typeId':2881,'slotIndex':7,'online':False,'active':False,'overheated':False}]}
+        created=self.call('create',sessionId='qa',fit=fit,allowIncompleteDraft=True)
+        self.assertTrue(created['allowIncompleteDraft'])
+        self.assertTrue(self.call('inspect',sessionId='qa')['analysis']['errors'])
+        commands=[{'kind':'setName','name':'Diagnostic saved'}]
+        path=self.root/'commands.json';path.write_text(json.dumps(commands),encoding='utf-8')
+        preview=self.call('preview',sessionId='qa',revision=0,commands=commands)
+        self.assertTrue(preview['committable']);self.assertTrue(preview['analysis']['errors'])
+        self.assertEqual(preview,self.cli('eve-preview',revision=0,commands=path))
+        applied=self.call('execute',sessionId='qa',revision=0,requestId='edit',operation='apply',commands=commands)
+        self.assertEqual(applied['appliedFitHash'],preview['candidateHash'])
+        saved=self.cli('eve-save',revision=1,request='save')
+        self.assertFalse(saved['dirty']);self.assertTrue(saved['analysis']['errors'])
+        export=self.call('export',sessionId='qa',snapshot='saved')
+        self.assertEqual(export,self.cli('eve-export',snapshot='saved',out=self.root/'export.json'))
+        imported=self.call('import',sessionId='copy',document=export)
+        self.assertTrue(imported['allowIncompleteDraft']);self.assertFalse(imported['dirty'])
+        # CLI creates an equivalent policy-bound initial draft in a separate directory.
+        cli_state=self.root/'cli-state';cli_state.mkdir();old=self.client.state
+        fit_path=self.root/'fit.json';fit_path.write_text(json.dumps(fit),encoding='utf-8')
+        self.client.state=cli_state
+        try:cli_created=self.cli('eve-new',fit=fit_path,**{'allow-incomplete-draft':'true'})
+        finally:self.client.state=old
+        self.assertEqual(created,cli_created)
+
 if __name__=='__main__':unittest.main()

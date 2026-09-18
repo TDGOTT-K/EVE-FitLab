@@ -396,3 +396,5 @@ plan-attribute-inspection 只映射公开 Attributes/Issues/ProjectionComplete �
 ## NUI-44：原生编辑事务（进行中，暂不验收按钮）
 
 已完成独立原生事务通道及MCP/CLI同会话回归。UI预览/撤销/保存仍使用现有流程，尚未切换；须先解决静态覆盖不完整草稿的保存边界和UI元数据协调。基础验证详见joint-development.md的NUI-44a。
+
+NUI-44b进度：原生诊断草稿策略及公开MCP/CLI验证完成。已解决会话无法保存带安装错误/缺机制诊断草稿的边界；错误和空值保留，不改变游戏准入。当前界面按钮仍未切换，暂无新用户验收操作。
