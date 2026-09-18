@@ -1,4 +1,4 @@
-"""FitLab v1 -> NEngine r9. Mapping only; no duplicate fitting formulas."""
+"""FitLab v1 -> pinned NEngine r23. Mapping only; no duplicate fitting formulas."""
 from functools import lru_cache
 import json
 from nengine_bridge import NEngineBridge
@@ -90,10 +90,34 @@ def analyze(f):
     issues=list(a['errors'])
     if not a['staticCoverageComplete']:
         issues.append({'code':'STATIC_COVERAGE_INCOMPLETE','message':'当前引擎副本未覆盖部分装备或技能效果，数值不可用；未删减输入。'})
+    selection=fighter_damage_selection(f,a)
     return {'provider':'nengine','contract':'fitlab-analysis-v2','engineVersion':status['engineVersion'],
+        'fighterDamageSelection':selection,
         'native':a,'nativeFit':native,'attributes':projection,'snapshot':{'modules':modules},
         'skillCount':len(native['skills']),'isValid':not issues,
-        'issues':issues,'integrationNotices':notices,'source':{'buildNumber':build,'revision':9}}
+        'issues':issues,'integrationNotices':notices,'source':{'buildNumber':build,'revision':client.baseline['revision']}}
+
+def fighter_damage_selection(f,analysis):
+    """Sum only selected engine-returned primary contributions; never model abilities.
+
+    This is a view selection, not a change to deployment or engine combat state.
+    """
+    rows={}
+    for location in ('tubes','reserve'):
+        for i,row in enumerate((f.get('fighterLoadout') or {}).get(location,[])):
+            if row: rows[row.get('id') or f'fighter-{location}-{i}']=row
+    included=[];excluded=[]
+    for ident,projection in analysis['fighters'].items():
+        if not projection['deployed']: continue
+        abilities=projection['abilityMetadata']['abilities']
+        primary=next((x for x in abilities if (x.get('duration') or {}).get('source',{}).get('attributeId')==2233),None)
+        disabled=rows.get(ident,{}).get('excludedAbilities',[])
+        if not isinstance(disabled,list) or len(disabled)>16 or any(type(x) is not int for x in disabled):
+            raise ValueError('舰载机武器选择无效')
+        (excluded if primary and primary['abilityId'] in disabled else included).append(ident)
+    return {'primaryDps':sum(analysis['fighters'][i]['primaryNominalDps'] for i in included) if analysis['staticCoverageComplete'] else None,
+        'includedSquadrons':included,'excludedSquadrons':excluded,
+        'scope':'selected_engine_primary_contributions_only'}
 
 @lru_cache(maxsize=1)
 def fighter_catalog():

@@ -1,4 +1,4 @@
-"""Real read-only calculations against the independent r9 copy; never battle jobs."""
+"""Real read-only calculations against the independent r23 copy; never battle jobs."""
 import copy
 import json
 from pathlib import Path
@@ -14,7 +14,7 @@ class NativeIntegration(unittest.TestCase):
 
     def test_pinned_source_and_resources(self):
         r=analyze(self.fit())
-        self.assertEqual(r['engineVersion'],'0.166.0')
+        self.assertEqual(r['engineVersion'],'0.180.0')
         self.assertEqual(r['source']['buildNumber'],3503375)
         self.assertEqual(r['attributes']['cpuAvailable'],r['native']['attributes']['ship/48']['value'])
         self.assertTrue(r['native']['staticCoverageComplete'])
@@ -52,6 +52,19 @@ class NativeIntegration(unittest.TestCase):
         self.assertIsNone(r['native']['nominalDps'])
         f['fighterLoadout']['tubes']*=4
         r=analyze(f);self.assertTrue(any(e['code']=='FIGHTER_LIMIT_EXCEEDED' for e in r['issues']))
+
+    def test_weapon_selection_preserves_deployment_and_limits(self):
+        f=self.fit(23913)
+        f['fighterLoadout']={'tubes':[{'id':'shadow','typeId':2948,'quantity':6,'active':True}], 'reserve':[]}
+        on=analyze(f)
+        f['fighterLoadout']['tubes'][0]['excludedAbilities']=[22]
+        off=analyze(f)
+        self.assertGreater(on['fighterDamageSelection']['primaryDps'],0)
+        self.assertEqual(off['fighterDamageSelection']['primaryDps'],0)
+        self.assertEqual(on['nativeFit'],off['nativeFit'])
+        self.assertEqual(on['native']['resources'],off['native']['resources'])
+        self.assertEqual(off['native']['fighterPrimaryNominalDps'],on['native']['fighterPrimaryNominalDps'])
+        self.assertIsNone(off['native']['nominalDps'])
 
     def test_full_skill_coverage_is_not_silently_filtered(self):
         c=json.loads(Path('data/full-catalog.json').read_text(encoding='utf-8'))

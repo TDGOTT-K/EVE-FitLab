@@ -5,10 +5,10 @@ const types=await fetch('./api/fighters').then(r=>{if(!r.ok)throw Error('舰载�
 const icon=t=>`<img class="fighter-type-icon" src="https://images.evetech.net/types/${t.id}/icon?size=64" alt="" width="32" height="32" draggable="false" loading="lazy">`;
 const type=id=>types.find(t=>t.id===Number(id));
 let drag=null,selected=null,owner=null;
-function menu(event,origin,item,entries){
+function menu(event,origin,item,entries,header=null){
  event.preventDefault();event.stopPropagation();
  origin=origin.querySelector('.fighter-pick')||origin;
- document.dispatchEvent(new CustomEvent('fitlab-loadout-menu',{detail:{event,origin,item,entries,showDetails:false}}));
+ document.dispatchEvent(new CustomEvent('fitlab-loadout-menu',{detail:{event,origin,item,entries,header,showDetails:false}}));
 }
 function bindMenu(element,open){
  element.oncontextmenu=open;
@@ -40,6 +40,26 @@ export function mountFighters(root,{ship,fit,report,mutate,browse,say,validate,o
   else next[target][index]={id:'squadron-'+crypto.randomUUID(),typeId:drag.type,quantity:type(drag.type).max,active:true};
   change(s=>Object.assign(s,next));
  };
+ function weaponHeader(t,entry,list,index){
+  const ident=entry.id||'fighter-'+list+'-'+index,projection=report?.native?.fighters?.[ident];
+  const abilities=projection?.abilityMetadata?.abilities?.filter(a=>[2233,2182,2401].includes(a.duration?.source?.attributeId))||[];
+  if(!abilities.length)return null;
+  const header=document.createElement('div');header.className='menu-title fighter-weapon-header';
+  const caption=document.createElement('div');caption.className='fighter-weapon-caption';
+  const name=document.createElement('span');name.textContent=t.name;const label=document.createElement('small');label.textContent='计入 DPS';caption.append(name,label);header.append(caption);
+  const bar=document.createElement('div');bar.className='fighter-weapon-bar';header.append(bar);
+  for(const a of abilities){
+   const primary=a.duration.source.attributeId===2233,enabled=primary&&!(entry.excludedAbilities||[]).includes(a.abilityId);
+   const button=document.createElement('button');button.type='button';button.role='menuitemcheckbox';button.disabled=!primary||host._busy;button.setAttribute('aria-checked',String(enabled));button.setAttribute('aria-label',(a.displayName.zh||a.displayName.en)+'计入DPS');
+   button.title=primary?(list==='reserve'||!entry.active?'当前中队未参战；此选择在参战后生效':'点击切换是否计入此中队的主武器输出'):'当前引擎副本尚未提供此武器的静态 DPS，暂不能计入';
+   const glyph=document.createElement('span');glyph.className='fighter-weapon-symbol';glyph.textContent=primary?'◎':a.duration.source.attributeId===2401?'✹':'↗';
+   const text=document.createElement('span');text.className='fighter-weapon-name';text.textContent=a.displayName.zh||a.displayName.en;
+   const stateLabel=document.createElement('small');stateLabel.textContent=!primary?'待接入':enabled?'已计入':'不计入';if(primary&&(list==='reserve'||!entry.active))stateLabel.textContent=enabled?'已选 · 待命':'不计入';
+   button.append(glyph,text,stateLabel);
+   button.onclick=()=>{document.querySelector('#menu').hidden=true;change(s=>{const row=s[list][index],excluded=new Set(row.excludedAbilities||[]);if(excluded.has(a.abilityId))excluded.delete(a.abilityId);else excluded.add(a.abilityId);row.excludedAbilities=[...excluded]})};bar.append(button);
+  }
+  return header;
+ }
  host.querySelectorAll('.fighter-row').forEach(el=>{
   const list=el.dataset.fighterList,index=Number(el.dataset.fighterIndex),entry=state[list][index];
   el.querySelector('.fighter-pick').onclick=()=>select(list,index);
@@ -50,7 +70,7 @@ export function mountFighters(root,{ship,fit,report,mutate,browse,say,validate,o
     [entry.active?'设为待命':'设为参战',()=>change(s=>s.tubes[index].active=!entry.active),{disabled:host._busy}],
     ['移入备用机库',()=>change(s=>{s.reserve.push({...s.tubes[index],active:false});s.tubes[index]=null}),{disabled:host._busy}],
    ]:[['装入空发射管',()=>change(s=>{s.tubes[empty]={...s.reserve[index],active:true};s.reserve.splice(index,1)}),{disabled:host._busy||empty===undefined,title:empty===undefined?'没有空发射管':''}]];
-   menu(e,el,t,[...actions,['在浏览器中定位',()=>{select(list,index);document.querySelector('#search').value=t.name;document.querySelector('#search').dispatchEvent(new Event('input',{bubbles:true}))}],['卸下',()=>change(s=>{if(list==='reserve')s.reserve.splice(index,1);else s.tubes[index]=null}),{disabled:host._busy}],['详细信息',()=>onInfo(t)]]);
+   menu(e,el,t,[...actions,['在浏览器中定位',()=>{select(list,index);document.querySelector('#search').value=t.name;document.querySelector('#search').dispatchEvent(new Event('input',{bubbles:true}))}],['卸下',()=>change(s=>{if(list==='reserve')s.reserve.splice(index,1);else s.tubes[index]=null}),{disabled:host._busy}],['详细信息',()=>onInfo(t)]],weaponHeader(t,entry,list,index));
   });
   el.querySelectorAll('[data-delta]').forEach(b=>b.onclick=()=>change(s=>{s[list][index].quantity=Math.max(1,Math.min(type(entry.typeId).max,entry.quantity+Number(b.dataset.delta)))}));
   const active=el.querySelector('[data-active]');if(active)active.onclick=()=>change(s=>s[list][index].active=!entry.active);

@@ -25,7 +25,7 @@ export function mountNativeStats(root,report,{mode='hp',onMode,onDamageEdit,cata
  html+='<div class="stat-block">'+(cap?row('容量',fmt(cap.recharge.capacity,'GJ'))+row('平均耗电',fmt(cap.averageActiveDrain,'GJ/s'))+row('峰值回充',fmt(cap.recharge.peakRecharge,'GJ/s'))+'<small class="profile-note">平均负载模型 · 非逐周期续航</small>':row('电容','不可计算'))+'</div>';
  html+=head('攻击',`<b>${fmt(a.nominalDps)} DPS</b>`)+'<div class="stat-block">';
  html+=row('武器 DPS',fmt(a.weaponNominalDps))+row('无人机 DPS',fmt(a.droneNominalDps));
- if(Object.keys(a.fighters).length)html+=row('舰载机主武器 DPS',fmt(a.fighterPrimaryNominalDps));
+ if(Object.keys(a.fighters).length)html+=row('舰载机已选武器 DPS',fmt(report.fighterDamageSelection?.primaryDps??a.fighterPrimaryNominalDps));
  html+=row('含换弹 DPS',fmt(a.coldSustainedDps));
  if(a.nominalDpsUnavailableReason)html+='<p class="profile-note">'+esc(a.nominalDpsUnavailableReason==='FIGHTER_TOTAL_DPS_POLICY_REQUIRED'?'舰载机主武器单列；特殊攻击未计入总 DPS。':a.nominalDpsUnavailableReason)+'</p>';
  html+='<small class="profile-note">不扣目标抗性 · 应用曲线 / EDPS 待接入</small></div>';
