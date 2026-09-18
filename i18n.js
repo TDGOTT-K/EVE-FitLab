@@ -11,10 +11,10 @@ function bundle(language){if(bundles.has(language))return bundles.get(language);
 function rebuild(){const b=bundle(locale);phrases=b.map;pattern=b.pattern;revision++;}
 export function translateFor(language,source){if(source==null)return '';const text=String(source);if(language==='zh-CN')return text;const b=bundle(language);let result=b.map[text]??(b.pattern?text.split(/(「[^」]*」)/g).map(part=>part.startsWith('「')?part:part.replace(b.pattern,s=>b.map[s])).join(''):text);return language==='zh-TW'?toTraditional(result):result;}
 export function t(source,params={}){return translateFor(locale,source).replace(/\{(\w+)\}/g,(m,k)=>params[k]??m)}
-export function gameName(type){const id=typeof type==='object'?type.id:type,n=game.names[id];if(!n)return typeof type==='object'?type.name||type.en||String(id):String(id);return locale==='zh-CN'?n.zh||n.en:locale==='zh-TW'?toTraditional(n.zh||n.en):n[locale]||n.en;}
+export function gameName(type){const id=typeof type==='object'?type.id:type,n=typeof type==='object'&&type.names?type.names:game.names[id];if(!n)return typeof type==='object'?type.name||type.en||String(id):String(id);return locale==='zh-CN'?n.zh||n.en:locale==='zh-TW'?toTraditional(n.zh||n.en):n[locale]||n.en;}
 export const formatNumber=(n,options={})=>new Intl.NumberFormat(locale,options).format(n);
 export const formatDate=(value,options={})=>new Intl.DateTimeFormat(locale,{dateStyle:'medium',timeStyle:'short',...options}).format(new Date(value));
-export function matchesName(type,query){const q=query.toLocaleLowerCase();const names=game.names[type.id]||{};return [type.name,type.en,String(type.id),...Object.values(names),toTraditional(type.name||'')].some(s=>String(s).toLocaleLowerCase().includes(q))}
+export function matchesName(type,query){const q=query.toLocaleLowerCase();const names=type.names||game.names[type.id]||{};return [type.name,type.en,String(type.id),...Object.values(names),toTraditional(type.name||'')].some(s=>String(s).toLocaleLowerCase().includes(q))}
 const texts=new WeakMap(),attrs=new WeakMap();
 // User-authored fields are never translated. The adapter only changes presentation,
 // leaving canonical labels, model values, data attributes and event handlers intact.

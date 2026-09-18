@@ -189,6 +189,11 @@ class Handler(SimpleHTTPRequestHandler):
   if os.environ.get('FITLAB_API_KEY') and self.headers.get('X-FitLab-Key')!=os.environ['FITLAB_API_KEY']:return self.reply({'error':'未授权'},403)
   try:
    if self.path=='/api/catalog':return self.reply(CATALOG)
+   if self.path=='/api/catalog-source':
+    if os.environ.get('FITLAB_CALCULATOR','nengine')=='nengine':
+     from nengine_catalog import index_metadata
+     return self.reply(index_metadata()['source'])
+    return self.reply({'buildNumber':3248221,'scope':'legacy_catalog'})
    if self.path=='/api/engine-status':
     from nengine_adapter import bridge
     return self.reply({'provider':os.environ.get('FITLAB_CALCULATOR','nengine'),'status':bridge().discover()})

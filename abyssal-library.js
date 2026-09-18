@@ -16,7 +16,7 @@ export function installAbyssalLibrary({host,catalog,api,render,onLocate,onInfo,o
  async function load(){if(loading)return;loading=true;error='';try{[records,mutationOptions]=await Promise.all([api('abyssal-instances'),api('mutation-options')]);loaded=true}catch(e){error=e.message}finally{loading=false;if(active)render()}}
  function switchTo(value){if(active===value)return;views[active?'abyss':'normal']={query:search.value,scroll:root.scrollTop};active=value;host.classList.toggle('abyssal-skin',active);footer.textContent=active?'双击安装 · 拖入槽位 · 右键管理':normalHint;const view=views[active?'abyss':'normal'];search.value=view.query;title.textContent=active?'深渊装备库':'装备浏览器';updateSwitch();render();root.scrollTop=view.scroll;if(active)load();}
  switchButton.onclick=()=>switchTo(!active);
- const path=t=>[...t.path,t.meta||'科技 I'];
+ const path=t=>[...t.path,t.meta||'未标注科技分类'];
  function reveal(t){let key='';for(const part of path(t)){key+='/'+part;open.add(key)}open.add('base/'+t.id);located=t.id;}
  function locate(t){onLocate();reveal(t);if(!active)switchTo(true);search.value='';render();if(!loaded)load();}
  function edit(t,record=null,copy=false){
