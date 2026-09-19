@@ -14,7 +14,7 @@ export function openAbyssalWorkbench({type,record,copy=false,onSave,api,options}
  function controls(){
   dialog.classList.toggle('mutation-editing',editing);
   dialog.querySelectorAll('[data-mode]').forEach(b=>{b.setAttribute('aria-pressed',String((b.dataset.mode==='edit')===editing));b.disabled=busy||running;});
-  dialog.querySelectorAll('[role=slider]').forEach(slider=>{const a=rule.attributes.find(a=>a.attributeId===+slider.dataset.attr),enabled=!busy&&!running&&a.minimumValue!==a.maximumValue;slider.setAttribute('aria-disabled',String(!enabled));slider.tabIndex=enabled?0:-1;});
+  dialog.querySelectorAll('[role=slider]').forEach(slider=>{const a=rule?.attributes.find(a=>a.attributeId===+slider.dataset.attr),enabled=!!a&&!busy&&!running&&a.minimumValue!==a.maximumValue;slider.setAttribute('aria-disabled',String(!enabled));slider.tabIndex=enabled?0:-1;});
   $('[data-apply]').hidden=!editing;$('[data-save]').hidden=!editing;$('[data-roll]').hidden=editing;$('[data-adopt]').hidden=editing;$('.mutation-goals').hidden=editing;
   dialog.querySelectorAll('[data-apply],[data-roll],[data-save],[data-estimate],[data-trial],[data-adopt],[data-enabled]').forEach(e=>e.disabled=busy||running||!rule);
   $('[data-adopt]').disabled=busy||running||!candidate;$('[data-save]').disabled=busy||running||!rule?.nativeInstanceSupported;picker.disabled=busy||running;$('[data-close]').disabled=busy;$('[data-stop]').hidden=!running;$('[data-stop]').disabled=stop||!running;$('[data-trial]').textContent=stream?'继续试验':'Roll 至合格';
@@ -58,8 +58,8 @@ export function openAbyssalWorkbench({type,record,copy=false,onSave,api,options}
 
  async function apply(){checkInputs();const result=await api('mutation-workbench',{...request('edit'),values});edit=result.edit;receipt=null;rule=result.rule;}
  function chanceText(c){$('[data-chance]').textContent=c.state==='impossible'?'合格概率为 0，当前条件不可能随机达成。':`单次合格概率 ${c.probability==null?'低于数值表示范围':number(c.probability*100)+'%'} · 平均需要 ${c.expectedAttempts==null?'超出数值表示范围':number(c.expectedAttempts)} 次`;}
- async function action(fn){if(busy||running)return;busy=true;controls();$('.mutation-error').textContent='';try{await fn()}catch(e){$('.mutation-error').textContent=e.message}finally{busy=false;paint()}}
- async function load(){receipt=null;edit=null;candidate=null;rule=null;targets.clear();resetTrial();await action(async()=>{const r=await api('mutation-rule',request('edit'));rule=r.data;metadata=r.metadata;values=Object.fromEntries(rule.attributes.map(a=>[a.attributeId,Math.max(a.minimumValue,Math.min(a.maximumValue,a.baseValue))]));});}
+ async function action(fn){if(busy||running)return;busy=true;try{controls();$('.mutation-error').textContent='';await fn()}catch(e){$('.mutation-error').textContent=e.message}finally{busy=false;paint()}}
+ async function load(){await action(async()=>{receipt=null;edit=null;candidate=null;rule=null;values={};metadata={};targets.clear();resetTrial();paint();const r=await api('mutation-rule',request('edit'));rule=r.data;metadata=r.metadata;values=Object.fromEntries(rule.attributes.map(a=>[a.attributeId,Math.max(a.minimumValue,Math.min(a.maximumValue,a.baseValue))]));});}
  dialog.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{if(busy||running)return;editing=b.dataset.mode==='edit';paint();});
  $('[data-adopt]').onclick=()=>{if(busy||running||!candidate)return;receipt=structuredClone(candidate);edit=null;values={...receipt.mutation.attributes};editing=true;paint();};
  $('[data-apply]').onclick=()=>action(apply);
