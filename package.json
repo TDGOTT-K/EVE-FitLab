@@ -1,6 +1,6 @@
 {
   "name": "eve-fitlab",
-  "version": "0.1.2-beta.1",
+  "version": "0.1.2-rc.1",
   "description": "EVE FitLab 舰船装配工作台",
   "author": "深海的鱼 (ImFishMan)",
   "private": true,
@@ -61,6 +61,10 @@
       {
         "from": "desktop/build/nengine",
         "to": "nengine"
+      },
+      {
+        "from": "desktop/build/release-manifest.json",
+        "to": "release-manifest.json"
       }
     ],
     "win": {
