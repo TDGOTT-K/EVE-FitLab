@@ -11,7 +11,7 @@ const icon=t=>t?'<img loading="lazy" draggable="false" src="https://images.evete
 
 export function installLoadoutManager(host,{api}){
  let plans=[],pilots=[],draft=null,dirty=false,busy=false,drag=null,returnToFit=false,analysisToken=0,analysisTimer;
- host.innerHTML='<div class="plan-workspace"><aside class="plan-library"><div class="plan-library-head"><button data-toggle-library aria-expanded="true" aria-controls="plan-library-body"><span class="plan-library-chevron">▾</span> 方案库</button><span class="plan-library-current"></span></div><div id="plan-library-body"><input class="plan-search" aria-label="搜索方案" placeholder="搜索方案或分组"><div class="plan-list plan-folder-list" tabindex="0" aria-label="脑插与增效剂方案列表"></div><div class="plan-library-blank" tabindex="0" aria-label="方案库空白区域" title="右键新建分组"></div><small>Ctrl+C / V 复制粘贴</small></div></aside><aside class="plan-browser"></aside><section class="plan-editor"><div class="plan-toolbar"></div><p class="plan-message" role="status"></p><div class="plan-content"></div></section></div>';
+ host.innerHTML='<div class="plan-workspace"><aside class="plan-library"><div class="plan-library-head"><button data-toggle-library aria-expanded="true" aria-controls="plan-library-body"><span class="plan-library-chevron">▾</span> 方案库</button><span class="plan-library-current"></span><button type="button" class="plan-library-add" aria-label="新建最外层方案" title="新建方案 · 最外层">＋</button></div><div id="plan-library-body"><input class="plan-search" aria-label="搜索方案" placeholder="搜索方案或分组"><div class="plan-list plan-folder-list" tabindex="0" aria-label="脑插与增效剂方案列表"></div><div class="plan-library-blank" tabindex="0" aria-label="方案库空白区域" title="右键新建分组"></div><small>Ctrl+C / V 复制粘贴</small></div></aside><aside class="plan-browser"></aside><section class="plan-editor"><div class="plan-toolbar"></div><p class="plan-message" role="status"></p><div class="plan-content"></div></section></div>';
  const $=s=>host.querySelector(s),message=text=>$('.plan-message').textContent=text;
  let layout={revision:0,folders:[],order:[]};const folderOpen=new Set(['']);let activeFolder=null,extraFolders=[];try{extraFolders=JSON.parse(localStorage.getItem('fitlab-plan-folders')||'[]').filter(x=>typeof x==='string')}catch{}
  const storeFolders=()=>localStorage.setItem('fitlab-plan-folders',JSON.stringify(extraFolders));
@@ -21,6 +21,7 @@ export function installLoadoutManager(host,{api}){
   $('[data-toggle-library]').setAttribute('aria-expanded',String(!libraryCollapsed));$('.plan-library-chevron').textContent=libraryCollapsed?'▸':'▾';
  }
  $('[data-toggle-library]').onclick=()=>{libraryCollapsed=!libraryCollapsed;updateLibraryFold();try{localStorage.setItem('fitlab-plan-library-collapsed',String(libraryCollapsed))}catch{}};
+ $('.plan-library-add').onclick=()=>newPlan('');
  updateLibraryFold();
  installPlanResize($('.plan-workspace'));
 
@@ -132,7 +133,7 @@ export function installLoadoutManager(host,{api}){
  }
  function draw(){
   cache();drawList();browser.refresh();
-  if(!draft){$('.plan-toolbar').innerHTML=returnToFit?'<button data-back>返回装配</button>':'';$('.plan-content').innerHTML='<div class="character-empty">创建一套可跨装配调用的脑插与增效剂方案。</div>';host.querySelector('[data-back]')?.addEventListener('click',()=>location.hash='fitting');return;}
+  if(!draft){$('.plan-toolbar').innerHTML=returnToFit?'<button data-back>返回装配</button>':'';$('.plan-content').innerHTML='<button type="button" class="plan-create-slot"><span class="plan-create-plus" aria-hidden="true">＋</span><span>创建新方案</span></button>';$('.plan-create-slot').onclick=()=>newPlan('');host.querySelector('[data-back]')?.addEventListener('click',()=>location.hash='fitting');return;}
   $('.plan-toolbar').innerHTML='<div class="plan-name-row fit-name-row"><h2>'+esc(draft.name)+'</h2><button class="edit-name-icon" data-rename aria-label="编辑方案名称" title="编辑名称"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15Z"/></svg></button></div><span class="plan-dirty">'+(dirty?'未保存':'已保存')+'</span><button data-save>保存方案</button><button data-more aria-haspopup="menu" aria-label="更多方案操作">更多 ···</button>'+(returnToFit?'<button data-use>应用到装配</button><button data-back>返回装配</button>':'');
   $('.plan-content').innerHTML='<div class="plan-meta"><label>计算角色 <select data-plan-pilot aria-label="方案计算角色"><option value="snapshot">'+esc(draft.pilot?.name||'无技能 · 基础对照')+'</option><option value="untrained">无技能 · 基础对照</option>'+pilots.map((p,i)=>'<option value="'+i+'">'+esc(p.name)+'</option>').join('')+'</select></label><small data-plan-analysis>查询引擎…</small></div><div class="plan-section-head"><b>脑插</b><span>'+draft.implants.length+' / 10</span></div><div class="plan-slots"></div><div class="plan-section-head"><b>增效剂</b><button data-roll-boosters title="每种副作用独立抽取；概率由引擎按当前角色和脑插计算">⚄ 随机服用一次</button></div><div class="plan-boosters"></div><p class="plan-scope">概率与时长由 N 引擎计算 · 非实际服用</p>';
    $('[data-rename]').onclick=rename;$('.plan-name-row h2').onclick=rename;
