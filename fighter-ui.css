@@ -13,3 +13,4 @@
 .fighter-weapon-symbol{font-size:21px;line-height:23px}
 .fighter-weapon-name{font-size:11px}
 .fighter-weapon-bar small{font-size:9px;color:var(--muted)}
+.fighter-icon-frame{position:relative;display:inline-block;width:32px;height:32px;flex:0 0 32px;overflow:visible!important}.fighter-icon-frame>.fighter-type-icon{display:block;width:100%;height:100%;margin:0;object-fit:contain}.fighter-tech-corner{position:absolute;left:0;top:0;width:14px;height:14px;background:url('assets/ship-corner-t2.png') left top/contain no-repeat;pointer-events:none}.item .fighter-icon-frame{width:30px;height:30px;flex:0 0 30px}.item .fighter-icon-frame>img{width:100%;height:100%;margin:0}

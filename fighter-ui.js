@@ -3,7 +3,8 @@ import {fighterOutputOption,toggleFighterOutput,defaultFighterOutput} from './fi
 let catalogError='';
 let types=[];
 export const fighterCatalogReady=fetch('./api/fighters').then(r=>{if(!r.ok)throw Error('舰载机目录暂不可用');return r.json()}).then(d=>d.items.map(t=>({...t,kind:({light:'轻型',heavy:'重型',support:'支援'})[t.class]}))).catch(e=>{catalogError=e.message;return []}).then(items=>{types=items;});
-const icon=t=>`<img class="fighter-type-icon" src="https://images.evetech.net/types/${t.id}/icon?size=64" alt="" width="32" height="32" draggable="false" loading="lazy">`;
+export const fighterIcon=t=>`<span class="fighter-icon-frame"><img class="fighter-type-icon" src="https://images.evetech.net/types/${t.id}/icon?size=64" alt="" width="32" height="32" draggable="false" loading="lazy">${(t.metaGroupId??t.meta)===2?'<i class="fighter-tech-corner" role="img" aria-label="二级科技" title="二级科技"></i>':''}</span>`;
+const icon=fighterIcon;
 const type=id=>types.find(t=>t.id===Number(id));
 let drag=null,selected=null,owner=null;
 function clearFighterDrag(){

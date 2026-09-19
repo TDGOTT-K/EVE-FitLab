@@ -11,7 +11,7 @@ import {effectiveModuleState} from './module-state.js';
 import {planAttributeInspection} from './plan-attribute-inspection.js';
 import {detachUnmatchedCrystals,exchangeCrystalSlots,mountCrystal,crystalProjection,crystalWearText,crystalErrorText} from './crystal-stock.js';
 import {mountNativeStats,nativeResources,nativeSlotMetrics} from './nengine-view.js';
-import {mountFighters,fighterBrowserItems,bindFighterBrowserItem,fighterMarketIcons,fighterCatalogReady} from './fighter-ui.js';
+import {mountFighters,fighterIcon,fighterBrowserItems,bindFighterBrowserItem,fighterMarketIcons,fighterCatalogReady} from './fighter-ui.js';
 import {installAbyssalLibrary} from './abyssal-library.js';
 import {openLoadoutPicker} from './loadout-manager.js';
 import {implantCatalog} from './loadout-catalog.js';
@@ -62,7 +62,7 @@ const fresh=()=>Object.entries(counts).flatMap(([kind,n])=>Array.from({length:n}
 const selectedSlots=new Set();let selectionAnchor=null,previewTimer=null,previewToken=0,previewKey=null,previewRestore=null;
 let slots=fresh(),filter=null,dragged=null,draggedInstance=null,slotDrag=null,history=[],redoHistory=[],menuOrigin=null;
 try{const saved=JSON.parse(localStorage.getItem('fitlab-prototype-v1'));if(Array.isArray(saved))slots=slots.map(s=>{const old=saved.find(v=>v.key===s.key&&v.kind===s.kind);return old&&(!old.item||byId(old.item))?{...s,...old}:s})}catch{}
-const img=t=>`<img src="https://images.evetech.net/types/${t.id}/icon?size=64" alt="" loading="lazy">`;
+const img=t=>t.kind==='fighter'?fighterIcon(t):`<img src="https://images.evetech.net/types/${t.id}/icon?size=64" alt="" loading="lazy">`;
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const abyssalLibrary=installAbyssalLibrary({host:$('.browser'),catalog,api,render:()=>renderTree(),onLocate:()=>{filter=null;cancelInstallPreview()},onInfo:t=>showInfo(t),onInstall:r=>install(abyssalItem(r)),onPreview:r=>{const t=abyssalItem(r);if(t)queueInstallPreview(installTarget(t),t.id,'hover',t)},onPreviewEnd:cancelInstallPreview,onDrag:(e,r)=>{clearDrag();const t=abyssalItem(r);if(!t){e.preventDefault();return}dragged=t.id;draggedInstance=t;e.dataTransfer.setData('text/plain',String(t.id));e.dataTransfer.effectAllowed='copy';document.querySelectorAll('.slot').forEach(el=>el.classList.add(canInstall(t,el.dataset.key)?'compatible':'incompatible'))},onDragEnd:clearDrag});
 function abyssalItem(record){const type=byId(record.resultTypeId);return type&&record.status==='generated'?{...type,name:record.name,abyssal:structuredClone(record)}:null;}
