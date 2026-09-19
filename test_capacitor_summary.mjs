@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {capacitorHtml} from './native-capacitor-view.js';
+const result={average:{complete:true,stableFromFullInAverageModel:true,stableFraction:.65,knownNetDrainGjPerSecond:2,peakRechargeGjPerSecond:8,exclusions:[]},recharge:{capacity:100},query:{horizonSeconds:60,initialFraction:1},firstFailedPaymentSeconds:10,firstSupplyStoppedSeconds:null,firstZeroSeconds:null,minimumAmountGj:10,finalAmountGj:20,sources:[],samples:[],supplies:[],sharedCargo:{}};
+const report={native:{},capacitorScenario:{result,sources:[]}};
+const html=capacitorHtml(report),details=html.indexOf('<details');
+assert(html.slice(0,details).includes('稳定 · 65 %'));
+assert(!html.slice(0,details).includes('<select'));
+assert(!html.slice(0,details).includes('付款失败'));
+result.query.horizonSeconds=3600;
+assert.equal(capacitorHtml(report).split('<details')[0],html.split('<details')[0]);
+result.average.complete=false;report.native.capacitor={stableFromFullInAverageModel:true,stableFraction:.9};
+assert(capacitorHtml(report).includes('暂无法确定'));
+result.average.complete=true;result.average.stableFromFullInAverageModel=false;
+assert(capacitorHtml(report).includes('不稳定'));assert(!capacitorHtml(report).split('<details')[0].includes('10 s'));
+const missing={native:{capacitorUnavailableReason:'missing',capacitorContributions:[{instanceId:'high-0',state:'unavailable',reason:'EVE_CAPACITOR_EFFECT'}]},snapshot:{modules:[{workspaceSlotKey:'high-0',dogmaTypeId:33400}]}};
+const blocked=capacitorHtml(missing,[{id:33400,name:'堡垒装备 I'}]);
+assert(blocked.includes('缺少 堡垒装备 I 的完整耗电数据'));assert(!blocked.includes('<select'));
+console.log('Capacitor summary is horizon independent; discrete failures and controls stay in details; exclusions never become stable.');

@@ -26,7 +26,7 @@ export function nativeResources(host,report){
 export function mountNativeStats(root,report,{mode='hp',onMode,onDamageEdit,onOutputMetric,onCapHorizon,catalog=[]}={}){
  const a=report.native,attrs=a.attributes;
  const attr=(label,id,unit='',scale=1)=>{const t=attrs['ship/'+id];return row(label,fmt(scaleReading(t?.value,scale),unit),nativeDetail(t,label))};
- let html=capacitorHtml(report);
+ let html=capacitorHtml(report,catalog);
  const unit=report.attackMode==='edps'?'EDPS':'DPS';
  const current=report.outputSelection,base=report.baselineOutputSelection,comparison=report.native.outputContributions.comparison;
  const comparisons=report.scenarioTarget?[['无情景基准',outputReading(base)+' DPS'],['差量',fmt(comparison?.delta.value,unit)],['相对基准',comparison?.ratio.state==='available'?fmt(comparison.ratio.value*100,'%'):'不可用 · '+(comparison?.ratio.reason||'缺少比较结果')]]:[];
@@ -52,7 +52,7 @@ export function mountNativeStats(root,report,{mode='hp',onMode,onDamageEdit,onOu
  root.innerHTML=html;
  root.querySelectorAll('[data-native-defense]').forEach(b=>b.onclick=()=>onMode?.(b.dataset.nativeDefense));
  root.querySelectorAll('[data-native-attack]').forEach(b=>b.onclick=()=>document.dispatchEvent(new CustomEvent('fitlab-attack-mode',{detail:b.dataset.nativeAttack})));
- root.querySelector('[data-cap-horizon]').onchange=e=>onCapHorizon?.(Number(e.target.value));
+ const capWindow=root.querySelector('[data-cap-horizon]');if(capWindow)capWindow.onchange=e=>onCapHorizon?.(Number(e.target.value));
  root.querySelector('.native-output-metric').onchange=e=>onOutputMetric?.(e.target.value);
  root.querySelector('[data-native-damage]').onclick=()=>onDamageEdit?.();
 }
