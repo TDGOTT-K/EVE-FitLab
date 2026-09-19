@@ -342,6 +342,9 @@ class Handler(SimpleHTTPRequestHandler):
    if self.path=='/api/fit-valuation':
     from nengine_valuation import value_fit
     return self.reply(value_fit(body['fit']))
+   if self.path=='/api/export/eft':
+    from eft_export import export_eft
+    return self.reply(export_eft(body['fit']))
    if self.path=='/api/import/eft':
     from eft_import import parse_eft
     return self.reply(parse_eft(body.get('text')))
