@@ -40,6 +40,10 @@ const [,catalog,marketIcons]=await Promise.all([
  fetch('./data/market-icons.json').then(r=>r.json())
 ]);
 Object.assign(marketIcons,fighterMarketIcons);
+// New SDE groups without historical market paths use FitLab navigation grouping.
+for(const t of catalog)if(t.kind==='ship'&&t.group===5120&&t.path.length===2){
+ t.path=['舰船','旗舰','指挥航母'];t.navigationSource='fitlab-capital-navigation-v1';
+}
 
 const tLabel=t;
 const $=s=>document.querySelector(s), typeIndex=new Map(catalog.map(t=>[t.id,t])), byId=id=>typeIndex.get(Number(id));
