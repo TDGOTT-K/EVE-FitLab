@@ -51,7 +51,7 @@ for(const t of catalog)if(t.kind==='ship'&&t.group===5120&&t.path.length===2){
 
 const tLabel=t;
 const $=s=>document.querySelector(s), typeIndex=new Map(catalog.map(t=>[t.id,t])), byId=id=>typeIndex.get(Number(id));
-let ship=byId(587),fitRecord={id:crypto.randomUUID(),name:'裂谷级 · 我的装配',shipId:587,skills:[],characterName:'无技能 · 基础对照'},report=null,reportVersion=-1,analysisVersion=0,analysisTimer,analysisState='pending';
+let ship=byId(587),fitRecord={id:crypto.randomUUID(),name:'裂谷级 · 我的装配',shipId:587,cargo:[],skills:[],characterName:'无技能 · 基础对照'},report=null,reportVersion=-1,analysisVersion=0,analysisTimer,analysisState='pending';
 const nativeHistory=createNativeEditHistory(api);let editTransition=null;
 const cachedItem=requestCache(id=>api('items/'+id),128);
 const cachedCalculation=requestCache(fit=>api('analyze',fit),12);
@@ -460,7 +460,7 @@ function createHullFit(hull){
  flow.querySelector('[data-create-import="text"]').onclick=()=>{flow.close();importText()};
  flow.querySelector('[data-create-import="image"]').onclick=()=>{flow.close();importImage()};
  $('#create-fit-name').focus();$('#create-fit-name').select();
- $('#create-fit-form').onsubmit=e=>{e.preventDefault();const name=$('#create-fit-name').value.trim();if(!name){$('#flow-error').textContent='请输入装配名称';return}const tags=tagInput.values();restoreFit({name,tags,shipId:hull.id,skills:[],characterName:'无技能 · 基础对照',slots:[]});flow.close();location.hash='fitting'};
+ $('#create-fit-form').onsubmit=e=>{e.preventDefault();const name=$('#create-fit-name').value.trim();if(!name){$('#flow-error').textContent='请输入装配名称';return}const tags=tagInput.values();restoreFit({name,tags,shipId:hull.id,cargo:[],skills:[],characterName:'无技能 · 基础对照',slots:[]});flow.close();location.hash='fitting'};
 };
 function openHullPicker(){
  const path=libraryTree.selectedPath();
@@ -609,12 +609,12 @@ function renderBayConfigBody(){
  const root=$('#bay-config');if(!root)return;
  root.innerHTML=(["drones","cargo"].filter(k=>k!=="drones"||!report||report.native?.bayReadouts?.droneBay?.state==="unknown"||report.native?.droneBay?.capacityCubicMeters>0||report.native?.droneBay?.bandwidthMegabitsPerSecond>0||fitRecord.drones?.length)).map(kind=>{
   const drones=kind==='drones',entries=fitRecord[kind]||[],title=drones?'无人机库':'货舱';
-  const ready=report&&reportVersion===analysisVersion,inventory=ready?report.native?.inventory:null,capacity=ready?(report.provider==='nengine'?inventory?.capacity.value:report.attributes.attributeSnapshot.capacity):null;
+  const ready=report&&reportVersion===analysisVersion,inventory=ready?report.native?.inventory:null,capacity=ready?(report.provider==='nengine'?(inventory?.capacity?.value??report.native?.attributes?.['ship/38']?.value):report.attributes.attributeSnapshot.capacity):null;
   const used=report?.provider==='nengine'&&!drones?inventory?.usedCubicMeters:entries.reduce((sum,e)=>sum+(byId(e.item)?.volume||0)*e.quantity,0);
   const fmt=n=>Number.isFinite(n)?n.toLocaleString(getLocale(),{maximumFractionDigits:1}):'—';
   const droneLimit=(label,value,max,unit)=>'<span class="bay-capacity" aria-label="'+label+'">'+label+' <b class="'+(!ready?'':value>max?'limit-over':value===max?'limit-full':'limit-free')+'">'+(ready?fmt(value):'—')+'</b> / '+(ready?fmt(max):'—')+' '+unit+'</span>';
   const droneSummary='<span class="drone-bay-resources">'+droneLimit('带宽',report?.attributes.droneBandwidthUsed,report?.attributes.droneBandwidthAvailable,'Mbit/s')+droneLimit('机库',report?.attributes.droneBayUsed,report?.attributes.droneBayAvailable,'m³')+'</span>';
-  const cargoSummary='<span class="bay-capacity" aria-label="货舱占用"><b class="'+(capacity==null?'':used>capacity?'limit-over':used===capacity?'limit-full':'limit-free')+'">'+fmt(used)+'</b> / '+(capacity==null?'—':fmt(capacity))+' m³</span>';
+  const cargoSummary='<span class="bay-capacity" aria-label="货舱占用" title="'+(!ready?'正在计算货舱':used==null?'此装配未声明货舱库存，占用量未知；右侧为当前舰船容量':'货舱已用体积 / 当前容量')+'"><b class="'+(capacity==null||used==null?'':used>capacity?'limit-over':used===capacity?'limit-full':'limit-free')+'">'+(ready&&used==null?'未知':fmt(used))+'</b> / '+(capacity==null?'—':fmt(capacity))+' m³</span>';
   const special=ready&&!drones?[['舰队机库','fleetHangarCapacity'],['舰船维护舱','shipMaintenanceBayCapacity'],['燃料舱','specialFuelBayCapacity'],['矿石舱','specialOreHoldCapacity'],['采集舱','generalMiningHoldCapacity'],['冰矿舱','specialIceHoldCapacity'],['气云舱','specialGasHoldCapacity'],['弹药舱','specialAmmoHoldCapacity']].filter(([n,k])=>report.attributes.attributeSnapshot[k]>0).map(([n,k])=>'<small>'+n+' '+fmt(report.attributes.attributeSnapshot[k])+' m³</small>').join(''):'';
   return '<section class="bay-config-section '+(filter?.bay===kind?'bay-selected':'')+'" data-bay="'+kind+'"><div class="slot-heading"><button class="bay-filter" data-select-bay="'+kind+'">'+title+'</button>'+(drones?droneSummary:cargoSummary)+'</div>'+(special?'<div class="special-bay-capacities">'+special+'</div>':'')+entries.map((e,i)=>'<div class="bay-config-item" tabindex="0" data-bay-index="'+i+'">'+img(byId(e.item))+'<span>'+esc(byId(e.item).name)+'</span>'+(drones?'<span class="drone-quantity">× <button data-edit-drone-quantity aria-label="编辑'+esc(byId(e.item).name)+'数量">'+e.quantity+'</button></span><span class="drone-launch-boxes" role="group" aria-label="出动数量">'+Array.from({length:Math.min(e.quantity,report?.native?.droneBay?.maximumActive??0)},(_,j)=>'<button class="drone-launch-box '+(j<(e.active||0)?'lit':'')+'" data-launch="'+(j+1)+'" aria-label="出动 '+(j+1)+' 架'+esc(byId(e.item).name)+'" aria-pressed="'+(j<(e.active||0))+'" '+(j>=e.quantity?'disabled':'')+' title="'+(j+1)+' 架；再次点击当前数量收回全部"></button>').join('')+'</span>':'<label>携带<input aria-label="'+esc(byId(e.item).name)+'携带数量" data-bay-field="quantity" type="number" min="1" max="100000" value="'+e.quantity+'"></label>')+'</div>').join('')+'<button class="bay-config-empty" data-select-bay="'+kind+'"><span>＋</span> 拖入'+(drones?'无人机':'物品')+' · 点击筛选浏览器</button></section>';
  }).join('');
