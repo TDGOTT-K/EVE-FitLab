@@ -1,3 +1,4 @@
+import {fighterOutputOption,toggleFighterOutput} from './fighter-output-selection.js';
 // Native fighter loadout presenter; server validates every change through the pinned engine.
 export const fighterHull = ship => [547,659].includes(ship.group);
 let catalogError='';
@@ -51,14 +52,14 @@ export function mountFighters(root,{ship,fit,report,mutate,browse,say,validate,o
   for(const a of abilities){
    const metric=fit.outputMetric||'nominalCycleDps';
    const contribution=report.native.outputContributions?.items.find(item=>item.source.squadronId===ident&&item.source.officialAbilityId===a.abilityId),reading=contribution?.metrics[metric],primary=['fighter_primary','fighter_missile_primary'].includes(contribution?.kind);
-   const enabled=primary?!(entry.excludedAbilities||[]).includes(a.abilityId):(entry.includedSecondaryAbilities||[]).includes(a.abilityId),available=reading?.state==='available'&&Number.isFinite(reading.value)&&!!reading.aggregationKey;
+   const enabled=primary?!(entry.excludedAbilities||[]).includes(a.abilityId):(entry.includedSecondaryAbilities||[]).includes(a.abilityId),{available,finite}=fighterOutputOption(contribution,metric);
    const button=document.createElement('button');button.type='button';button.role='menuitemcheckbox';button.disabled=(!available&&!enabled)||host._busy;button.setAttribute('aria-checked',String(enabled));button.setAttribute('aria-label',(a.displayName.zh||a.displayName.en)+'计入DPS');
-   button.title=available?(list==='reserve'||!entry.active?'当前中队未参战；此选择在参战后生效':'只改变显示选择，不改变部署或消耗弹药'):reading?.reason==='FINITE_ABILITY_USE_LOADED_CYCLE_BASIS'?'请先在攻击区域切换为有限弹量周期 DPS':reading?.reason||'此能力没有可用的周期输出';
+   button.title=available?((finite?'选择此武器会按有限弹量周期口径汇总已选输出；假定可发射，不代表可无限持续输出。':'只改变显示选择，不改变部署或消耗弹药。')+(list==='reserve'||!entry.active?'当前中队未参战，参战后计入。':'')):reading?.reason||'此能力没有可用的周期输出';
    const glyph=document.createElement('span');glyph.className='fighter-weapon-symbol';glyph.textContent=primary?'◎':a.duration.source.attributeId===2401?'✹':'↗';
    const text=document.createElement('span');text.className='fighter-weapon-name';text.textContent=a.displayName.zh||a.displayName.en;
-   const stateLabel=document.createElement('small');stateLabel.textContent=!available?(reading?.reason==='FINITE_ABILITY_USE_LOADED_CYCLE_BASIS'?'需有限弹量口径':'当前不可计入'):enabled?'已计入':'不计入';if(available&&(list==='reserve'||!entry.active))stateLabel.textContent=enabled?'已选 · 待命':'不计入';
+   const stateLabel=document.createElement('small');stateLabel.textContent=!available?'当前不可计入':enabled?(finite?'已计入 · 有限弹量':'已计入'):(finite?'点击计入 · 有限弹量':'不计入');if(available&&(list==='reserve'||!entry.active)&&enabled)stateLabel.textContent='已选 · 待命';
    button.append(glyph,text,stateLabel);
-   button.onclick=()=>{document.querySelector('#menu').hidden=true;const next=structuredClone(state),row=next[list][index],field=primary?'excludedAbilities':'includedSecondaryAbilities',set=new Set(row[field]||[]);if(set.has(a.abilityId))set.delete(a.abilityId);else set.add(a.abilityId);row[field]=[...set];mutate(()=>{fit.fighterLoadout=next},'已更新输出选择 · 部署与库存不变')};bar.append(button);
+   button.onclick=()=>{document.querySelector('#menu').hidden=true;const next=toggleFighterOutput(state,report.native.outputContributions?.items||[],list,index,a.abilityId,primary);mutate(()=>{fit.fighterLoadout=next.loadout;fit.outputMetric=next.metric},next.metric==='loadedCycleDps'?'已选输出按有限弹量周期计算 · 不代表持续输出':'已选输出恢复名义周期口径')};bar.append(button);
   }
   return header;
  }
