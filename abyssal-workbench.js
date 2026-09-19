@@ -21,6 +21,21 @@ export function openAbyssalWorkbench({type,record,copy=false,onSave,api,options}
  }
  function resetTrial(){stream=null;lastRequest=null;$('[data-progress]').textContent='';$('[data-chance]').textContent='';}
  function invalidate(){receipt=null;edit=null;dialog.querySelectorAll('[data-change]').forEach(e=>e.textContent='');$('.mutation-summary').textContent='数值已修改，保存时将由引擎校验';controls();}
+ // Only presentation geometry and source-declared direction; numerical comparisons remain engine receipts.
+ function decorateTrack(a){
+  const id=a.attributeId,track=$('[data-track="'+id+'"]');if(!track)return;
+  track.querySelectorAll('.mutation-marker-label,.mutation-effect').forEach(e=>e.remove());
+  const low=Math.min(a.minimumValue,a.baseValue),high=Math.max(a.maximumValue,a.baseValue),position=v=>100*(v-low)/(high-low||1),t=targets.get(id);
+  const v=editing?values[id]:candidate?.mutation.attributes[id],reference=editing?a.baseValue:values[id];
+  if(v!=null){const segment=document.createElement('i');segment.className='mutation-effect';segment.title=editing?'相对于原值的增益或减益':'相对于编辑参考值的增益或减益';segment.dataset.state=v===reference?'unchanged':a.highIsGood==null?'unknown':(v>reference)===a.highIsGood?'improved':'degraded';segment.style.left=position(Math.min(reference,v))+'%';segment.style.width=Math.abs(position(v)-position(reference))+'%';track.append(segment);}
+  const markers=editing?[{value:values[id],kind:'current',label:'编辑值'}]:[{value:t.low,kind:'low',label:'合格下限'},{value:t.high,kind:'high',label:'合格上限'},{value:values[id],kind:'reference',label:'编辑值参考'},...(v==null?[]:[{value:v,kind:'current',label:'随机候选'}])];
+  const width=track.clientWidth,lanes=[];let maxLane=0;
+  for(const marker of markers.sort((a,b)=>a.value-b.value)){
+   const label=document.createElement('span');label.className='mutation-marker-label '+marker.kind;label.dataset.marker=marker.kind;label.textContent=number(display(marker.value,a.unitId));label.title=marker.label+' · '+label.textContent+' '+unit(a.unitId,metadata[id]?.unit);track.append(label);
+   const w=label.offsetWidth,x=Math.max(0,Math.min(width-w,width*position(marker.value)/100-w/2));let lane=0;while(lanes[lane]!=null&&x<lanes[lane]+8)lane++;lanes[lane]=x+w;maxLane=Math.max(maxLane,lane);label.style.left=x+'px';label.style.bottom=(17+lane*16)+'px';
+  }
+  track.style.marginTop=(24+maxLane*16)+'px';
+ }
  function paint(){
   $('.mutation-attributes').innerHTML=(rule?.attributes||[]).map(a=>{
    const id=a.attributeId,meta=metadata[id]||{},u=unit(a.unitId,meta.unit),fmt=x=>number(display(x,a.unitId))+(u?' '+u:''),label=meta.label||a.name;
@@ -29,7 +44,7 @@ export function openAbyssalWorkbench({type,record,copy=false,onSave,api,options}
    const v=editing?values[id]:candidate?.mutation.attributes[id];
    const comparison=editing?(receipt?.rolls.find(r=>r.range.attributeId===id)?.comparison||edit?.rows.find(r=>r.attributeId===id)?.comparison):candidate?.rolls.find(r=>r.range.attributeId===id)?.comparison;
    const aria=(value,name)=>`role="slider" data-attr="${id}" aria-label="${esc(label+' '+name)}" aria-valuemin="${a.minimumValue}" aria-valuemax="${a.maximumValue}" aria-valuenow="${value}" aria-valuetext="${esc(fmt(value))}"`;
-   return `<div class="mutation-edit-row" data-row="${id}"><label><b>${editing?'':`<input type="checkbox" data-enabled="${id}" aria-label="筛选${esc(label)}" ${t.enabled?'checked':''}> `}${esc(label)}</b><small>原值 ${esc(fmt(a.baseValue))} · 允许 ${esc(fmt(a.minimumValue))} ～ ${esc(fmt(a.maximumValue))}</small></label><div class="mutation-reading"><strong data-value="${id}">${v==null?'—':esc(number(display(v,a.unitId)))}</strong><span>${esc(u)}</span></div><small data-change>${comparison?.relativeChange!=null?(comparison.relativeChange>0?'+':'')+number(comparison.relativeChange*100)+'%':''}</small><div class="mutation-range ${editing?'':'mutation-dual'}" data-track="${id}" style="grid-column:1/-1" ${editing?aria(values[id],'编辑值'):''}>
+   return `<div class="mutation-edit-row" data-row="${id}"><label><b>${editing?'':`<input type="checkbox" data-enabled="${id}" aria-label="筛选${esc(label)}" ${t.enabled?'checked':''}> `}${esc(label)}</b><small>原值 ${esc(fmt(a.baseValue))} · 允许 ${esc(fmt(a.minimumValue))} ～ ${esc(fmt(a.maximumValue))}</small></label><div class="mutation-reading"><strong data-value="${id}">${v==null?'—':esc(number(display(v,a.unitId)))}</strong><span>${esc(u)}</span></div><small data-change title="相对于原装备的变化" data-state="${comparison?.changeState||'unknown'}">${comparison?.relativeChange!=null?(comparison.relativeChange>0?'+':'')+number(comparison.relativeChange*100)+'%':''}</small><div class="mutation-range ${editing?'':'mutation-dual'}" data-track="${id}" style="grid-column:1/-1" ${editing?aria(values[id],'编辑值'):''}>
     <i class="mutation-allowed" style="left:${position(a.minimumValue)}%;width:${position(a.maximumValue)-position(a.minimumValue)}%"></i><i class="mutation-baseline" style="left:${position(a.baseValue)}%"></i>
     ${editing?`<i class="mutation-point" style="left:${position(values[id])}%"></i>`:`<i class="mutation-selection" style="left:${position(t.low)}%;width:${position(t.high)-position(t.low)}%"></i><i class="mutation-reference" style="left:${position(values[id])}%" title="编辑值参考"></i>${candidate?`<i class="mutation-point mutation-candidate-point" style="left:${position(v)}%" title="随机候选"></i>`:''}<span class="mutation-bound" data-bound="low" ${aria(t.low,'合格下限')} style="left:${position(t.low)}%"></span><span class="mutation-bound" data-bound="high" ${aria(t.high,'合格上限')} style="left:${position(t.high)}%"></span>`}
    </div>${editing?'':`<small class="mutation-range-label" data-range-label="${id}">合格范围 ${esc(fmt(t.low))} ～ ${esc(fmt(t.high))}</small>`}</div>`;
@@ -42,7 +57,7 @@ export function openAbyssalWorkbench({type,record,copy=false,onSave,api,options}
    const update=value=>{if(!enabled())return;value=Math.max(a.minimumValue,Math.min(a.maximumValue,value));
     if(bound){value=bound==='low'?Math.min(value,t.high):Math.max(value,t.low);if(value===t[bound])return;t[bound]=value;slider.style.left=position(value)+'%';track.querySelector('.mutation-selection').style.left=position(t.low)+'%';track.querySelector('.mutation-selection').style.width=position(t.high)-position(t.low)+'%';$('[data-range-label="'+id+'"]').textContent='合格范围 '+fmt(t.low)+' ～ '+fmt(t.high);resetTrial();}
     else{if(value===values[id])return;values[id]=value;$('[data-value="'+id+'"]').textContent=number(display(value,a.unitId));track.querySelector('.mutation-point').style.left=position(value)+'%';invalidate();}
-    slider.setAttribute('aria-valuenow',String(value));slider.setAttribute('aria-valuetext',fmt(value));
+    slider.setAttribute('aria-valuenow',String(value));slider.setAttribute('aria-valuetext',fmt(value));decorateTrack(a);
    };
    const move=e=>{const rect=track.getBoundingClientRect();if(!rect.width)return;const value=low+(high-low)*Math.max(0,Math.min(1,(e.clientX-dragOffset-rect.left)/rect.width)),span=a.maximumValue-a.minimumValue;update(a.minimumValue+span*Math.round(1000*Math.max(0,Math.min(1,(value-a.minimumValue)/span)))/1000);};
    slider.onpointerdown=e=>{if(!enabled()||e.button!==0)return;e.preventDefault();e.stopPropagation();pointer=e.pointerId;const rect=track.getBoundingClientRect();dragOffset=bound?e.clientX-(rect.left+position(t[bound])*rect.width/100):0;slider.setPointerCapture(pointer);slider.focus({preventScroll:true});move(e);};
@@ -51,7 +66,7 @@ export function openAbyssalWorkbench({type,record,copy=false,onSave,api,options}
    slider.onpointerup=finish;slider.onpointercancel=finish;slider.onlostpointercapture=()=>{pointer=null};
    slider.onkeydown=e=>{if(!enabled())return;const step=(a.maximumValue-a.minimumValue)/(e.shiftKey?100:1000),v=bound?t[bound]:values[id];const next={ArrowLeft:v-step,ArrowDown:v-step,ArrowRight:v+step,ArrowUp:v+step,Home:a.minimumValue,End:a.maximumValue}[e.key];if(next!==undefined){e.preventDefault();update(next)}};
   });
-  dialog.querySelectorAll('[data-enabled]').forEach(input=>input.onchange=()=>{targets.get(+input.dataset.enabled).enabled=input.checked;resetTrial();});controls();
+  dialog.querySelectorAll('[data-enabled]').forEach(input=>input.onchange=()=>{targets.get(+input.dataset.enabled).enabled=input.checked;resetTrial();});controls();for(const a of rule?.attributes||[])decorateTrack(a);
  }
  function criteria(){return [...targets].filter(([,t])=>t.enabled).map(([attributeId,t])=>({attributeId,mode:'range',minimum:t.low,maximum:t.high}));}
  function checkInputs(){if(!rule||rule.attributes.some(a=>!Number.isFinite(values[a.attributeId])||values[a.attributeId]<a.minimumValue||values[a.attributeId]>a.maximumValue))throw Error('请将编辑值保持在允许范围内')}
@@ -78,7 +93,9 @@ export function openAbyssalWorkbench({type,record,copy=false,onSave,api,options}
   }}catch(e){$('.mutation-error').textContent=e.message;}finally{running=false;if(dialog.isConnected){paint();if(stop)$('[data-progress]').textContent+=' · 已停止，可继续';}}
  };
  $('[data-stop]').onclick=()=>{stop=true;$('[data-stop]').disabled=true;$('[data-progress]').textContent+=' · 正在停止当前批次';};
- $('[data-close]').onclick=()=>{stop=true;dialog.close()};dialog.oncancel=e=>{if(busy)e.preventDefault();else stop=true};dialog.onclose=()=>{stop=true;picker.destroy();dialog.remove()};
+ $('[data-close]').onclick=()=>{stop=true;dialog.close()};dialog.oncancel=e=>{if(busy)e.preventDefault();else stop=true};dialog.onclose=()=>{stop=true;window.removeEventListener('resize',layoutLabels);picker.destroy();dialog.remove()};
+ function layoutLabels(){for(const a of rule?.attributes||[])decorateTrack(a)}
+ window.addEventListener('resize',layoutLabels);
  paint();dialog.showModal();
  if(receipt||edit){const originalReceipt=receipt,originalEdit=edit;action(async()=>{
   const info=await api('mutation-rule',request('edit'));rule=info.data;metadata=info.metadata;
