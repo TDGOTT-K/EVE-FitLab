@@ -230,6 +230,9 @@ class Handler(SimpleHTTPRequestHandler):
    if self.path=='/api/fighters':
     from nengine_adapter import fighter_catalog
     return self.reply(fighter_catalog())
+   if re.fullmatch(r'/api/capabilities/\d+',self.path):
+    from nengine_adapter import bridge
+    return self.reply(bridge().call('catalog_item',{'typeId':int(self.path.rsplit('/',1)[1])})['result'])
    if re.fullmatch(r'/api/items/\d+',self.path):
     item=TYPES.get(int(self.path.rsplit('/',1)[1]))
     if item is None and os.environ.get('FITLAB_CALCULATOR','nengine')=='nengine':

@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+let calls=0;
+globalThis.fetch=async url=>{calls++;return {ok:true,json:async()=>({capabilities:{moduleConfiguration:{states:{active:{state:'unknown'},overheated:{state:'not_applicable'}}},hullConfiguration:{tacticalModes:[{typeId:901}],subsystemSlots:[{slot:127,kind:'offensive',candidates:[{typeId:902}]}]}}})}};
+const {hydrateType,modeCandidates,subsystemSlots}=await import('./capability-discovery.js');
+const a={id:1,canActivate:true};await hydrateType(a);await hydrateType(a);
+assert.equal(calls,1);assert.equal(a.canActivate,null);assert.equal(a.canOverload,false);
+assert.equal(modeCandidates(a)[0].typeId,901);assert.equal(subsystemSlots(a)[0].slot,127);
+const {effectiveModuleState}=await import('./module-state.js');
+assert.equal(effectiveModuleState({state:'Active'},{canActivate:false}),'Active');
+console.log('Capability caching, unknown state preservation, native candidates and explicit state preservation passed.');

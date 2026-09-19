@@ -36,12 +36,18 @@ def activation_capabilities(type_id):
 
 
 def effective_module_state(slot):
-    capability=activation_capabilities(slot.get('item'))
+    capability=native_type_capabilities(slot.get('item'))
+    active=((capability or {}).get('moduleConfiguration') or {}).get('states',{}).get('active',{}).get('state')
+    capability={'canActivate':active in ('available','requires_fit_validation')}
     state=slot.get('state') or ('Offline' if slot.get('online') is False else 'Active' if capability['canActivate'] else 'Online')
     if state not in ('Offline','Online','Active','Overload'):raise ValueError('无效装备状态')
     # Old FitLab catalogs treated non-default online effect 16 as activation.
-    if state=='Active' and not capability['canActivate']:return 'Online'
     return state
+
+@lru_cache(maxsize=4096)
+def native_type_capabilities(type_id):
+    from nengine_adapter import bridge
+    return bridge().call('catalog_item',{'typeId':type_id})['result'].get('capabilities')
 
 
 def catalog_kind(category,effects):

@@ -1,11 +1,4 @@
-// UI prototype mapping from NEngine native-tactical-modes.md (SDE 3503375).
-// NEngine applies the selected mode through its native fitting graph.
-export const tacticalModes={
- 34317:[34319,34323,34321],
- 34562:[34564,34566,34570],
- 34828:[35676,35677,35678],
- 35683:[35686,35687,35688],
-};
+import {modeCandidates} from './capability-discovery.js';
 const modeIcons=[
  '<path d="m10 2 6 2.5v5c0 3.8-3 6.7-6 8.5-3-1.8-6-4.7-6-8.5v-5Z"/><path d="M10 5v9"/>',
  '<path d="m7 3 9 7-9 7 3-7Z"/><path d="M3 6h2M2 10h4M3 14h2"/>',
@@ -14,9 +7,9 @@ const modeIcons=[
 let dismissModeMenu=null;
 const modeNames=['防御模式','推进模式','精确模式'];
 const modeSvg=i=>'<svg viewBox="0 0 20 20" aria-hidden="true">'+(modeIcons[i]||'<path d="m10 2 7 4v8l-7 4-7-4V6Z"/>')+'</svg>';
-export function mountTacticalMode(root,fit,onChange){
+export function mountTacticalMode(root,fit,onChange,ship){
  dismissModeMenu?.();root.querySelector('.tactical-mode-row')?.remove();
- const modes=tacticalModes[fit.shipId];if(!modes)return;
+ const modes=modeCandidates(ship).map(m=>m.typeId);if(!modes.length)return;
  const selected=modes.indexOf(fit.tacticalModeTypeId);
  const row=document.createElement('div');row.className='tactical-mode-row';
  row.innerHTML='<span class="tactical-mode-label">'+modeSvg(-1)+'舰体模式</span><div class="tactical-mode-choice"><button type="button" id="tactical-mode-select" aria-label="舰体模式" aria-haspopup="listbox" aria-expanded="false">'+modeSvg(selected)+'<span>'+ (modeNames[selected]||'请选择模式')+'</span><span class="mode-arrow" aria-hidden="true">⌄</span></button></div><small title="已接入 N 号引擎静态配装，选择后重新计算">静态模式</small>';
@@ -27,7 +20,7 @@ export function mountTacticalMode(root,fit,onChange){
   const close=()=>{if(!menu.isConnected)return;menu.hidePopover();menu.remove();trigger.setAttribute('aria-expanded','false');window.removeEventListener('resize',close);document.removeEventListener('scroll',onScroll,true);dismissModeMenu=null;};
   const onScroll=e=>{if(!menu.contains(e.target))close();};
   dismissModeMenu=close;
-  for(const i of [-1,0,1,2]){
+  for(const i of [-1,...modes.map((_,i)=>i)]){
    const button=document.createElement('button');button.type='button';button.setAttribute('role','option');button.setAttribute('aria-selected',String(i===selected));button.setAttribute('aria-label',modeNames[i]||'请选择模式');
    button.innerHTML=modeSvg(i)+'<span>'+(modeNames[i]||'请选择模式')+'</span><span class="mode-check" aria-hidden="true">'+(i===selected?'✓':'')+'</span>';
    button.onclick=()=>{close();if(i!==selected)onChange(i<0?null:modes[i]);root.querySelector('#tactical-mode-select')?.focus({preventScroll:true});};menu.append(button);

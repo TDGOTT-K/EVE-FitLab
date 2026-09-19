@@ -1,6 +1,5 @@
 import {fighterOutputOption,toggleFighterOutput,defaultFighterOutput} from './fighter-output-selection.js';
 // Native fighter loadout presenter; server validates every change through the pinned engine.
-export const fighterHull = ship => Number.isFinite(ship?.attrs?.[2055])&&ship.attrs[2055]>0;
 let catalogError='';
 const types=await fetch('./api/fighters').then(r=>{if(!r.ok)throw Error('舰载机目录暂不可用');return r.json()}).then(d=>d.items.map(t=>({...t,kind:({light:'轻型',heavy:'重型',support:'支援'})[t.class]}))).catch(e=>{catalogError=e.message;return []});
 const icon=t=>`<img class="fighter-type-icon" src="https://images.evetech.net/types/${t.id}/icon?size=64" alt="" width="32" height="32" draggable="false" loading="lazy">`;
@@ -11,10 +10,12 @@ function clearFighterDrag(){
  document.querySelectorAll('.fighter-drop').forEach(el=>el.classList.remove('fighter-drop'));
 }
 function fighterIssueMessage(issue,resources=[]){
- const label=({'fighterClass.light':'轻型','fighterClass.support':'支援','fighterClass.heavy':'重型'})[issue.message];
+ const label=({'fighterClass.light':'轻型','fighterClass.support':'支援','fighterClass.heavy':'重型','fighterLoadedClass.light':'轻型','fighterLoadedClass.support':'支援','fighterLoadedClass.heavy':'重型'})[issue.message];
  if(!label)return issue.message;
  const resource=resources?.find(r=>r.id===issue.message);
- return Number.isFinite(resource?.capacity)?label+'舰载机已部署中队超过上限（'+resource.used+'/'+resource.capacity+'）':label+'舰载机部署超限';
+ const used=resource?.used??issue.details?.used,limit=resource?.capacity??issue.details?.limit;
+ const scope=issue.code==='FIGHTER_LOADED_LIMIT_EXCEEDED'?'管内装载':'部署';
+ return Number.isFinite(limit)?label+'舰载机'+scope+'超过上限（'+used+'/'+limit+'）':label+'舰载机'+scope+'超限';
 }
 function menu(event,origin,item,entries,header=null){
  event.preventDefault();event.stopPropagation();
