@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {fighterOutputOption,toggleFighterOutput} from './fighter-output-selection.js';
+import {fighterOutputOption,toggleFighterOutput,defaultFighterOutput} from './fighter-output-selection.js';
 import {captureEditSnapshot,restoreEditSnapshot} from './fitting-edit-snapshot.js';
 const reading={state:'available',value:20,aggregationKey:'loaded'};
 const rocket=id=>({kind:'fighter_rocket',source:{squadronId:id,officialAbilityId:33},metrics:{nominalCycleDps:{state:'requires_policy',value:null,reason:'FINITE_ABILITY_USE_LOADED_CYCLE_BASIS'},loadedCycleDps:reading}});
@@ -17,4 +17,14 @@ Object.assign(fit,{fighterLoadout:next.loadout,outputMetric:'loadedCycleDps'});c
 restoreEditSnapshot(fit,before);assert(!Object.hasOwn(fit,'outputMetric'));
 restoreEditSnapshot(fit,after);assert.equal(fit.outputMetric,'loadedCycleDps');
 assert.deepEqual(JSON.parse(JSON.stringify(fit)),fit);
+const fresh={tubes:[{id:'one'}],reserve:[]};
+const unsupported={...rocket('one'),source:{squadronId:'one',officialAbilityId:99},metrics:{nominalCycleDps:{state:'unsupported',value:null}}};
+const defaults=defaultFighterOutput(fresh,[...items,unsupported],'one');
+assert.deepEqual(defaults.loadout.tubes[0].includedSecondaryAbilities,[33]);
+assert.equal(defaults.metric,'loadedCycleDps');
+assert(!Object.hasOwn(fresh.tubes[0],'includedSecondaryAbilities'));
+const disabled=toggleFighterOutput(defaults.loadout,items,'tubes',0,33,false);
+assert.deepEqual(defaultFighterOutput(disabled.loadout,items,'one').loadout.tubes[0].includedSecondaryAbilities,[]);
+assert.equal(disabled.metric,'nominalCycleDps');
+assert.deepEqual(defaultFighterOutput({tubes:[],reserve:[{id:'one'}]},items,'one').loadout.reserve[0].includedSecondaryAbilities,[33]);
 console.log('Fighter selection: finite capability gating, atomic metric switch, other squadrons retained, final deselection and undo/redo passed.');
