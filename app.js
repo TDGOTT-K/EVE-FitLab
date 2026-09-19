@@ -475,6 +475,12 @@ function openHullPicker(){
 
 installPilotPicker($('#pilot'),{api,catalog,current:()=>fitRecord.characterName,select:c=>mutate(()=>{fitRecord.skills=structuredClone(c.skills);fitRecord.characterName=c.name;fitRecord.characterId=c.id;fitRecord.eveCharacterId=c.eveCharacterId||null;},'已更换驾驶员')});
 
+function renderFitNotes(){const node=$('#fit-notes-text');node.textContent=fitRecord.notes||'暂无备注';node.classList.toggle('is-empty',!fitRecord.notes);}
+$('#edit-fit-notes').onclick=()=>{
+ openFlow('装配备注','<form id="fit-notes-form"><label>备注<textarea aria-label="装配备注" maxlength="4000" rows="7" placeholder="用途、操作要点、适用场景…"></textarea></label><button type="submit">应用</button></form>');
+ const input=$('#fit-notes-form textarea');input.value=fitRecord.notes||'';input.focus();
+ $('#fit-notes-form').onsubmit=e=>{e.preventDefault();if(!canEditNow())return;const notes=input.value.trim();if(notes!==(fitRecord.notes||''))mutate(()=>{fitRecord.notes=notes},'已修改装配备注');flow.close();};
+};
 $('#rename-fit').onclick=()=>{
  const heading=$('.title h1'),button=$('#rename-fit');
  if($('.fit-name-input'))return;
@@ -566,7 +572,7 @@ function renderImplantEntry(){
  button.innerHTML='<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M20 27h-9v-5l-4-2 3-5v-4a9 9 0 0 1 18 0v7l-5 5v4"/><rect x="14" y="9" width="8" height="8" rx="2"/><path d="M16 6v3m4-3v3m-4 8v3m4-3v3M11 11h3m-3 4h3m8-4h3m-3 4h3"/></svg><span class="pilot-copy"><span class="pilot-caption">脑插与增效剂</span><span class="pilot-name">'+esc(snapshot?.name||'未选择方案')+'</span></span>';button.setAttribute('aria-label','脑插与增效剂'+(snapshot?.name?'：'+snapshot.name:''));button.title=(snapshot?.name||'脑插与增效剂')+' · 选择方案';
  button.onclick=()=>openLoadoutPicker(button,{api,snapshot,onSelect:applyLoadout,onManage:()=>{location.hash='characters?from=fitting';document.dispatchEvent(new CustomEvent('fitlab-manage-loadout',{detail:{id:snapshot?.id,initial:snapshot,fromFit:true}}));}});
 }
-function renderPilot(){renderImplantEntry();
+function renderPilot(){renderImplantEntry();renderFitNotes();
  const full=fitRecord.characterName||'选择角色技能',name=full==='全技能 V · 模拟角色'?'全技能 V':full;
  const button=$('#pilot');button.classList.add('pilot-identity');button.setAttribute('aria-label','切换驾驶员：'+name);button.setAttribute('aria-haspopup','dialog');button.title=full;
  button.innerHTML=`<span class="pilot-portrait">${pilotPortrait(pilotPortraitCharacters.find(c=>fitRecord.characterId?c.id===fitRecord.characterId:c.name===fitRecord.characterName)||{id:fitRecord.characterId,name:fitRecord.characterName,eveCharacterId:fitRecord.eveCharacterId})}</span><span class="pilot-copy"><span class="pilot-caption">驾驶员</span><span class="pilot-name">${esc(name)}</span></span><svg class="pilot-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg>`;
@@ -838,7 +844,7 @@ function scenarioStatusMarkup(){return '<small id="scenario-calculation-status" 
 function updateScenarioStatus(){
  const status=$('#scenario-calculation-status');if(status)status.outerHTML=scenarioStatusMarkup();
  $('.workspace').dataset.analysisState=analysisState;
- let badge=$('#scenario-context');if(!badge){badge=document.createElement('button');badge.id='scenario-context';badge.className='scenario-context';badge.setAttribute('aria-haspopup','menu');badge.setAttribute('aria-expanded','false');badge.setAttribute('aria-controls','scenario-quick-menu');$('.fit-actions').append(badge)}
+ let badge=$('#scenario-context');if(!badge){badge=document.createElement('button');badge.id='scenario-context';badge.className='scenario-context';badge.setAttribute('aria-haspopup','menu');badge.setAttribute('aria-expanded','false');badge.setAttribute('aria-controls','scenario-quick-menu');$('#fit-action-bottom').append(badge)}
  const state=scenarioPresets(fitRecord),name=state.scenarios.find(s=>s.id===state.activeScenarioId)?.name||'不应用情景';
  badge.textContent=(analysisState==='pending'?'计算中 · ':analysisState==='failed'?'计算失败 · ':'')+name+' ▾';
  badge.title='快速切换情景';

@@ -769,3 +769,17 @@ label:has(>input[type="checkbox"]:disabled){cursor:default;color:var(--muted)}
 .bay-compartment>.bay-config-section{padding:0 10px 10px;margin:0}
 .bay-compartment[open]>summary{border-bottom:1px solid var(--line);margin-bottom:8px}
 .bay-unavailable{font-size:11px;color:var(--muted);margin:4px 0}
+/* Notes occupy the central title space; editing tools sit beside scenarios. */
+#editor-page>.title{grid-template-columns:minmax(270px,1fr) minmax(180px,1fr) 360px;align-items:center}
+.fit-notes{min-width:0;align-self:stretch;padding:3px 8px;display:flex;flex-direction:column;max-height:108px}
+.fit-notes-heading{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:10px}
+.fit-notes-heading .edit-name-icon{width:24px;height:24px;padding:3px}
+#fit-notes-text{font-size:12px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere;overflow:auto;scrollbar-width:thin;min-height:0}
+#fit-notes-text.is-empty{color:var(--muted)}
+#fit-action-bottom{display:flex;align-items:center;justify-content:flex-end;gap:8px;width:100%}
+#fit-action-bottom .fit-edit-tools{display:flex;gap:3px;flex-shrink:0}
+#fit-action-bottom .fit-edit-tools button{font-size:11px;padding:4px 6px}
+#fit-action-bottom .scenario-context{margin:0;white-space:nowrap}
+#fit-notes-form textarea{width:100%;resize:vertical;background:var(--bg);color:var(--text);border:1px solid var(--line);padding:10px}
+@media(max-width:900px){#editor-page>.title{grid-template-columns:minmax(240px,1fr) 360px}.fit-notes{grid-column:1;grid-row:2;max-height:90px}.fit-actions{grid-column:2;grid-row:1/3}}
+@media(max-width:650px){#editor-page>.title{grid-template-columns:minmax(0,1fr)}.fit-notes{grid-column:1;grid-row:2}.fit-actions{grid-column:1;grid-row:3;width:100%}#fit-action-bottom{justify-content:flex-start;flex-wrap:wrap}}
