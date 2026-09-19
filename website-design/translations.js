@@ -915,3 +915,5 @@ Object.assign(window.siteTranslations, {
     "ja": "以前のテスト版をダウンロード"
   }
 });
+
+Object.assign(window.siteTranslations, {"按发布日期排列": {"zh-CN": "按发布日期排列", "zh-TW": "依發布日期排列", "en": "By release date", "ja": "リリース日順"}, "发行说明 ↗": {"zh-CN": "发行说明 ↗", "zh-TW": "發行說明 ↗", "en": "Release notes ↗", "ja": "リリースノート ↗"}});
