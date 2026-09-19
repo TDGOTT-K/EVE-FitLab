@@ -11,7 +11,7 @@ import {effectiveModuleState} from './module-state.js';
 import {planAttributeInspection} from './plan-attribute-inspection.js';
 import {detachUnmatchedCrystals,exchangeCrystalSlots,mountCrystal,crystalProjection,crystalWearText,crystalErrorText} from './crystal-stock.js';
 import {mountNativeStats,nativeResources,nativeSlotMetrics} from './nengine-view.js';
-import {mountFighters,fighterBrowserItems,bindFighterBrowserItem,fighterMarketIcons} from './fighter-ui.js';
+import {mountFighters,fighterBrowserItems,bindFighterBrowserItem,fighterMarketIcons,fighterCatalogReady} from './fighter-ui.js';
 import {installAbyssalLibrary} from './abyssal-library.js';
 import {openLoadoutPicker} from './loadout-manager.js';
 import {implantCatalog} from './loadout-catalog.js';
@@ -868,3 +868,6 @@ async function editCrystal(typeId,key=null,id=null){
   catch(error){$('#flow-error').textContent=crystalErrorText(error)}finally{form.inert=false}
  };input.focus();input.select();
 }
+
+// Fighter metadata must not gate the library. Refresh only its dependent surfaces.
+fighterCatalogReady.then(()=>{renderTree();const old=document.querySelector('#fighter-config');if(old)old._key=null;renderBayConfig();});

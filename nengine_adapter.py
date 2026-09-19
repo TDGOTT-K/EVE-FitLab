@@ -168,22 +168,16 @@ def fighter_damage_selection(f,analysis):
 
 @lru_cache(maxsize=1)
 def fighter_catalog():
-    client=bridge();client.discover()
-    page=client.call('catalog_search',{'query':{'categoryId':87,'limit':100}})['result']
-    # Read immutable indexed metadata from the SAME pinned copy, not legacy SDE.
-    ids={x['typeId'] for x in page['items']}
-    attrs={}
-    index=client.root/client.baseline['dataDirectory']
-    with (index/'typeDogma.jsonl').open(encoding='utf-8') as stream:
-        for line in stream:
-            record=json.loads(line)
-            if record['_key'] in ids:
-                attrs[record['_key']]={x['attributeID']:x['value'] for x in record.get('dogmaAttributes',[])}
-    result=[]
-    for item in page['items']:
-        a=attrs.get(item['typeId'],{})
+    # Metadata already loaded from the pinned source at server startup.
+    # Do not cold-start the analysis host to populate a navigation directory.
+    from nengine_catalog import index_metadata
+    data=index_metadata();result=[]
+    for ident,item in sorted(data['types'].items()):
+        if not item.get('published') or data['groups'].get(item['groupID'],{}).get('categoryID')!=87:continue
+        a={x['attributeID']:x['value'] for x in data['typeDogma'].get(ident,{}).get('dogmaAttributes',[])}
         kind=next((k for k,id in [('light',2212),('support',2213),('heavy',2214)] if a.get(id)==1),None)
-        if kind is None or not a.get(2215): continue
-        result.append({'id':item['typeId'],'typeId':item['typeId'],'name':item['names'].get('zh',item['names']['en']),
-            'en':item['names']['en'],'class':kind,'max':int(a[2215]),'meta':item.get('metaGroupId')})
-    return {'source':page['source'],'items':result}
+        if kind is None or not a.get(2215):continue
+        names=item['name']
+        result.append({'id':ident,'typeId':ident,'name':names.get('zh',names.get('en',str(ident))),
+            'en':names.get('en',''),'class':kind,'max':int(a[2215]),'meta':item.get('metaGroupID')})
+    return {'source':data['source'],'items':result}
