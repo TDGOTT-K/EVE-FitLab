@@ -15,6 +15,10 @@ export function mountDpsChart(root,data,{mode='distance',onMode=()=>{}}={}){
   for(const child of [...root.children])if(child!==modes)child.remove();
   modes.querySelectorAll('button').forEach((button,i)=>{button.classList.toggle('active',i===index);button.setAttribute('aria-pressed',String(i===index))});
   root.dataset.mode=keys[index];
+  if(data.status==='empty'){
+   root.insertAdjacentHTML('beforeend','<div class="dps-chart-current"><span>没有攻击来源</span><b>0 '+damageUnit+'</b></div><svg class="dps-function-plot" viewBox="0 0 440 226" role="img" aria-label="'+damageUnit+' 随'+labels[index]+'变化，恒为零"><text x="47" y="11">'+damageUnit+'</text><line class="chart-grid" x1="47" x2="47" y1="20" y2="186"/><text x="40" y="190" text-anchor="end">0</text><path class="dps-curve" d="M47 186 L422 186"/><text x="422" y="210" text-anchor="end">'+labels[index]+' →</text></svg>');
+   return;
+  }
   if(data.status!=='ready'){const p=document.createElement('p');p.className='dps-chart-empty';p.textContent=data.reason;root.append(p);return;}
   const s=data.series.find(s=>s.key===keys[index]);if(!s)return;
   const W=440,H=226,L=47,R=422,T=20,B=186;
