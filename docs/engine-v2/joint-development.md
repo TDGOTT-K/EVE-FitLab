@@ -525,3 +525,7 @@ UI改动只在已有入口、显示与悬停说明：角色管理＋→从EVE官
 ### 2026-09-20 性能联调：LOCAL-013 / NUI-88
 
 当前独立副本0.210.4-ui.perf1，契约r57不变。SDE与全结果缓存、MCP紧凑JSON；UI候选复用、预览去重、简要事务回执与gzip。所有业务数值仍从公开引擎分析获得；保留完整性/null/来源，未新增规则。引擎和UI分别提交；下一次升级必须核对LOCAL-013并保留LOCAL-010～012。实测及验证见performance-20260920.md，用户体验待验收，未发布。
+
+### 深渊工作台LOCAL-014 / NUI-90
+
+0.210.5-ui.mutation1 / r58-ui-mutation1：mutation_workbench及CLI入口提供手动范围校验、联合概率/期望、实际分批试验。规则沿用既有SDE/随机模型。手动保存经公开接口核验，UI仅做单位展示与交互；随机命中保留可重放receipt。见abyssal-edit-and-trials.md与引擎docs/ui-local-changes.md。独立提交，不打包，不修改主库/历史候选。

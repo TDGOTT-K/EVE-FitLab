@@ -68,3 +68,21 @@ def verify_receipt(receipt, base, types):
 def review_receipt(body,types):
     receipt=verify_receipt(body.get('generationReceipt'),body.get('baseTypeId'),types)
     return generate({'baseTypeId':body['baseTypeId'],'mutaplasmidTypeId':receipt['rule']['mutaplasmidTypeId'],'seed':receipt['seed']},types,roll=True)
+
+
+def workbench(body,types):
+    base,plasmid=body.get('baseTypeId'),body.get('mutaplasmidTypeId')
+    if not any(x['id']==plasmid for x in options(types).get(str(base),[])):
+        raise ValueError('突变道具不适用于当前装备')
+    engine=bridge();engine.discover()
+    return engine.call('mutation_workbench',{'request':body})['result']
+
+
+def verify_edit(receipt,base,types):
+    if not isinstance(receipt,dict) or receipt.get('rule',{}).get('baseTypeId')!=base:
+        raise ValueError('编辑凭据与原装备不符')
+    rule=receipt['rule']
+    canonical=workbench({'operation':'edit','baseTypeId':base,'mutaplasmidTypeId':rule['mutaplasmidTypeId'],
+        'values':receipt.get('mutation',{}).get('attributes')},types)['edit']
+    if canonical!=receipt:raise ValueError('编辑凭据与当前引擎不一致，请重新应用编辑')
+    return copy.deepcopy(canonical)

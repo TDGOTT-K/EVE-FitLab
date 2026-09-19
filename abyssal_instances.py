@@ -9,7 +9,7 @@ def save_instance(body,library,types,stamp):
     if type(body.get('baseTypeId')) is not int:raise ValueError('原装备类型无效')
     base=types.get(body.get('baseTypeId'))
     groups={t['group'] for t in types.values() if 'Abyssal' in t.get('en','') and t.get('kind') in ['high','mid','low']}
-    if body.get('generationReceipt') is not None:
+    if body.get('generationReceipt') is not None or body.get('editReceipt') is not None:
         from nengine_mutations import options
         eligible=bool(options(types).get(str(body['baseTypeId'])))
     else:
@@ -31,6 +31,14 @@ def save_instance(body,library,types,stamp):
             if any(not isinstance(row.get(k),str) or len(row[k])>80 for k in ('label','unit')):raise ValueError('演示属性文字无效')
         record['uiMock']=copy.deepcopy(mock)
         record['status']='mock'
+    edited=body.get('editReceipt')
+    if edited is not None:
+        if body.get('generationReceipt') is not None:raise ValueError('不能混用编辑与随机凭据')
+        from nengine_mutations import verify_edit
+        edited=verify_edit(edited,base['id'],types)
+        if not edited['rule']['nativeInstanceSupported']:raise ValueError('当前引擎不支持安装此类变异实例')
+        record.update(status='generated',origin='manual',resultTypeId=edited['rule']['resultTypeId'],mutation=copy.deepcopy(edited['mutation']),editReceipt=edited)
+        record.pop('uiMock',None)
     receipt=body.get('generationReceipt')
     if receipt is not None:
         from nengine_mutations import verify_receipt
@@ -38,7 +46,7 @@ def save_instance(body,library,types,stamp):
         if not receipt['rule']['nativeInstanceSupported']:raise ValueError('当前引擎不支持安装此类变异实例')
         record.update(status='generated',resultTypeId=receipt['rule']['resultTypeId'],mutation=copy.deepcopy(receipt['mutation']),generationReceipt=receipt)
         record.pop('uiMock',None)
-    elif previous and previous.get('generationReceipt'):
+    elif edited is None and previous and (previous.get('generationReceipt') or previous.get('editReceipt')):
         raise ValueError('编辑真实实例时须保留变异凭据')
     library['abyssalInstances']=[x for x in records if x['id']!=record['id']]+[record]
     return dict(record)

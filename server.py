@@ -304,6 +304,7 @@ class Handler(SimpleHTTPRequestHandler):
    if self.path=='/api/native-dps-curves':
     from nengine_curves import build_curves
     return self.reply(build_curves(analyze(body)))
+   if self.path=='/api/mutation-workbench':return self.reply(nengine_mutations.workbench(body,TYPES))
    if self.path=='/api/mutation-review':return self.reply(nengine_mutations.review_receipt(body,TYPES))
    if self.path in ('/api/mutation-rule','/api/mutation-roll'):
     return self.reply(nengine_mutations.generate(body,TYPES,roll=self.path.endswith('-roll')))
