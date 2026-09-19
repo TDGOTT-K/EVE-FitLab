@@ -15,7 +15,14 @@ module.exports=String.raw`(async()=>{
  const redo=await history.redo();if(redo.result.analysis.fitHash!==preview.editPreview.candidateHash)throw Error('Native redo failed');
  const exports=await api('native-session/export',{sessionId:history.state().id,snapshot:'saved'});
  if(exports.result.fitHash!==preview.editPreview.candidateHash)throw Error('Saved document differs from preview');
- return {title:document.title,characters:chars.length,cpu:preview.attributes.cpuAvailable,desktop:!!window.fitlabDesktop,
+ const replay=await import('/sandbox-preview-data.js');if(replay.default.ships.length!==6||replay.default.duration!==100)throw Error('Sandbox replay missing');
+ document.querySelector('#nav-sandbox-preview').click();
+ const frame=document.querySelector('#sandbox-preview-overlay iframe');
+ await new Promise((resolve,reject)=>{let tries=0;const timer=setInterval(()=>{try{if(frame.contentDocument?.querySelector('#play:not([disabled])')){clearInterval(timer);resolve();}else if(++tries>120){clearInterval(timer);reject(Error('Packaged sandbox frame did not load'));}}catch(e){clearInterval(timer);reject(e)}},250);});
+ const sandboxShips=frame.contentDocument.querySelectorAll('#roster button').length;
+ if(sandboxShips!==6)throw Error('Sandbox roster incomplete');
+ document.querySelector('#manage-characters').click();if(document.querySelector('#sandbox-preview-overlay'))throw Error('Sandbox navigation stuck');
+ return {sandboxShips,sandboxNavigation:true,title:document.title,characters:chars.length,cpu:preview.attributes.cpuAvailable,desktop:!!window.fitlabDesktop,
   engineVersion:preview.engineVersion,source:preview.source,previewHash:preview.editPreview.candidateHash,
   saved:saved.nativeSession,workingRevision:history.state().revision,undoRedo:true,artifactModules:true};
 })()`;
