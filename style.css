@@ -652,3 +652,10 @@ label:has(>input[type="checkbox"]:disabled){cursor:default;color:var(--muted)}
 .library-hull-picker summary::before{content:'▸';color:var(--muted)}
 .library-hull-picker details[open]>summary::before{content:'▾'}
 .new-fit-hull-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:12px}
+.info-tabs{flex-wrap:wrap}
+.ship-info-group h3,[data-info-pane="requirements"] h3{font-size:12px;font-weight:500;color:var(--accent);margin:16px 0 8px}
+.ship-info-group ul{list-style:none;padding:0;margin:0}
+.ship-info-group li{padding:7px 10px;margin:4px 0;background:var(--row);line-height:1.65;font-size:12px;border-left:2px solid var(--line)}
+.ship-info-group li b{color:var(--accent);font-variant-numeric:tabular-nums}
+.ship-required-skill{display:flex;justify-content:space-between;gap:18px;padding:10px 4px;border-bottom:1px solid var(--line);font-size:12px}
+.ship-required-skill b{color:var(--accent)}

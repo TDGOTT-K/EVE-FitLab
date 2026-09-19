@@ -98,11 +98,24 @@ def refresh_catalog(catalog):
 
 def item_metadata(item):
     data=index_metadata()
-    return {'source':{**data['source'],'typeId':item['id'],'tables':['types','typeDogma','dogmaAttributes','dogmaEffects','dogmaUnits']},
+    result={'source':{**data['source'],'typeId':item['id'],'tables':['types','typeDogma','dogmaAttributes','dogmaEffects','dogmaUnits']},
         'attributes':[dict(data['dogmaAttributes'].get(int(k),{}),id=int(k),value=v) for k,v in item['attrs'].items()],
         'units':{str(k):v for k,v in data['dogmaUnits'].items()},
         'effects':[data['dogmaEffects'].get(i,{}) for i in item['effects']],
         'description':data['types'][item['id']].get('description',{})}
+    if item.get('kind')=='ship':
+        from nengine_adapter import bridge
+        detail=bridge().call('catalog_item',{'typeId':item['id']})['result']
+        result['shipTraits']={'items':detail['traits'],'source':detail.get('traitsSource'),'units':detail['units']}
+        requirements=[]
+        attrs={data['dogmaAttributes'].get(int(k),{}).get('name'):v for k,v in item['attrs'].items()}
+        for name,value in attrs.items():
+            if not name or not name.startswith('requiredSkill') or not name[13:].isdigit() or not value:continue
+            level=attrs.get(name+'Level')
+            requirements.append({'skillTypeId':int(value),'level':level,'names':data['types'].get(int(value),{}).get('name',{}),
+                                 'source':{'table':'typeDogma','typeId':item['id'],'skillAttribute':name,'levelAttribute':name+'Level','buildNumber':data['source']['buildNumber']}})
+        result['requiredSkills']=requirements
+    return result
 
 def indexed_item(type_id):
     data=index_metadata()
