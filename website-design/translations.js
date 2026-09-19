@@ -989,3 +989,42 @@ Object.assign(window.siteTranslations, {
     "ja": "招待リンクをコピー"
   }
 });
+
+Object.assign(window.siteTranslations, {
+  "第四个公开测试版现已上线，欢迎体验并反馈问题。": {
+    "zh-CN": "第四个公开测试版现已上线，欢迎体验并反馈问题。",
+    "zh-TW": "第四個公開測試版現已上線，歡迎體驗並回報問題。",
+    "en": "The fourth public test release is available. Try it and share feedback.",
+    "ja": "第4回公開テスト版を公開しました。ぜひお試しいただき、ご意見をお寄せください。"
+  },
+  "装配交互与深渊编辑更新，新增战斗概念演示。": {
+    "zh-CN": "装配交互与深渊编辑更新，新增战斗概念演示。",
+    "zh-TW": "裝配互動與深淵編輯更新，新增戰鬥概念演示。",
+    "en": "Updated fitting interactions and abyssal editing, with a new combat concept demo.",
+    "ja": "装備操作とアビサル編集を更新し、戦闘コンセプトデモを追加。"
+  },
+  "装配交互修复、深渊装备编辑与脑插方案汇总。": {
+    "zh-CN": "装配交互修复、深渊装备编辑与脑插方案汇总。",
+    "zh-TW": "裝配互動修復、深淵裝備編輯與植入體方案彙總。",
+    "en": "Fitting interaction fixes, abyssal module editing and implant plan summaries.",
+    "ja": "装備操作の修正、アビサルモジュール編集、インプラントプランの集計。"
+  },
+  "独立船舱分区，更新物品管理体验。": {
+    "zh-CN": "独立船舱分区，更新物品管理体验。",
+    "zh-TW": "獨立船艙分區，更新物品管理體驗。",
+    "en": "Separate cargo sections improve item management.",
+    "ja": "独立したカーゴ区画でアイテム管理を改善。"
+  },
+  "新增六舰、100 秒战斗概念演示，不代表完整战斗模拟。": {
+    "zh-CN": "新增六舰、100 秒战斗概念演示，不代表完整战斗模拟。",
+    "zh-TW": "新增六艦、100 秒戰鬥概念演示，不代表完整戰鬥模擬。",
+    "en": "Adds a six-ship, 100-second combat concept demo, not a full combat simulation.",
+    "ja": "6隻・100秒の戦闘コンセプトデモを追加。完全な戦闘シミュレーションではありません。"
+  },
+  "第三个公开测试版 · 2026-09-20": {
+    "zh-CN": "第三个公开测试版 · 2026-09-20",
+    "zh-TW": "第三個公開測試版 · 2026-09-20",
+    "en": "Third public test release · 2026-09-20",
+    "ja": "第3回公開テスト版 · 2026-09-20"
+  }
+});
