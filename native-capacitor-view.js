@@ -47,6 +47,6 @@ export function capacitorHtml(report,catalog=[]){
  if(p.recharge)html+=row('容量',fmt(p.recharge.capacity,'GJ'),p.capTrace)+row('回充时间',p.timeTrace.result,p.timeTrace)+row('峰值回充',fmt(p.peak,'GJ/s'),panelReading('峰值回充',p.peak,'GJ/s',p.terms));
  if(Number.isFinite(p.moduleDrain))html+=row('模块耗电',fmt(p.moduleDrain,'GJ/s'),panelReading('模块耗电',p.moduleDrain,'GJ/s',p.moduleTerms,[['口径','已启用本舰模块 · 周期平均耗电']]));
  if(Number.isFinite(p.drain))html+=row(p.average&&!p.average.complete?'已知净耗电':'净耗电',fmt(p.drain,'GJ/s'),panelReading('平均净耗电',p.drain,'GJ/s',[],p.detail.conditions));
- html+='<p class="profile-note">'+(p.stable==null?esc(p.reason):'悬停续航查看电量曲线')+'</p></div>';
+ html+='<p class="profile-note">'+(p.stable==null?esc(p.reason):(report.capacitorScenario?.result?.query?.initialFraction??1)===1?'满电起始 · 按模块周期计算':'按情景初始电量 · 按模块周期计算')+'</p></div>';
  return html;
 }

@@ -10,6 +10,11 @@ assert.equal(analysisStatusText({analysisStatus:{legality:'valid',completeness:'
 const report={native:{attributes:{'ship/76':{value:null},'ship/552':{value:null}},weapons:{},resources:[],coverage:[],warnings:[],outputContributions:{items:[],staticBlockers:[]},droneBay:{capacityCubicMeters:1,controlRangeMeters:null,maximumActive:0}},outputSelection:{metric:'nominalCycleDps',status:'empty_selection',groups:[],exclusions:[]},baselineOutputSelection:{metric:'nominalCycleDps'},outputContext:{selection:{contributionIds:[]}},outputBreakdown:Object.fromEntries(['weapons','drones','fighters'].map(k=>[k,{groups:[],exclusions:[]}])),integrationNotices:[],issues:[]};
 const host={innerHTML:'',querySelectorAll:()=>[],querySelector:()=>({})};
 mountNativeStats(host,report);
+const legacyLabels=['电容','攻击','防御','机动','锁定','无人机'];
+let previous=-1;
+for(const label of legacyLabels){const next=host.innerHTML.indexOf('<span>'+label+'</span>');assert(next>previous,label+' section order');previous=next;}
+for(const removed of ['native-output-details','native-output-metric','native-status','data-cap-horizon'])assert(!host.innerHTML.includes(removed));
+for(const restored of ['含换弹 DPS','齐射伤害 · DPH','起跳时间','最大操控数量'])assert(host.innerHTML.includes(restored));
 assert.match(host.innerHTML,/锁定摘要"><b[^>]*>—<\/b>/);
 assert(!host.innerHTML.includes('0 km'));
 assert(!host.innerHTML.includes('>0 m<'));

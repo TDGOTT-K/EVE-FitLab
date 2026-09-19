@@ -98,6 +98,9 @@ def analyze(f,target=None,native_query=None):
     baseline_breakdown={kind:grouped_reading([item for item in baseline_selected if (
         item['kind'].startswith('fighter_') if kind=='fighters' else item['kind']=='drone' if kind=='drones' else item['kind'].startswith('ship_'))],baseline['metric'])
         for kind in ('weapons','drones','fighters')}
+    volley_metric=('effectiveVolley' if effective else 'appliedVolley') if target is not None else 'volleyDamage'
+    legacy_output={'volleyMetric':volley_metric,'volley':grouped_reading(
+        [item for item in selected if item['kind'].startswith('ship_')],volley_metric)}
     attrs=a['attributes']
     def value(key):return attrs.get(key,{}).get('value')
     resources={r['id']:r for r in a['resources']}
@@ -133,7 +136,7 @@ def analyze(f,target=None,native_query=None):
     selection=fighter_damage_selection(f,a)
     report={'provider':'nengine','contract':'fitlab-analysis-v2','engineVersion':status['engineVersion'],'sourceBinding':source_binding(client),
         'fighterDamageSelection':selection,'outputSelection':output['selection'],'outputBreakdown':breakdown,'baselineOutputBreakdown':baseline_breakdown,
-        'outputContext':context['output'],'baselineOutputSelection':baseline,'baselineOutputItems':baseline_items,
+        'outputContext':context['output'],'baselineOutputSelection':baseline,'baselineOutputItems':baseline_items,'legacyInspectorOutput':legacy_output,
         'scenarioTarget':target,'attackMode':'edps' if effective else 'dps','curveRequest':f,
         'native':a,'nativeFit':native,'attributes':projection,'snapshot':{'modules':modules},
         'skillCount':len(native['skills']),'isValid':not issues,

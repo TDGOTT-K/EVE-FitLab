@@ -1,39 +1,28 @@
 import {numberAttributes} from './scenario-display.js';
-import {panelReading,panelTip} from './native-panel-detail.js';
-// Only formats engine readings/reducer states; no damage formulas.
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fmt=n=>Number.isFinite(n)?n.toLocaleString('zh-CN',{maximumFractionDigits:2}):'—';
-const states={available:'可用',requires_policy:'需要使用策略',requires_target:'缺少目标条件',requires_combat_record:'需要战斗记录',not_applicable:'不适用',unsupported:'尚未支持',blocked:'计算受限'};
-const reasons={FINITE_ABILITY_USE_LOADED_CYCLE_BASIS:'有限弹量武器，请使用有限弹量周期口径',TIME_SUPPLY_CAPACITOR_AND_USE_POLICY_REQUIRED:'缺少时间、补给、电容与使用策略',METRIC_NOT_APPLICABLE:'此武器不适用该口径',BATTLE_DAMAGE_LEDGER_AND_TIME_WINDOW_REQUIRED:'需要实际战斗记录',EXCLUDED_BY_DISPLAY_SELECTION:'未选择'};
+import {panelReading,panelTip,panelAttributeTerm} from './native-panel-detail.js';
+const fmt=n=>Number.isFinite(n)?n.toLocaleString('zh-CN',{maximumFractionDigits:1}):'—';
 export function outputReading(selection){
  if(selection?.completeSelection&&Number.isFinite(selection.total))return fmt(selection.total);
  if(selection?.groups?.length===1)return fmt(selection.groups[0].subtotal)+'（部分）';
  return '—';
 }
-export function outputHtml(report,catalog){
- const unit=report.attackMode==='edps'?'EDPS':'DPS';
- const selection=report.outputSelection,output=report.native.outputContributions,metric=selection?.metric||'nominalCycleDps',basis=report.baselineOutputSelection?.metric||metric;
- if(!output)return '<div class="stat-block">输出接口不可用</div>';
- const name=item=>{const type=catalog.find(t=>t.id===item.source.typeId),ability=report.native.fighterEntities[item.source.squadronId]?.abilityMetadata?.abilities?.find(a=>a.abilityId===item.source.officialAbilityId);return (type?.name||report.native.fighterEntities[item.source.squadronId]?.abilityMetadata?.name?.zh||report.native.fighterEntities[item.source.squadronId]?.abilityMetadata?.name?.en||item.source.instanceId)+(ability?' · '+(ability.displayName.zh||ability.displayName.en):'');};
- const selected=new Set(report.outputContext.selection.contributionIds),excluded=new Map((selection.exclusions||[]).map(x=>[x.contributionId,x]));
+export function outputHtml(report,catalog=[]){
+ const unit=report.attackMode==='edps'?'EDPS':'DPS',metric=report.outputSelection?.metric||'nominalCycleDps';
+ const selected=new Set(report.outputContext?.selection?.contributionIds||[]),selectedItems=(report.native.outputContributions?.items||[]).filter(i=>selected.has(i.id));
+ const name=i=>catalog.find(t=>t.id===i.source.typeId)?.name||i.source.instanceId;
+ const terms=rows=>rows.map(i=>{const r=i.metrics[metric],title=name(i);return [title,r?.state==='available'?fmt(r.value)+' '+unit:'—',null,{title,result:r?.state==='available'?fmt(r.value)+' '+unit:'—',terms:(i.attributeKeys||[]).map(k=>panelAttributeTerm(k,report,catalog)),conditions:[['口径',metric],['状态',r?.state||'未知'],...(r?.reason?[['未计入原因',r.reason]]:[])]}];});
+ const stat=(title,reading,rows,baseline)=>{
+  const detail=panelReading(title,reading?.total,unit,terms(rows),[['范围','已选分项'],...(reading?.exclusions||[]).map(e=>['未计入',e.reason])]);detail.result=outputReading(reading);
+  return '<div class="stat-row" '+panelTip(detail)+'><span>'+title+'</span><b '+numberAttributes(reading?.total,baseline)+'>'+outputReading(reading)+'</b></div>';
+ };
  let html='<div class="stat-block">';
- for(const [key,label] of [['weapons','武器'],['drones','无人机'],['fighters','舰载机已选武器']]){
-  const value=report.outputBreakdown[key];
-  const terms=output.items.filter(i=>selected.has(i.id)&&((i.kind.startsWith('fighter_')?'fighters':i.kind.startsWith('ship_')?'weapons':i.kind==='drone'?'drones':null)===key)).map(i=>[name(i),i.metrics[metric]?.state==='available'?fmt(i.metrics[metric].value)+' '+unit:states[i.metrics[metric]?.state]||'不可用']);
-  const detail=panelReading(label+' '+unit,value.total,unit,terms,[['范围','仅统计已选分项'],['完整性',value.completeSelection?'完整':'部分或不可用'],...value.exclusions.map(e=>['未计入',reasons[e.reason]||e.reason])]);
-  detail.result=outputReading(value)+' '+unit;
-  if(value.groups.length||value.exclusions.length)html+='<div class="stat-row" '+panelTip(detail)+'><span>'+label+' '+unit+'</span><b '+numberAttributes(value.total,report.scenarioTarget?report.baselineOutputBreakdown[key].total:undefined)+'>'+outputReading(value)+'</b></div>';
- }
- const explanation=selection.status==='empty_selection'?(output.staticBlockers.length?'计算受限，未取得可选分项':'没有已选输出项'):selection.completeSelection?'仅汇总已选武器':'仅显示可计算小计';
- if(!selection.completeSelection)html+='<small class="profile-note">'+explanation+'</small>';
- html+='<details class="native-output-details"><summary>输出详情 <span>'+selected.size+' / '+output.items.length+'</span></summary>';
- html+='<label>计算口径 <select class="native-output-metric" aria-label="输出计算口径"><option value="nominalCycleDps" '+(basis==='nominalCycleDps'?'selected':'')+'>名义周期 DPS</option><option value="loadedCycleDps" '+(basis==='loadedCycleDps'?'selected':'')+'>有限弹量周期 DPS</option></select></label>';
- html+='<p class="profile-note">'+explanation+(report.scenarioTarget?' · 已应用情景':'')+(unit==='EDPS'?' · 固定目标层 · 已扣抗性':' · 不扣抗性')+(basis==='loadedCycleDps'?' · 假定可发射，非持续输出':'')+'</p>';
- for(const item of output.items){
-  const reading=item.metrics[metric],missing=excluded.get(item.id),chosen=selected.has(item.id),reason=missing?.reason||reading?.reason;
-  const status=chosen?(missing?(reasons[reason]||states[reading?.state]||reason):'已计入'):item.source.deployed===false?'待命 · 不计入':'未选择';
-  html+='<div class="native-output-item"><span>'+esc(name(item))+'</span><b '+numberAttributes(reading?.state==='available'?reading.value:null,report.scenarioTarget?report.baselineOutputItems.find(x=>x.id===item.id)?.metrics[basis]?.value:undefined)+'>'+fmt(reading?.state==='available'?reading.value:null)+'</b><small title="'+esc(reason||'')+'">'+esc(status)+'</small></div>';
- }
- html+='</details></div>';
- return html;
+ html+=stat('武器 '+unit,report.outputBreakdown?.weapons,selectedItems.filter(i=>i.kind.startsWith('ship_')),report.scenarioTarget?report.baselineOutputBreakdown?.weapons?.total:undefined);
+ html+=stat('无人机 '+unit,report.outputBreakdown?.drones,selectedItems.filter(i=>i.kind==='drone'),report.scenarioTarget?report.baselineOutputBreakdown?.drones?.total:undefined);
+ const missing=(title,units,reason,rows=[])=>'<div class="stat-row" '+panelTip(panelReading(title,null,units,rows,[['不可用原因',reason]]))+'><span>'+title+'</span><b>—</b></div>';
+ html+=missing('含换弹 '+unit,unit,'当前接入尚无同口径的完整换弹合计；不以名义输出替代。',selectedItems.map(i=>[name(i),i.metrics.reloadCycleDps?.state==='available'?fmt(i.metrics.reloadCycleDps.value)+' DPS':i.metrics.reloadCycleDps?.reason||'未提供']));
+ const volley=report.legacyInspectorOutput?.volley;
+ if(volley){const d=panelReading('齐射伤害 · DPH',volley.total,'HP',selectedItems.filter(i=>i.kind.startsWith('ship_')).map(i=>[name(i),fmt(i.metrics[report.legacyInspectorOutput.volleyMetric]?.value)+' HP']),[['范围','已选舰载武器齐射'],...(volley.exclusions||[]).map(e=>['未计入',e.reason])]);html+='<div class="stat-row" '+panelTip(d)+'><span>齐射伤害 · DPH</span><b>'+outputReading(volley)+(Number.isFinite(volley.total)?' HP':'')+'</b></div>';}else html+=missing('齐射伤害 · DPH','HP','尚未取得同口径的舰载武器齐射合计。');
+ html+='<div class="damage-bars">'+['电磁','热能','动能','爆炸'].map((n,i)=>'<div class="damage-cell" '+panelTip(panelReading(n+'伤害占比',null,'%',[],[['不可用原因','尚未接入已选集合的同口径分类型DPS与比例。']]))+'><span class="damage-label">'+n+'</span><div class="mini-bar damage-'+i+'"><b>—</b></div><span class="damage-component"><b>—</b><small>'+unit+'</small></span></div>').join('')+'</div>';
+ if(report.scenarioTarget)html+='<p class="profile-note">'+(unit==='EDPS'?'EDPS · 已扣目标抗性':'DPS · 不扣抗性')+' · 不含换弹</p>';
+ return html+'</div>';
 }

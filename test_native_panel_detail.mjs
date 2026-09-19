@@ -18,7 +18,7 @@ Object.assign(report,{attackMode:'dps',outputSelection:{...reading,metric:'nomin
 report.native.outputContributions={items:[make(1,'ship_smartbomb',12),make(2,'fighter_rocket',null)],staticBlockers:[]};
 report.native.fighterEntities={};
 const html=outputHtml(report,[{id:1,name:'智能炸弹'},{id:2,name:'舰载机'}]);
-assert(html.includes('智能炸弹'));assert(html.includes('MISSING_EFFECT'));
+assert(html.includes('智能炸弹'));assert(html.includes('含换弹 DPS'));assert(html.includes('齐射伤害 · DPH'));assert(!html.includes('舰载机已选武器'));
 assert(!html.includes('data-native-attack'));
-assert(html.indexOf('<details')<html.indexOf('native-output-metric'));
+assert(!html.includes('<details'));assert(!html.includes('native-output-metric'));
 console.log('Panel explanations: scaled source traces, null/zero, output groups and partial states passed');

@@ -10,6 +10,23 @@ class OutputIntegration(unittest.TestCase):
     @classmethod
     def tearDownClass(cls): bridge().close()
 
+    def test_legacy_volley_matches_public_selection(self):
+        import subprocess,tempfile
+        from pathlib import Path
+        native=json.loads((bridge().root/'examples/output-contributions/mixed-fit.json').read_text())
+        fit={'shipId':native['shipTypeId'],'skills':[{'skillTypeId':int(k),'level':v} for k,v in native['skills'].items()],
+             'slots':[{'key':('high-' if i<2 else 'low-')+str(m['slotIndex']),'kind':'high' if i<2 else 'low','item':m['typeId'],'ammo':m.get('chargeTypeId'),'state':'Active' if i<2 else 'Online'} for i,m in enumerate(native['items'])]}
+        report=analyze(fit)
+        context={'output':{'selection':{'metric':'volleyDamage','contributionIds':[i['id'] for i in report['native']['outputContributions']['items'] if i['kind'].startswith('ship_')]}}}
+        b=bridge();public=b.call('fit_analyze',{'fit':report['nativeFit'],'context':context})['result']
+        self.assertEqual(report['legacyInspectorOutput']['volley']['total'],public['outputContributions']['selection']['total'])
+        with tempfile.TemporaryDirectory() as directory:
+            p=Path(directory)
+            (p/'fit.json').write_text(json.dumps(report['nativeFit']),encoding='utf-8')
+            (p/'context.json').write_text(json.dumps(context),encoding='utf-8')
+            subprocess.run([str(b.root/'.tools/dotnet/dotnet.exe'),str(b.root/'src/NEngine.Cli/bin/Debug/net10.0/NEngine.Cli.dll'),'sde-fit','--data',str(b.root/b.baseline['dataDirectory']),'--fit',str(p/'fit.json'),'--metrics',str(p/'context.json'),'--out',str(p/'result.json')],check=True,capture_output=True)
+            self.assertEqual(public,json.loads((p/'result.json').read_text(encoding='utf-8-sig')))
+
     def fighter_fit(self):
         native=json.loads((bridge().root/'examples/output-contributions/primary-fit.json').read_text())
         return dict(name='Output QA', shipId=native['shipTypeId'], slots=[],

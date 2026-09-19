@@ -1,3 +1,4 @@
+import {panelTip} from './native-panel-detail.js';
 // Format the public fit_valuation result; no price or quantity arithmetic.
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const reasons={QUANTITY_UNDECLARED:'数量未声明',INVENTORY_UNDECLARED:'库存未声明',PRICE_UNAVAILABLE:'暂无报价',MARKET_UNAVAILABLE:'市场来源不可用',MUTATED_INSTANCE_PRICE_REQUIRED:'深渊实例需要单独估价',VALUATION_OVERFLOW:'金额超出范围',TOTAL_OVERFLOW:'合计超出范围',NO_AVAILABLE_SUBTOTALS:'没有可用报价',INCOMPLETE_VALUATION:'部分数量或价格缺失'};
@@ -16,5 +17,6 @@ export function valuationSummary(v,locale='zh-CN'){
 }
 export function valuationMarkup(v,locale){
  const s=valuationSummary(v,locale),format=n=>Number.isFinite(n)?n.toLocaleString(locale,{maximumFractionDigits:2}):'—';
- return '<div class="stat-row"><span>'+esc(s.label)+'</span><b>'+esc(s.value)+'</b></div><p class="profile-note">'+esc(s.source)+'<br>'+esc(s.scope)+'</p><details class="valuation-details"><summary>估价明细与缺项</summary>'+v.lines.map(l=>'<p><b>'+esc(l.name||'库存')+'</b> × '+esc(l.quantity??'未知')+' · '+esc(l.state==='available'?format(l.subtotal)+' ISK':valuationReason(l.reason))+'</p>').join('')+'<p class="profile-note">'+esc(v.marketSource.url)+'<br>'+esc(v.marketSource.reason||'')+'<br>快照 '+esc(v.snapshotHash)+'</p></details>';
+ const detail={title:'装配估价',result:s.value,terms:v.lines.map(l=>[(l.name||'库存')+' × '+(l.quantity??'未知'),l.state==='available'?format(l.subtotal)+' ISK':valuationReason(l.reason)]),conditions:[['来源',s.source],['范围',s.scope],['完整性',v.complete?'完整':s.reason||'部分报价'],['报价地址',v.marketSource.url],['快照',v.snapshotHash],...(v.marketSource.reason?[['来源状态',v.marketSource.reason]]:[])]};
+ return '<div class="stat-row" '+panelTip(detail)+'><span>'+esc(s.label)+'</span><b>'+esc(s.value)+'</b></div><p class="profile-note">'+esc(s.source)+'<br>'+esc(s.scope)+'</p>';
 }

@@ -13,9 +13,13 @@ export function panelTrace(trace,title,unit,report,catalog=[],scale=1,depth=0){
  const operations={'-1':'前置赋值',0:'前置乘法',1:'前置除法',2:'加法',3:'减法',4:'后置乘法',5:'后置除法',6:'百分比',7:'后置赋值'};
  return {title,result:value(trace.value),terms:[['基础值',value(trace.baseValue)],...(trace.steps||[]).filter(s=>s.before!==s.after).map(s=>{
   const name=sourceName(s.sourceId,report,catalog);
-  const nested={title:name,result:value(s.after),terms:[['执行前',value(s.before)],['来源修正值',fmt(s.sourceValue)],['叠加系数',fmt(s.penalty)],['运算',operations[s.operation]??String(s.operation)],['执行后',value(s.after)]],conditions:[['效果',String(s.effectId)]]};
-  return [name,value(s.before)+' → '+value(s.after),null,depth<3?nested:null];
- })],conditions:[['来源','N '+report.engineVersion],['属性',trace.key],['基础值来源',trace.origin||'引擎记录']]};
+  const skill=s.sourceId?.startsWith('skill.')?report.nativeFit?.skills?.[s.sourceId.slice(6)]:undefined;
+  const sourceKey=(trace.dependencies||[]).find(k=>k.startsWith(s.sourceId+'/'));
+  const sourceTrace=sourceKey?report.native?.attributes?.[sourceKey]:null;
+  const sourceDetail=sourceTrace&&depth<2?panelTrace(sourceTrace,name+' · 修正值','',report,catalog,1,depth+1):{title:name+' · 修正值',result:fmt(s.sourceValue),terms:skill!==undefined?[['技能等级',String(skill)]]:[],conditions:[['来源','原生属性求值']]};
+  const nested={title:name,result:value(s.after),terms:[['执行前',value(s.before)],['来源修正值',fmt(s.sourceValue),null,sourceDetail],['叠加惩罚系数',fmt(s.penalty)],['实际运算',operations[s.operation]??String(s.operation)]],conditions:skill!==undefined?[['来源状态','技能 '+skill+' 级']]:[['来源','装备属性修正']]};
+  return [name+(skill!==undefined?' '+skill+' 级':''),value(s.before)+' → '+value(s.after),'source',depth<3?nested:null];
+ })],conditions:[['角色',report.curveRequest?.characterName||'当前技能快照'],['来源','N '+report.engineVersion+' · 属性执行记录']]};
 }
 export function panelReading(title,value,unit,terms=[],conditions=[]){return {title,result:fmt(value,unit),terms,conditions};}
 export function panelAttributeTerm(key,report,catalog=[]){
