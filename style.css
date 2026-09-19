@@ -755,3 +755,8 @@ label:has(>input[type="checkbox"]:disabled){cursor:default;color:var(--muted)}
 .loadout-action-icon{width:16px;height:16px;flex:0 0 16px;display:inline-flex}
 .loadout-action-icon svg{width:100%;height:100%}
 .loadout-quick>button.loadout-plan-option{min-height:38px;padding-left:14px}
+.plan-affix-preview{margin:0;width:320px;max-height:min(440px,calc(100vh - 16px));display:flex;flex-direction:column;overflow:hidden}
+.plan-affix-preview .explain-heading,.plan-affix-preview .explain-lock{flex-shrink:0}
+.plan-affix-preview-content{min-height:0;overflow:auto;padding:10px 14px;overscroll-behavior:contain;scrollbar-width:thin}
+.plan-affix-preview .plan-affix-row.benefit b{color:#87ccad}
+.plan-affix-preview .plan-affix-row.penalty b{color:#ed858b}

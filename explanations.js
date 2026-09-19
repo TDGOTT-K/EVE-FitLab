@@ -1,15 +1,17 @@
+import {renderPlanAffixes} from './plan-affixes.js';
+import {implantCatalog,boosterCatalog} from './loadout-catalog.js';
 import {mountCapacitorChart} from './capacitor-chart.js';
 import {mountNativeCapacitorChart} from './native-capacitor-chart.js';
 import {mountDpsChart} from './dps-chart.js';
 import {getLocale} from './i18n.js';
 // One explanation branch; each locked panel can own a deeper explanation.
 export function installExplanations(){
- const curveCache=new Map();
+ const curveCache=new Map(),planCache=new Map();
  const chain=[],delay=800;let leaveTimer,lastPointer=null,chartMode='distance';
  const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function closeFrom(depth){for(const node of chain.splice(depth)){cancelAnimationFrame(node.frame);node.resize?.disconnect();node.anchor.removeAttribute('aria-describedby');node.panel.remove();node.bridge.remove();node.aura?.remove()}}
  function lock(node){if(!node.lockable||!node.panel.isConnected)return;node.locked=true;node.panel.inert=false;node.panel.classList.add('locked');node.bridge.classList.add('locked');node.aura.classList.add('complete');node.panel.querySelector('.explain-lock').textContent='已锁定 · 可继续查看明细';}
- function place(node){const r=node.anchor.getBoundingClientRect(),p=node.panel,w=p.offsetWidth,h=p.offsetHeight;let x=r.left-w-10;if(x<8)x=r.right+10;if(x+w>innerWidth-8)x=Math.max(8,innerWidth-w-8);const y=Math.max(8,Math.min(r.top,innerHeight-h-8));p.style.left=x+'px';p.style.top=y+'px';const b=node.bridge,left=x+w<=r.left?x+w:r.right,right=x+w<=r.left?r.left:x;Object.assign(b.style,{left:left+'px',top:Math.max(y,r.top)+'px',width:Math.max(0,right-left)+'px',height:Math.max(0,Math.min(y+h,r.bottom)-Math.max(y,r.top))+'px'});}
+ function place(node){const r=(node.anchor.closest('.loadout-quick')||node.anchor).getBoundingClientRect(),p=node.panel,w=p.offsetWidth,h=p.offsetHeight;let x=r.left-w-10;if(x<8)x=r.right+10;if(x+w>innerWidth-8)x=Math.max(8,innerWidth-w-8);const y=Math.max(8,Math.min(r.top,innerHeight-h-8));p.style.left=x+'px';p.style.top=y+'px';const b=node.bridge,left=x+w<=r.left?x+w:r.right,right=x+w<=r.left?r.left:x;Object.assign(b.style,{left:left+'px',top:Math.max(y,r.top)+'px',width:Math.max(0,right-left)+'px',height:Math.max(0,Math.min(y+h,r.bottom)-Math.max(y,r.top))+'px'});}
  function show(anchor){const owner=anchor.closest('.stat-explanation'),depth=owner?Number(owner.dataset.depth)+1:0;if(owner&&!chain[depth-1]?.locked)return;if(chain[depth]?.anchor===anchor)return;clearTimeout(leaveTimer);closeFrom(depth);let detail;try{detail=JSON.parse(anchor.dataset.explain)}catch{return}
   const panel=document.createElement('section'),bridge=document.createElement('div');panel.className='stat-explanation';panel.inert=true;panel.id=depth?'stat-explanation-'+depth:'stat-explanation';panel.dataset.depth=depth;panel.role='tooltip';panel.setAttribute('aria-label',detail.title);panel.style.zIndex=150+depth*2;bridge.className='explain-bridge';bridge.style.zIndex=149+depth*2;
   const lines=rows=>(rows||[]).map(([label,value,kind,child])=>`<div class="explain-line ${kind==='source'?'explain-source':''} ${child?'has-detail':''}" ${child?`tabindex="0" data-explain="${esc(JSON.stringify(child))}"`:''}><span>${esc(label)}</span><b>${esc(value)}${child?' <span class="detail-arrow">›</span>':''}</b></div>`).join('');
@@ -39,7 +41,20 @@ export function installExplanations(){
    const more=document.createElement('details');more.className='dps-chart-breakdown';more.innerHTML='<summary>计算条件与来源</summary>';
    more.append(panel.querySelector('.explain-terms'),panel.querySelector('.explain-conditions'));panel.append(more);
   }
-  const lockable=!!panel.querySelector('[data-explain]'),interactive=!lockable&&!!(detail.chart||detail.capacitor||detail.nativeCapacitor);
+  if(detail.planAffixes){
+   panel.classList.add('plan-affix-preview');
+   for(const selector of ['.explain-terms','.explain-conditions','.explain-result'])panel.querySelector(selector).remove();
+   const host=document.createElement('div');host.className='plan-affix-preview-content';host.textContent='正在读取方案加成…';panel.append(host);
+   const key=JSON.stringify(detail.planAffixes);
+   if(!planCache.has(key)){
+    if(planCache.size>=16)planCache.delete(planCache.keys().next().value);
+    planCache.set(key,fetch('/api/booster-plan/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:key}).then(async r=>{const data=await r.json();if(!r.ok)throw Error(data.error?.message||data.error||'查询失败');return data}).catch(e=>{planCache.delete(key);throw e}));
+   }
+   planCache.get(key).then(data=>{
+    if(!panel.isConnected)return;renderPlanAffixes(host,data.summary,{find:(kind,id)=>(kind==='implants'?implantCatalog:boosterCatalog).find(t=>t.id===id)});
+   }).catch(e=>{if(panel.isConnected)host.textContent='加成暂不可用：'+e.message;});
+  }
+  const lockable=!!detail.planAffixes||!!panel.querySelector('[data-explain]'),interactive=!lockable&&!!(detail.chart||detail.capacitor||detail.nativeCapacitor);
   if(!lockable){
    panel.querySelector('.explain-lock').remove();
    if(interactive){panel.inert=false;panel.classList.add('interactive');bridge.classList.add('interactive');}
@@ -63,7 +78,7 @@ export function installExplanations(){
    }
    curveCache.get(key).then(data=>{if(!panel.isConnected)return;panel.querySelector('.dps-chart').replaceChildren();node.chart=mountDpsChart(panel.querySelector('.dps-chart'),data,{mode:node.chart?.mode()||chartMode,onMode:mode=>{chartMode=mode}});place(node)});
   }
-  if(detail.chart)node.chart=mountDpsChart(panel.querySelector('.dps-chart'),detail.chart,{mode:chartMode,onMode:mode=>{chartMode=mode}});chain.push(node);document.body.append(bridge,panel);if(detail.chart){node.resize=new ResizeObserver(()=>{if(panel.isConnected)place(node)});node.resize.observe(panel)}anchor.setAttribute('aria-describedby',panel.id);place(node);if(lockable)animateLock(node);panel.querySelector('.dps-chart-breakdown')?.addEventListener('toggle',()=>{place(node);if(!node.lockable)return;cancelAnimationFrame(node.frame);node.aura?.remove();if(node.locked){animateLock(node);cancelAnimationFrame(node.frame);lock(node)}else animateLock(node)});
+  if(detail.chart)node.chart=mountDpsChart(panel.querySelector('.dps-chart'),detail.chart,{mode:chartMode,onMode:mode=>{chartMode=mode}});chain.push(node);(anchor.closest('.loadout-quick')||document.body).append(bridge,panel);if(detail.chart||detail.planAffixes){node.resize=new ResizeObserver(()=>{if(panel.isConnected){place(node);if(node.aura){cancelAnimationFrame(node.frame);node.aura.remove();animateLock(node);if(node.locked){cancelAnimationFrame(node.frame);lock(node)}}}});node.resize.observe(panel)}anchor.setAttribute('aria-describedby',panel.id);place(node);if(lockable)animateLock(node);panel.querySelector('.dps-chart-breakdown')?.addEventListener('toggle',()=>{place(node);if(!node.lockable)return;cancelAnimationFrame(node.frame);node.aura?.remove();if(node.locked){animateLock(node);cancelAnimationFrame(node.frame);lock(node)}else animateLock(node)});
  }
  function inChain(target){return target instanceof Node&&chain.some(n=>n.anchor.contains(target)||n.panel.contains(target)||n.bridge.contains(target))}
  function animateLock(node){
@@ -73,7 +88,7 @@ export function installExplanations(){
   // Clockwise from twelve o'clock, along the actual rectangular perimeter.
   const d=`M ${w/2} 6 H ${w-10} Q ${w-6} 6 ${w-6} 10 V ${h-10} Q ${w-6} ${h-6} ${w-10} ${h-6} H 10 Q 6 ${h-6} 6 ${h-10} V 10 Q 6 6 10 6 Z`;
   aura.innerHTML=`<svg width="100%" height="100%" viewBox="0 0 ${w} ${h}"><defs><filter id="${id}" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="0.9"/><feColorMatrix type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 2.8 -0.55"/></filter></defs><path class="gold-orbit" d="${d}"/><g class="liquid-tail" filter="url(#${id})">${Array.from({length:15},()=>'<ellipse fill="#e9b84d"/>').join('')}</g><ellipse class="liquid-head" fill="#fff1b2" rx="3" ry="1.4"/></svg>`;
-  document.body.append(aura);const path=aura.querySelector('path'),length=path.getTotalLength(),drops=[...aura.querySelectorAll('.liquid-tail ellipse')],head=aura.querySelector('.liquid-head'),reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  (node.anchor.closest('.loadout-quick')||document.body).append(aura);const path=aura.querySelector('path'),length=path.getTotalLength(),drops=[...aura.querySelectorAll('.liquid-tail ellipse')],head=aura.querySelector('.liquid-head'),reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   const start=performance.now();
   function frame(time){if(!node.panel.isConnected)return;const progress=Math.min(1,(time-start)/delay);aura.style.setProperty('--lock-progress',progress);
    if(!reduced){for(let i=0;i<drops.length;i++){const distance=(progress*length-i*3+length)%length,p=path.getPointAtLength(distance),next=path.getPointAtLength((distance+1)%length),width=2.7*(1-i/drops.length)+0.75,wave=Math.sin(time*.025-i*.8);drops[i].setAttribute('rx',String(width+1));drops[i].setAttribute('ry',String(width*.65+wave*.35));drops[i].setAttribute('opacity',String(1-i/drops.length*.85));drops[i].setAttribute('transform',`translate(${p.x} ${p.y}) rotate(${Math.atan2(next.y-p.y,next.x-p.x)*180/Math.PI})`)}const p=path.getPointAtLength(progress*length),next=path.getPointAtLength((progress*length+1)%length);head.setAttribute('transform',`translate(${p.x} ${p.y}) rotate(${Math.atan2(next.y-p.y,next.x-p.x)*180/Math.PI})`)}else{aura.classList.add('reduced');}
@@ -105,6 +120,6 @@ export function installExplanations(){
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&chain.length){e.preventDefault();e.stopImmediatePropagation();closeFrom(chain.length-1)}},true);
  window.addEventListener('resize',()=>closeFrom(0));
  document.addEventListener('scroll',e=>{if(e.target instanceof Element&&e.target.closest('.stat-explanation'))return;closeFrom(0)},true);
- const observer=new MutationObserver(()=>{const i=chain.findIndex(n=>!n.anchor.isConnected||n.anchor.closest('[hidden]'));if(i>=0)closeFrom(i)});for(const root of document.querySelectorAll('.inspector,#info-window'))observer.observe(root,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});
+ const observer=new MutationObserver(()=>{const i=chain.findIndex(n=>!n.anchor.isConnected||n.anchor.closest('[hidden]'));if(i>=0)closeFrom(i)});observer.observe(document.body,{childList:true});for(const root of document.querySelectorAll('.inspector,#info-window'))observer.observe(root,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});
 }
 
