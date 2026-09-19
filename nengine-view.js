@@ -2,7 +2,7 @@ import {panelTrace,panelReading,panelTip,panelAttributeTerm} from './native-pane
 import {scaleReading} from './analysis-status.js';
 import {capacitorHtml} from './native-capacitor-view.js';
 import {numberAttributes,deltaClass} from './scenario-display.js';
-import {outputHtml,outputReading} from './nengine-output-view.js';
+import {outputHtml,outputReading,displayOutputSelection} from './nengine-output-view.js';
 // Native report presenter: formatting and layout only; values belong to NEngine.
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=(n,u='')=>Number.isFinite(n)?n.toLocaleString('zh-CN',{maximumFractionDigits:2})+(u?' '+u:''):'—';
@@ -30,7 +30,7 @@ export function mountNativeStats(root,report,{mode='hp',onMode,onDamageEdit,cata
  const detail=(title,value,unit,terms=[],conditions=[])=>panelReading(title,value,unit,terms,conditions);
  let html=capacitorHtml(report,catalog);
  const unit=report.attackMode==='edps'?'EDPS':'DPS';
- const current=report.outputSelection,base=report.baselineOutputSelection,comparison=report.native.outputContributions.comparison;
+ const current=displayOutputSelection(report,report.outputSelection,report.outputContext?.selection?.contributionIds),base=displayOutputSelection(report,report.baselineOutputSelection,report.outputContext?.selection?.contributionIds),comparison=report.native.outputContributions.comparison;
  const comparisons=report.scenarioTarget?[['无情景基准',outputReading(base)+' DPS'],['差量',fmt(comparison?.delta.value,unit)],['相对基准',comparison?.ratio.state==='available'?fmt(comparison.ratio.value*100,'%'):'不可用 · '+(comparison?.ratio.reason||'缺少比较结果')]]:[];
  const targetConditions=report.scenarioTargetSource?[['目标装配',report.scenarioTargetSource.name],['目标防御层',({shield:'护盾',armor:'装甲',hull:'结构'})[report.scenarioTargetSource.layer]],['目标版本',String(report.scenarioTargetSource.revision??'未保存')]]:[];
  const outputTerms=(a.outputContributions.items||[]).filter(i=>report.outputContext.selection.contributionIds.includes(i.id)).map(i=>{const r=i.metrics[current.metric],name=catalog.find(t=>t.id===i.source.typeId)?.name||i.source.instanceId;return [name,r?.state==='available'?fmt(r.value,unit):'不可用',null,{title:name,result:r?.state==='available'?fmt(r.value,unit):'—',terms:(i.attributeKeys||[]).map(k=>panelAttributeTerm(k,report,catalog)),conditions:[['口径',current.metric],['状态',r?.state||'未知'],...(r?.reason?[['原因',r.reason]]:[])]}];});

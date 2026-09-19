@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {displayOutputSelection,outputReading} from './nengine-output-view.js';
+const empty={state:'empty_selection',total:null,groups:[],exclusions:[],completeSelection:false};
+const report={native:{outputContributions:{staticBlockers:[]},inspector:{damagePerSecond:Object.fromEntries(['em','thermal','kinetic','explosive'].map(k=>[k,{state:'available',value:0}]))}}};
+assert.equal(outputReading(displayOutputSelection(report,empty,[])),'0');
+assert.equal(empty.total,null);
+assert.equal(outputReading(displayOutputSelection(report,empty,['unsupported-weapon'])),'—');
+assert.equal(outputReading(displayOutputSelection(report,{...empty,exclusions:[{reason:'UNKNOWN'}]},[])),'—');
+assert.equal(outputReading(displayOutputSelection({native:{}},empty,[])),'—');
+const blocked=structuredClone(report);blocked.native.outputContributions.staticBlockers.push('unsupported');
+assert.equal(outputReading(displayOutputSelection(blocked,empty,[])),'—');
+const unknown=structuredClone(report);unknown.native.inspector.damagePerSecond.em={state:'unavailable',value:null};
+assert.equal(outputReading(displayOutputSelection(unknown,empty,[])),'—');
+console.log('Empty output display: known empty sums are zero; unavailable, blocked and nonempty selections remain unknown.');
