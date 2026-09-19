@@ -6,7 +6,7 @@
 
 [Website & downloads](https://imfishman.com/) · [Support development](../SPONSOR.md) · [Report an issue](https://github.com/TDGOTT-K/EVE-FitLab/issues) · [简体中文](../README.md)
 
-> The second public test release **0.1.2-rc.1** is available. [Choose a version](https://imfishman.com/download) or [view the release](https://github.com/TDGOTT-K/EVE-FitLab/releases/tag/v0.1.2-rc.1). This is an unsigned test release; keep backups of important fits.
+> The third public test release **0.1.2-rc.2** is available. [Choose a version](https://imfishman.com/download) or [view the release](https://github.com/TDGOTT-K/EVE-FitLab/releases/tag/v0.1.2-rc.2). This is an unsigned test release; keep backups of important fits.
 
 ## 💛 Tokens are expensive… spare a little fuel?
 

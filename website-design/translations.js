@@ -917,3 +917,36 @@ Object.assign(window.siteTranslations, {
 });
 
 Object.assign(window.siteTranslations, {"按发布日期排列": {"zh-CN": "按发布日期排列", "zh-TW": "依發布日期排列", "en": "By release date", "ja": "リリース日順"}, "发行说明 ↗": {"zh-CN": "发行说明 ↗", "zh-TW": "發行說明 ↗", "en": "Release notes ↗", "ja": "リリースノート ↗"}});
+
+Object.assign(window.siteTranslations, {
+  "第三个公开测试版现已上线，修复启动时界面加载时间过长的问题。": {
+    "zh-CN": "第三个公开测试版现已上线，修复启动时界面加载时间过长的问题。",
+    "zh-TW": "第三個公開測試版現已上線，修復啟動時介面載入時間過長的問題。",
+    "en": "The third public test release fixes excessive UI loading time at startup.",
+    "ja": "第3回公開テスト版では、起動時の画面読み込みに時間がかかる問題を修正しました。"
+  },
+  "修复启动时界面加载时间过长的问题。": {
+    "zh-CN": "修复启动时界面加载时间过长的问题。",
+    "zh-TW": "修復啟動時介面載入時間過長的問題。",
+    "en": "Fixed excessive UI loading time at startup.",
+    "ja": "起動時の画面読み込みに時間がかかる問題を修正。"
+  },
+  "舰载机目录独立加载，不再阻塞主界面初始化。": {
+    "zh-CN": "舰载机目录独立加载，不再阻塞主界面初始化。",
+    "zh-TW": "艦載機目錄獨立載入，不再阻塞主介面初始化。",
+    "en": "Fighter catalog loading no longer blocks application initialization.",
+    "ja": "艦載戦闘機カタログを独立して読み込み、メイン画面の初期化を妨げないようにしました。"
+  },
+  "保留第二个测试版功能，优化启动体验。": {
+    "zh-CN": "保留第二个测试版功能，优化启动体验。",
+    "zh-TW": "保留第二個測試版功能，最佳化啟動體驗。",
+    "en": "Retains the second test release features with an improved startup experience.",
+    "ja": "第2回テスト版の機能を維持し、起動時の使い勝手を改善。"
+  },
+  "第二个公开测试版 · 2026-09-20": {
+    "zh-CN": "第二个公开测试版 · 2026-09-20",
+    "zh-TW": "第二個公開測試版 · 2026-09-20",
+    "en": "Second public test release · 2026-09-20",
+    "ja": "第2回公開テスト版 · 2026-09-20"
+  }
+});
