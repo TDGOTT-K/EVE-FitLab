@@ -18,8 +18,8 @@ export function installCharacterManager({api,catalog,onReturn}){
  const contextMenu=document.createElement('div');contextMenu.className='character-context-menu';contextMenu.role='menu';contextMenu.hidden=true;document.body.append(contextMenu);
  const $=s=>root.querySelector(s),skills=catalog.filter(t=>t.kind==='skill').sort((a,b)=>a.name.localeCompare(b.name,'zh-CN'));
  const group=t=>t.path?.at(-1)||'其他技能';
- const pointText=createSkillPointDisplay(catalog);
- function updateSkillSummary(){const c=current();if(!c)return;$('#character-skill-count').textContent=c.skills.filter(s=>s.level>0).length+' 项已学技能';$('#character-skill-points strong').textContent=pointText(c);}
+ const pointText=createSkillPointDisplay(api,()=>{drawList();if($('#character-skill-points strong'))updateSkillSummary()});
+ function updateSkillSummary(){const c=current();if(!c)return;$('#character-skill-count').textContent=c.skills.filter(s=>s.level>0).length+' 项已学技能';$('#character-skill-points strong').textContent=pointText(c);$('#character-skill-points').title=pointText.note(c);}
 
  let people=[],selected=null,draft=null,dirty=false,loaded=false,generation=0;
  let folders=readPilotFolders(),activeFolder='',draggedPerson=null;const skillOpen=new Set();
@@ -59,7 +59,7 @@ export function installCharacterManager({api,catalog,onReturn}){
  const addEntries=()=>[['新建自定义角色',newCharacter],['新建文件夹',()=>editFolder()],['从 EVE 官网导入',login]];
  function drawList(){
   const q=$('#character-search').value.trim().toLowerCase();
-  const row=c=>'<button class="character-person" draggable="true" data-character="'+esc(c.id)+'" aria-pressed="'+(selected?.id===c.id)+'">'+icon(c)+'<span>'+esc(c.name)+'<small>'+esc(c.source)+' · '+c.skills.filter(s=>s.level>0).length+' 项技能</small><small class="character-row-sp" title="'+pointNote+'">'+pointText(c)+' SP</small></span></button>';
+  const row=c=>'<button class="character-person" draggable="true" data-character="'+esc(c.id)+'" aria-pressed="'+(selected?.id===c.id)+'">'+icon(c)+'<span>'+esc(c.name)+'<small>'+esc(c.source)+' · '+c.skills.filter(s=>s.level>0).length+' 项技能</small><small class="character-row-sp" title="'+esc(pointText.note(c))+'">'+pointText(c)+' SP</small></span></button>';
   $('#character-list').innerHTML=folders.folders.map(f=>{const rows=people.filter(c=>folderOf(c)===f.id),matches=rows.filter(c=>c.name.toLowerCase().includes(q)||f.name.toLowerCase().includes(q));if(q&&!matches.length&&!f.name.toLowerCase().includes(q))return '';return '<details class="character-folder" data-folder="'+esc(f.id)+'" '+((q||f.open!==false)?'open':'')+'><summary>'+folderIcon+'<span>'+esc(f.name)+'</span><small>'+rows.length+'</small></summary>'+matches.map(row).join('')+(!matches.length?'<div class="pilot-empty">拖入角色</div>':'')+'</details>'}).join('')+'<div class="character-root" data-folder=""><div class="character-root-label">未分组</div>'+people.filter(c=>!folderOf(c)&&c.name.toLowerCase().includes(q)).map(row).join('')+'</div>';
   $('#character-list').querySelectorAll('[data-character]').forEach(b=>{
    const c=people.find(c=>String(c.id)===b.dataset.character);
@@ -96,7 +96,7 @@ export function installCharacterManager({api,catalog,onReturn}){
  function markDirty(){dirty=true;cacheDraft();status('有未保存的修改');}
  function drawDetail(){
   const c=current();if(!c){$('#character-detail').innerHTML='<div class="character-empty">选择一个角色查看技能，或新建自定义角色。</div>';return}
-  $('#character-detail').innerHTML='<div class="character-skill-toolbar"><b id="character-skill-count"></b>'+(draft?'<button id="skills-zero">全部未学习</button><button id="skills-five">全部 V</button>':'')+'<span id="character-skill-points" title="'+pointNote+'"><span>总技能点</span><strong>'+pointText(c)+'</strong><small>SP</small></span></div><div class="character-skill-filters"><input id="skill-search" aria-label="搜索技能" placeholder="搜索技能"><label><input id="skills-learned" type="checkbox" '+(!draft?'checked':'')+'>仅已学习</label></div><div id="character-skills"></div>'+(draft?'<div class="character-edit-footer"><span>正在编辑 · '+esc(c.name)+'</span><button id="character-discard">结束编辑</button><button id="character-save">保存修改</button></div>':'');
+  $('#character-detail').innerHTML='<div class="character-skill-toolbar"><b id="character-skill-count"></b>'+(draft?'<button id="skills-zero">全部未学习</button><button id="skills-five">全部 V</button>':'')+'<span id="character-skill-points" title="'+esc(pointText.note(c))+'"><span>总技能点</span><strong>'+pointText(c)+'</strong><small>SP</small></span></div><div class="character-skill-filters"><input id="skill-search" aria-label="搜索技能" placeholder="搜索技能"><label><input id="skills-learned" type="checkbox" '+(!draft?'checked':'')+'>仅已学习</label></div><div id="character-skills"></div>'+(draft?'<div class="character-edit-footer"><span>正在编辑 · '+esc(c.name)+'</span><button id="character-discard">结束编辑</button><button id="character-save">保存修改</button></div>':'');
   $('#skill-search').oninput=drawSkills;$('#skills-learned').onchange=drawSkills;
   if(draft){$('#skills-zero').onclick=()=>{draft.skills=[];markDirty();drawSkills()};$('#skills-five').onclick=()=>{draft.skills=skills.map(t=>({skillTypeId:t.id,level:5}));markDirty();drawSkills()};$('#character-discard').onclick=async()=>{if(!await guard())return;draft=null;drawDetail();status('')};$('#character-save').onclick=async()=>{const button=$('#character-save');button.disabled=true;try{const c=await api('character',draft);people=people.filter(p=>p.id!==c.id).concat(c);if(!draft.id&&activeFolder)movePerson(c.id,activeFolder);selected=c;draft=null;dirty=false;cacheDraft();drawList();drawDetail();status('角色已保存')}catch(e){status(e.message)}finally{if(button.isConnected)button.disabled=false}}}
 

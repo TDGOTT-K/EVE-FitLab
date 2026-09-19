@@ -307,6 +307,17 @@ class Handler(SimpleHTTPRequestHandler):
     try:return self.reply(request(self.path.removeprefix('/api/native-session/'),body))
     except NEngineError as error:
      return self.reply(error.payload,409 if error.error.get('code') in ('STALE_REVISION','REQUEST_CONFLICT') else 400)
+   if self.path=='/api/skill-points':
+    from nengine_adapter import bridge
+    rows=body.get('skills')
+    if not isinstance(rows,list) or len(rows)>2000:raise ValueError('技能列表无效')
+    skills={}
+    for row in rows:
+     type_id=row.get('skillTypeId');level=row.get('level')
+     if type(type_id) is not int or type(level) is not int or type_id in skills:raise ValueError('技能 ID 或等级无效、重复')
+     skills[type_id]=level
+    client=bridge()
+    return self.reply(client.call('skill_points',{'query':{'buildNumber':client.baseline['buildNumber'],'skills':skills}})['result'])
    if self.path=='/api/fit-valuation':
     from nengine_valuation import value_fit
     return self.reply(value_fit(body['fit']))
