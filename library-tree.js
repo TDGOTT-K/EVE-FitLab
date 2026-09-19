@@ -1,5 +1,5 @@
 
-export function createLibraryTree(root,catalog,onChange){
+export function createLibraryTree(root,catalog,onChange,onHullMenu){
  const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let fits=[],filter='',selectedTags=new Set(),expanded=new Set(['舰船']);
  try{expanded=new Set(JSON.parse(localStorage.getItem('fitlab-library-expanded')||'["舰船"]'))}catch{}
@@ -42,6 +42,11 @@ export function createLibraryTree(root,catalog,onChange){
   root.querySelector('.library-tree-scroll').scrollTop=scroll;
 
   root.querySelectorAll('[data-library-filter]').forEach(b=>b.onclick=e=>{filter=b.dataset.libraryFilter;if(filter.startsWith('g:')){e.preventDefault();const d=b.closest('details');d.open=!d.open}root.querySelectorAll('[data-library-filter]').forEach(x=>x.classList.toggle('active',x===b));drawTags();onChange()});
+  root.querySelectorAll('[data-library-filter^="h:"]').forEach(b=>{
+   const open=e=>{if(!onHullMenu)return;e.preventDefault();e.stopPropagation();onHullMenu(e,index.get(Number(b.dataset.libraryFilter.slice(2))),b)};
+   b.oncontextmenu=open;
+   b.onkeydown=e=>{if(e.key==='ContextMenu'||e.shiftKey&&e.key==='F10')open(e)};
+  });
   root.querySelectorAll('details').forEach(d=>d.ontoggle=()=>{if(!d.isConnected)return;const key=JSON.parse(d.dataset.branch).join(' › ');if(d.open)expanded.add(key);else expanded.delete(key);try{localStorage.setItem('fitlab-library-expanded',JSON.stringify([...expanded]))}catch{}});
  }
  return {matches:match,selectedHull(){

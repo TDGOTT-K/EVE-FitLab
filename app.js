@@ -250,14 +250,14 @@ function renderShipStats(){if(report){renderEngineStats();return}$('#ship-stats'
 let infoOrigin=null;
 function closeInfo(){const panel=$('#info-window');if(panel.hidden)return;panel.hidden=true;if(infoOrigin?.isConnected)infoOrigin.focus({preventScroll:true})}
 let infoRequest=0;
-async function showInfo(t,slotKey=null,droneIndex=null,fittedObject=null){infoOrigin=document.activeElement;const request=++infoRequest,panel=$('#info-window'),captured=currentFit(),selected=slotKey?captured.slots.find(s=>s.key===slotKey):null;$('#info-title').textContent=t.path.join(' › ');$('#info-title').title='在装备浏览器中定位此物品';$('#info-title').onclick=e=>{e.preventDefault();if(t.kind!=='loadout')locateItem(t)};if(t.kind==='loadout')$('#info-title').title='脑插与增效剂 · 物品详情';$('#info-content').innerHTML='<p class="profile-note">正在读取物品属性…</p>';panel.hidden=false;if(!panel.style.left){panel.style.left=Math.max(8,(innerWidth-panel.offsetWidth)/2)+'px';panel.style.top='100px'}clampInfo();$('#info-close').focus({preventScroll:true});
+async function showInfo(t,slotKey=null,droneIndex=null,fittedObject=null,baseOnly=false){infoOrigin=document.activeElement;const request=++infoRequest,panel=$('#info-window'),captured=currentFit(),selected=slotKey?captured.slots.find(s=>s.key===slotKey):null;$('#info-title').textContent=t.path.join(' › ');$('#info-title').title='在装备浏览器中定位此物品';$('#info-title').onclick=e=>{e.preventDefault();if(t.kind!=='loadout')locateItem(t)};if(t.kind==='loadout')$('#info-title').title='脑插与增效剂 · 物品详情';$('#info-content').innerHTML='<p class="profile-note">正在读取物品属性…</p>';panel.hidden=false;if(!panel.style.left){panel.style.left=Math.max(8,(innerWidth-panel.offsetWidth)/2)+'px';panel.style.top='100px'}clampInfo();$('#info-close').focus({preventScroll:true});
  const useNative=!!t.metadataSource||!!fittedObject||!!t.planContext;
- const calculationRequest=!useNative&&(selected||droneIndex!==null||t.kind==='ship')?getCalculation(captured):Promise.resolve(null);
+ const calculationRequest=!baseOnly&&!useNative&&(selected||droneIndex!==null||t.kind==='ship')?getCalculation(captured):Promise.resolve(null);
  // Attach rejection handling immediately, even while item metadata is in flight.
  const settledCalculation=calculationRequest.then(value=>({value}),error=>({error}));
  try{const data=await cachedItem(t.id,t.id);if(request!==infoRequest||panel.hidden)return;
  renderItemInfo($('#info-content'),t,data,null,catalog,'');clampInfo();
- if(!selected&&droneIndex===null&&t.kind!=='ship'&&!fittedObject&&!t.planContext){say('已读取物品详情');return}
+ if(baseOnly||!selected&&droneIndex===null&&t.kind!=='ship'&&!fittedObject&&!t.planContext){say('已读取物品详情');return}
  const status=document.createElement('p');status.className='profile-note';status.textContent='装配参数计算中 · 可先查看基础属性';$('#info-content').append(status);
  let touched=false;const remember=()=>{touched=true};$('#info-content').querySelector('.info-tabs').addEventListener('click',remember,{once:true});
  const outcome=await settledCalculation;if(request!==infoRequest||panel.hidden)return;
@@ -362,7 +362,12 @@ for(const id of ['import-fit-text','import-editor-text'])$('#'+id).onclick=impor
 $('#import-fit-image').onclick=()=>showImageImport({catalog,calculate:getCalculation,save:fit=>api('save',fit),onSaved:record=>{libraryFits.unshift(record);refreshLibraryRows();libraryMessage('已导入新装配：'+record.name)}});
 const libraryNavigationSaves=new Map();
 let libraryFits=[],pageMode=null,navigationVersion=0,lastWorkPage='library',libraryLoaded=false;const pageScrollStates=new Map();let editorFitDeleted=false;let fitClipboard=null;try{fitClipboard=JSON.parse(sessionStorage.getItem('fitlab-fit-clipboard'))}catch{}
-const libraryTree=createLibraryTree($('#library-nav'),catalog,drawFitLibrary);
+const libraryTree=createLibraryTree($('#library-nav'),catalog,drawFitLibrary,(event,hull,origin)=>{
+ document.dispatchEvent(new CustomEvent('fitlab-loadout-menu',{detail:{event,origin,item:hull,showDetails:false,entries:[
+  ['新建装配',()=>createHullFit(hull)],
+  ['舰船详情',()=>showInfo(hull,null,null,null,true)]
+ ]}}));
+});
 function drawFitLibrary(){
  const selectedHull=libraryTree.selectedHull();$('#new-fit').hidden=!selectedHull;$('#new-fit').disabled=false;$('#new-fit').title=selectedHull?'为'+selectedHull.name+'新建装配':'';
 
@@ -410,8 +415,9 @@ $('#library-search').oninput=drawFitLibrary;
 $('#fit-library').onclick=()=>{location.hash='library'};
 window.addEventListener('hashchange',navigateFitPage);
 
-$('#new-fit').onclick=()=>{
- const hull=libraryTree.selectedHull();if(!hull)return;
+$('#new-fit').onclick=()=>createHullFit(libraryTree.selectedHull());
+function createHullFit(hull){
+ if(!hull)return;
  openFlow('新建装配 · '+hull.name,`<form id="create-fit-form"><label>名称<input id="create-fit-name" aria-label="装配名称" maxlength="120" required value="${esc(hull.name+' · 新装配')}"></label><label>标签<input id="create-fit-tags" aria-label="装配标签" placeholder="用逗号分隔，例如：深渊、舰队" maxlength="500"></label><button type="submit">创建装配</button></form>`);
  $('#create-fit-name').focus();$('#create-fit-name').select();
  $('#create-fit-form').onsubmit=e=>{e.preventDefault();const name=$('#create-fit-name').value.trim();if(!name){$('#flow-error').textContent='请输入装配名称';return}const tags=[...new Set($('#create-fit-tags').value.split(/[,，]/).map(t=>t.trim()).filter(Boolean))];restoreFit({name,tags,shipId:hull.id,skills:[],characterName:'无技能 · 基础对照',slots:[]});flow.close();location.hash='fitting'};
