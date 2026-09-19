@@ -1,6 +1,7 @@
+import {panelTrace,panelReading,panelTip} from './native-panel-detail.js';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=(n,u='')=>Number.isFinite(n)?n.toLocaleString('zh-CN',{maximumFractionDigits:2})+(u?' '+u:''):'—';
-const row=(title,value)=>'<div class="stat-row"><span>'+esc(title)+'</span><b>'+esc(value)+'</b></div>';
+const row=(title,value,detail)=>'<div class="stat-row" '+(detail?panelTip(detail):'')+'><span>'+esc(title)+'</span><b>'+esc(value)+'</b></div>';
 export function capacitorHtml(report,catalog=[]){
  const data=report.capacitorScenario,r=data?.result,average=r?.average;
  const native=report.native||{},local=native.capacitor,scenario=report.curveRequest?.scenario||{};
@@ -15,10 +16,13 @@ export function capacitorHtml(report,catalog=[]){
  const name=id=>catalog.find(t=>t.id===report.snapshot?.modules?.find(m=>m.workspaceSlotKey===id)?.dogmaTypeId)?.name||id;
  const reason=missing.length?'缺少 '+missing.map(c=>name(c.instanceId)).join('、')+' 的完整耗电数据':average?.exclusions?.length?'部分耗电或供能条件尚未确定':data?.reason||native.capacitorUnavailableReason||'电容计算条件尚未完整';
  const recharge=r?.recharge||native.capacitorRecharge||local?.recharge;
- let html='<div class="panel-title"><span>电容</span><div class="section-summary"><b style="color:'+(stable===false?'#f18080':stable===true?'#79d6ab':'var(--muted)')+'">'+summary+'</b></div></div><div class="stat-block">';
- if(recharge)html+=row('容量',fmt(recharge.capacity,'GJ'))+row('峰值回充',fmt(recharge.peakRecharge??average?.peakRechargeGjPerSecond,'GJ/s'));
+ const capTrace=panelTrace(native.attributes?.['ship/482'],'电容容量','GJ',report,catalog),timeTrace=panelTrace(native.attributes?.['ship/55'],'回充时间','s',report,catalog,1000);
+ const capTerms=[['电容容量',fmt(recharge?.capacity,'GJ'),null,capTrace],['回充时间',timeTrace.result,null,timeTrace]];
+ const summaryDetail={title:'电容稳定性',result:summary,terms:capTerms,conditions:[['口径','平均负载模型 · 满电起始 · 与曲线时长无关'],['限制','稳定不保证每次启用都能支付电量'],...(stable==null?[['不可用原因',reason]]:[])]};
+ let html='<div class="panel-title"><span>电容</span><div class="section-summary"><b '+panelTip(summaryDetail)+' style="color:'+(stable===false?'#f18080':stable===true?'#79d6ab':'var(--muted)')+'">'+summary+'</b></div></div><div class="stat-block">';
+ if(recharge)html+=row('容量',fmt(recharge.capacity,'GJ'),capTrace)+row('峰值回充',fmt(recharge.peakRecharge??average?.peakRechargeGjPerSecond,'GJ/s'),panelReading('峰值回充',recharge.peakRecharge??average?.peakRechargeGjPerSecond,'GJ/s',capTerms));
  const drain=average?.knownNetDrainGjPerSecond??local?.averageActiveDrain;
- if(Number.isFinite(drain))html+=row(average&&!average.complete?'已知净消耗':'平均净消耗',fmt(drain,'GJ/s'));
+ if(Number.isFinite(drain))html+=row(average&&!average.complete?'已知净消耗':'平均净消耗',fmt(drain,'GJ/s'),panelReading('平均净消耗',drain,'GJ/s',[],[['口径','引擎平均负载模型'],['完整性',average&&!average.complete?'部分结果':'完整'],...(average?.exclusions||[]).map(e=>['未计入',e.id+' · '+e.reason])]));
  if(stable==null)html+='<p class="profile-note">'+esc(reason)+'</p>';
  if(stable===false)html+='<p class="profile-note">持续启用时无法维持电量；引擎尚未提供此口径的预计续航。</p>';
  html+='<details class="native-cap-curve"><summary>电容详情</summary><p class="profile-note">稳定性按平均负载判断，与下方曲线时长无关；不保证每次启用都能支付电量。</p>';

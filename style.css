@@ -635,3 +635,10 @@ label:has(>input[type="checkbox"]:disabled){cursor:default;color:var(--muted)}
 
 /* Ammo readings become inputs only while editing. */
 .ammo-count{border:0;background:none;padding:0 2px;color:var(--muted);font-size:11px;font-weight:400;cursor:text;box-shadow:none}.ammo-count:hover{color:var(--text)}.ammo-inline-input{width:72px;min-width:0;padding:2px 4px;font:inherit;text-align:right}.ammo-count:focus-visible{outline:1px solid var(--accent);outline-offset:3px}
+
+/* Native inspector follows the compact legacy headings, including narrow columns. */
+#ship-stats .panel-title>span:first-child{flex-shrink:0}
+#ship-stats .section-summary:has(.attack-modes){display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}
+#ship-stats .section-summary .attack-total{font-size:13px;white-space:nowrap}
+#ship-stats .native-output-details>label{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11px;margin:10px 0}
+#ship-stats .native-output-metric{min-width:0;max-width:100%}

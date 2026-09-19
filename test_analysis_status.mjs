@@ -10,7 +10,7 @@ assert.equal(analysisStatusText({analysisStatus:{legality:'valid',completeness:'
 const report={native:{attributes:{'ship/76':{value:null},'ship/552':{value:null}},weapons:{},resources:[],coverage:[],warnings:[],outputContributions:{items:[],staticBlockers:[]},droneBay:{capacityCubicMeters:1,controlRangeMeters:null,maximumActive:0}},outputSelection:{metric:'nominalCycleDps',status:'empty_selection',groups:[],exclusions:[]},baselineOutputSelection:{metric:'nominalCycleDps'},outputContext:{selection:{contributionIds:[]}},outputBreakdown:Object.fromEntries(['weapons','drones','fighters'].map(k=>[k,{groups:[],exclusions:[]}])),integrationNotices:[],issues:[]};
 const host={innerHTML:'',querySelectorAll:()=>[],querySelector:()=>({})};
 mountNativeStats(host,report);
-assert(host.innerHTML.includes('锁定摘要"><b>—</b>'));
+assert.match(host.innerHTML,/锁定摘要"><b[^>]*>—<\/b>/);
 assert(!host.innerHTML.includes('0 km'));
 assert(!host.innerHTML.includes('>0 m<'));
 report.native.motion={maximumSpeedMetersPerSecond:0,fromRestTo75PercentSeconds:null,fromRestTo75PercentState:'not_applicable',fromRestTo75PercentUnavailableReason:'ZERO_MAXIMUM_SPEED_NO_FROM_REST_THRESHOLD'};
