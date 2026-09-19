@@ -748,3 +748,10 @@ label:has(>input[type="checkbox"]:disabled){cursor:default;color:var(--muted)}
 #implant-config .pilot-caption{letter-spacing:1px;white-space:nowrap}
 @media(max-width:900px){#editor-page>.title{grid-template-columns:minmax(240px,1fr) auto}.fit-actions{max-width:380px}}
 @media(max-width:650px){#editor-page>.title{grid-template-columns:minmax(0,1fr)}.fit-actions{grid-column:1;grid-row:2;justify-content:flex-start;max-width:100%}.fit-edit-tools{grid-row:3}.fit-actions #save{text-align:left}}
+/* Separate plan choices from clearing and management actions. */
+.loadout-quick .loadout-list-label{margin-top:5px;padding:10px 9px 5px;border-top:1px solid var(--line);font-size:10px;letter-spacing:1px;color:var(--muted)}
+.loadout-quick>button.loadout-clear{color:var(--muted);font-size:11px}
+.loadout-quick>button.loadout-manage{margin-top:7px;padding-top:12px;border-top:1px solid var(--line);color:var(--accent);font-size:11px}
+.loadout-action-icon{width:16px;height:16px;flex:0 0 16px;display:inline-flex}
+.loadout-action-icon svg{width:100%;height:100%}
+.loadout-quick>button.loadout-plan-option{min-height:38px;padding-left:14px}

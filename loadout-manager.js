@@ -239,10 +239,14 @@ export async function openLoadoutPicker(anchor,{api,snapshot,onSelect,onManage})
  try{
   const plans=await api('loadout-plans');if(!menu.isConnected)return;menu.innerHTML='<input class="loadout-search" aria-label="搜索可用方案" placeholder="搜索方案">';
   const add=(label,fn)=>{const b=document.createElement('button');b.role='menuitem';b.textContent=label;b.onclick=()=>{close();fn()};menu.append(b);return b;};
-  add('不使用方案',()=>onSelect(null));
-  for(const p of plans){const b=add((snapshot?.id===p.id?'✓ ':'')+p.name+(snapshot?.id===p.id?(snapshot.customized?' · 已自定义':snapshot.revision!==p.revision?' · 有更新':''):''),()=>onSelect(p));b.dataset.search=(p.name+' '+(p.folder||'')).toLowerCase();}
+  const decorate=(button,icon)=>{const symbol=document.createElement('span');symbol.className='loadout-action-icon';symbol.setAttribute('aria-hidden','true');symbol.innerHTML=icon;button.prepend(symbol);};
+  const clear=add('不使用方案',()=>onSelect(null));clear.className='loadout-clear';clear.setAttribute('aria-checked',String(!snapshot));clear.role='menuitemradio';
+  decorate(clear,'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="10" cy="10" r="7"/><path d="m5 5 10 10"/></svg>');
+  const heading=document.createElement('div');heading.className='loadout-list-label';heading.textContent='已保存方案';menu.append(heading);
+  for(const p of plans){const b=add((snapshot?.id===p.id?'✓ ':'')+p.name+(snapshot?.id===p.id?(snapshot.customized?' · 已自定义':snapshot.revision!==p.revision?' · 有更新':''):''),()=>onSelect(p));b.className='loadout-plan-option';b.role='menuitemradio';b.setAttribute('aria-checked',String(snapshot?.id===p.id));b.dataset.search=(p.name+' '+(p.folder||'')).toLowerCase();}
   const search=menu.querySelector('input');search.oninput=()=>{menu.querySelectorAll('[data-search]').forEach(b=>b.hidden=!b.dataset.search.includes(search.value.trim().toLowerCase()));position();};
   menu.onkeydown=e=>{if(!['ArrowDown','ArrowUp'].includes(e.key))return;e.preventDefault();const buttons=[...menu.querySelectorAll('button')].filter(b=>!b.hidden),index=buttons.indexOf(document.activeElement);buttons[(index+(e.key==='ArrowDown'?1:buttons.length-1)+buttons.length)%buttons.length]?.focus();};
-  add('管理方案…',onManage);position();search.focus();
+  const manage=add('管理方案…',onManage);manage.className='loadout-manage';
+  decorate(manage,'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 5h14M3 10h14M3 15h14"/><path d="M7 3v4m6 1v4m-7 1v4" stroke-width="3"/></svg>');position();search.focus();
  }catch(e){menu.textContent=e.message;position();}
 }
