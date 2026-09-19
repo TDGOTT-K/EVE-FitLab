@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {planShareText,parsePlanText,encodePlanCodes,decodePlanCodes} from './plan-share-code.js';
+const doc={format:'EVE-FitLab-Plan',version:1,plan:{name:'中文分享 🛰',implants:[{typeId:19540,slot:1}],boosters:[{typeId:9950,slot:1,enabledSideEffects:[2737]}],pilot:{skills:Array.from({length:600},(_,i)=>({skillTypeId:3000+i,level:i%6}))}}};
+assert.deepEqual(parsePlanText(planShareText(doc)),doc);
+assert.deepEqual(parsePlanText(planShareText(doc).replaceAll('\n','\r\n')),doc);
+const codes=await encodePlanCodes(doc);
+assert(codes.length>1);assert.deepEqual(await decodePlanCodes([...codes].reverse().concat(codes[0])),doc);
+await assert.rejects(decodePlanCodes(codes.slice(1)),/不完整/);
+const other=await encodePlanCodes({...doc,plan:{...doc.plan,name:'另一份'}});
+await assert.rejects(decodePlanCodes([codes[0],other[0]]),/不同方案/);
+const corrupt=[...codes];corrupt[0]=corrupt[0].slice(0,-1)+(corrupt[0].endsWith('A')?'B':'A');
+await assert.rejects(decodePlanCodes(corrupt),/校验/);
+assert.throws(()=>parsePlanText('不是方案'),/FITLAB-PLAN/);
+console.log('PASS text/unicode/CRLF, multi-QR roundtrip, missing/mixed/corrupt payloads');

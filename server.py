@@ -315,6 +315,9 @@ class Handler(SimpleHTTPRequestHandler):
     try:return self.reply(request(self.path.removeprefix('/api/native-session/'),body))
     except NEngineError as error:
      return self.reply(error.payload,409 if error.error.get('code') in ('STALE_REVISION','REQUEST_CONFLICT') else 400)
+   if self.path in ('/api/plan-share/export','/api/plan-share/import'):
+    from plan_share import export_plan,import_plan
+    return self.reply(export_plan(body['plan']) if self.path.endswith('/export') else import_plan(body['document']))
    if self.path=='/api/character-skills':
     from nengine_adapter import bridge
     client=bridge()

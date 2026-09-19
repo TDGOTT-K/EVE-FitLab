@@ -1,3 +1,4 @@
+import {showPlanShare,showPlanImport} from './plan-share.js';
 import {installAffixFloat} from './plan-affix-float.js';
 import {renderPlanAffixes} from './plan-affixes.js';
 import {applyImplantSet,implantSetChanges} from './implant-sets.js';
@@ -13,7 +14,7 @@ const icon=t=>t?'<img loading="lazy" draggable="false" src="https://images.evete
 
 export function installLoadoutManager(host,{api}){
  let plans=[],pilots=[],draft=null,dirty=false,busy=false,drag=null,returnToFit=false,analysisToken=0,analysisTimer;
- host.innerHTML='<div class="plan-workspace"><aside class="plan-library"><div class="plan-library-head"><button data-toggle-library aria-expanded="true" aria-controls="plan-library-body"><span class="plan-library-chevron">▾</span> 方案库</button><span class="plan-library-current"></span><button type="button" class="plan-library-add" aria-label="新建最外层方案" title="新建方案 · 最外层">＋</button></div><div id="plan-library-body"><input class="plan-search" aria-label="搜索方案" placeholder="搜索方案或分组"><div class="plan-list plan-folder-list" tabindex="0" aria-label="脑插与增效剂方案列表"></div><div class="plan-library-blank" tabindex="0" aria-label="方案库空白区域" title="右键新建分组"></div><small>Ctrl+C / V 复制粘贴</small></div></aside><aside class="plan-browser"></aside><section class="plan-editor"><div class="plan-toolbar"></div><p class="plan-message" role="status"></p><div class="plan-content"></div></section></div>';
+ host.innerHTML='<div class="plan-workspace"><aside class="plan-library"><div class="plan-library-head"><button data-toggle-library aria-expanded="true" aria-controls="plan-library-body"><span class="plan-library-chevron">▾</span> 方案库</button><span class="plan-library-current"></span><button type="button" class="plan-library-import" aria-label="导入分享方案" title="导入方案文字或图片">导入</button><button type="button" class="plan-library-add" aria-label="新建最外层方案" title="新建方案 · 最外层">＋</button></div><div id="plan-library-body"><input class="plan-search" aria-label="搜索方案" placeholder="搜索方案或分组"><div class="plan-list plan-folder-list" tabindex="0" aria-label="脑插与增效剂方案列表"></div><div class="plan-library-blank" tabindex="0" aria-label="方案库空白区域" title="右键新建分组"></div><small>Ctrl+C / V 复制粘贴</small></div></aside><aside class="plan-browser"></aside><section class="plan-editor"><div class="plan-toolbar"></div><p class="plan-message" role="status"></p><div class="plan-content"></div></section></div>';
  const $=s=>host.querySelector(s),message=text=>$('.plan-message').textContent=text;
  const affixFloat=installAffixFloat(host);
  let layout={revision:0,folders:[],order:[]};const folderOpen=new Set(['']);let activeFolder=null,extraFolders=[];try{extraFolders=JSON.parse(localStorage.getItem('fitlab-plan-folders')||'[]').filter(x=>typeof x==='string')}catch{}
@@ -25,6 +26,7 @@ export function installLoadoutManager(host,{api}){
  }
  $('[data-toggle-library]').onclick=()=>{libraryCollapsed=!libraryCollapsed;updateLibraryFold();try{localStorage.setItem('fitlab-plan-library-collapsed',String(libraryCollapsed))}catch{}};
  $('.plan-library-add').onclick=()=>newPlan('');
+ $('.plan-library-import').onclick=async()=>{if(busy||!await guard())return;showPlanImport({api,onImported:saved=>{plans.push(saved);draft=structuredClone(saved);dirty=false;activeFolder='';folderOpen.add('');draw();notify();message('已导入新方案')}})};
  updateLibraryFold();
  installPlanResize($('.plan-workspace'));
 
@@ -110,6 +112,8 @@ export function installLoadoutManager(host,{api}){
   const menu=document.createElement('div');menu.className='plan-actions-menu scenario-quick-menu';menu.setAttribute('popover','auto');menu.setAttribute('role','menu');document.body.append(menu);
   const close=()=>{menu.hidePopover();menu.remove()};
   const add=(label,fn,danger=false)=>{const b=document.createElement('button');b.type='button';b.role='menuitem';b.textContent=label;if(danger)b.className='danger';b.onclick=()=>{close();fn()};menu.append(b);};
+  add('分享文字',()=>showPlanShare(draft,{api,find}));
+  add('分享图片',()=>showPlanShare(draft,{api,find,image:true}));
   add('另存为新方案',()=>run(async()=>{
    const names=new Set(plans.map(p=>p.name));let n=1,name;do{name=draft.name.slice(0,65)+' · 副本'+(n>1?' '+n:'');n++;}while(names.has(name));
    const saved=await api('loadout-plan',{...structuredClone(draft),id:undefined,revision:undefined,name,folder:draft.folder||''});

@@ -721,3 +721,13 @@ label:has(>input[type="checkbox"]:disabled){cursor:default;color:var(--muted)}
 .plan-affix-resize.se{bottom:-4px;right:-4px;cursor:nwse-resize}.plan-affix-resize.sw{bottom:-4px;left:-4px;cursor:nesw-resize}
 .plan-affix-resize.se:after{content:"";position:absolute;right:5px;bottom:5px;width:7px;height:7px;border-right:1px solid var(--muted);border-bottom:1px solid var(--muted)}
 .plan-affixes.resizing{user-select:none}
+.plan-library-head .plan-library-import{padding:4px 9px;font-size:11px;color:var(--muted)}
+.plan-library-head .plan-library-import+.plan-library-add{margin-left:0}
+.plan-share-body{padding:12px 18px;overflow:auto;min-height:0}
+.plan-share-body textarea{display:block;width:100%;min-height:200px;resize:vertical;background:var(--bg);color:var(--text);border:1px solid var(--line);padding:10px;font:12px/1.5 monospace}
+.plan-share-body>img{display:block;width:100%;height:auto}
+.plan-share-body input[type=file]{display:block;margin:12px 0;max-width:100%}
+.plan-share-body>p{font-size:12px;color:var(--muted);line-height:1.6}
+.plan-share-body>button{margin:4px 6px 4px 0}
+.plan-share-dialog{max-height:90vh}
+.plan-share-dialog[open]{display:flex;flex-direction:column}
