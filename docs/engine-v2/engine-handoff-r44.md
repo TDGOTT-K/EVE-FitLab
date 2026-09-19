@@ -29,6 +29,24 @@
 | ENG-44-09 | P2 | 已确认当前缺公开技能点能力 | 技能点逐项/总量与来源；见审计CAP-13，不要求UI开发训练公式 |
 | ENG-44-10 | P1 | 已复现静态重型鱼雷齐射不可用 | 独眼巨人II ability19返回EVE_FIGHTER_ROCKET_BINDING，核查重型齐射与轻型火箭共用编译路径 |
 | ENG-44-11 | P2 | 已确认炸弹口径条件缺失 | 白蚁II ability7有炸弹投影，但DPS与中队齐射requires_policy；复用已有投影明确静态政策 |
+| ENG-44-12 | P1 | 已复现末日武器静态覆盖阻断 | 四种定向末日effect4489–4492均UNKNOWN_STATIC_FOOTPRINT，伤害不可用且resources为空 |
+
+### ENG-44-12：四种定向末日武器阻断静态分析
+
+2026-09-19在当前r44副本，经只读/api/analyze逐一实测。每份输入使用当前目录全部技能level5、单个高槽high-0、state=Active，其余装备/无人机/舰载机为空。不是技能不足或选错种族武器造成。
+
+| 舰船typeId | 武器typeId | 名称 | 阻断effectId |
+|---|---|---|---|
+| 11567 | 24550 | 神使 + 审判之日（电磁） | 4489 |
+| 3764 | 24552 | 勒维亚坦 + 湮没之圣光（动能） | 4490 |
+| 671 | 24554 | 俄洛巴斯 + 极光之仪（热能） | 4491 |
+| 23773 | 23674 | 拉格纳洛克 + 赫姆达洱之咆哮（爆炸） | 4492 |
+
+四份回执一致：issues只有STATIC_COVERAGE_INCOMPLETE；native.staticDependencyIssues指向module.high-0及对应效果，reason=UNKNOWN_STATIC_FOOTPRINT；native.outputContributions.items为unresolved_module，reason=UNSUPPORTED_EFFECT_TARGET_SCOPE_NOT_PROVEN_ISOLATED；native.resources=[]。先前“不支持战斗行为也须保留可证明的静态资源”的阶段一目标在这类输入上尚未达到。不能不经依赖核实就去掉阻断或返回0。
+
+交付要求：先查明这些效果的静态影响范围，保留可证明的CPU/PG/槽位和安装诊断；分别列出单次伤害、激活/冷却、燃料或弹药前提、目标资格与应用的已有支持/缺口。若有已实现机制则接公开查询；缺机制只登记，不在本轮UI任务开发。末日不能默认当作普通可无限循环武器填DPS。补四种型号、关闭/离线、与常规武器混装的MCP/CLI回执及保守完整性验证。
+
+此次仅确认上述四种定向末日；扫射/范围/特殊末日没有实测，不可据此声称所有末日家族均已覆盖或全部同因。未修改引擎和UI逻辑。
 
 ### ENG-44-10/11：具体舰载机副武器复现（2026-09-19）
 
