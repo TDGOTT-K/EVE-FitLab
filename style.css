@@ -704,5 +704,20 @@ label:has(>input[type="checkbox"]:disabled){cursor:default;color:var(--muted)}
 .plan-affix-float .plan-affixes{position:fixed;display:flex;flex-direction:column;padding:12px 14px;border:1px solid var(--line);background:var(--panel);box-shadow:0 10px 30px #0007;border-radius:6px}
 .plan-affix-float-head{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;margin-bottom:7px}
 .plan-affix-float-head button{border:0;background:transparent;color:var(--muted);font-size:21px;padding:0 6px}
-.plan-affix-float [data-plan-affixes]{max-height:290px}
+.plan-affix-float [data-plan-affixes]{flex:1;max-height:none}
 @media(max-width:650px){.plan-toolbar .plan-name-row{flex-basis:calc(100% - 65px)}}
+
+.plan-affix-float-head{flex-shrink:0}
+.plan-affix-float-head button svg{display:block;width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.4}
+.plan-affix-float-head button{padding:5px;border-radius:3px}
+.plan-affix-float-head button:hover{color:var(--accent);background:var(--row)}
+.plan-affix-resize{position:absolute;touch-action:none;user-select:none}
+.plan-affix-resize.n,.plan-affix-resize.s{left:10px;right:10px;height:8px;cursor:ns-resize}
+.plan-affix-resize.n{top:-4px}.plan-affix-resize.s{bottom:-4px}
+.plan-affix-resize.e,.plan-affix-resize.w{top:10px;bottom:10px;width:8px;cursor:ew-resize}
+.plan-affix-resize.e{right:-4px}.plan-affix-resize.w{left:-4px}
+.plan-affix-resize.ne,.plan-affix-resize.nw,.plan-affix-resize.se,.plan-affix-resize.sw{width:14px;height:14px}
+.plan-affix-resize.ne{top:-4px;right:-4px;cursor:nesw-resize}.plan-affix-resize.nw{top:-4px;left:-4px;cursor:nwse-resize}
+.plan-affix-resize.se{bottom:-4px;right:-4px;cursor:nwse-resize}.plan-affix-resize.sw{bottom:-4px;left:-4px;cursor:nesw-resize}
+.plan-affix-resize.se:after{content:"";position:absolute;right:5px;bottom:5px;width:7px;height:7px;border-right:1px solid var(--muted);border-bottom:1px solid var(--muted)}
+.plan-affixes.resizing{user-select:none}
