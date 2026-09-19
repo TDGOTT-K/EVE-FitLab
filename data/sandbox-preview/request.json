@@ -1,332 +1,448 @@
 {
-  "id": "fitlab-preview",
-  "seed": 17,
-  "horizonSeconds": 40,
+  "id": "phoenix-siege-assault-near-range-control",
+  "seed": 20260919,
+  "horizonSeconds": 100,
   "participants": [
     {
-      "id": "blue-gun",
+      "id": "phoenix",
       "team": "blue",
       "fit": {
-        "id": "rifter-skill-chain",
+        "id": "phoenix-siege",
         "buildNumber": 3503375,
-        "shipTypeId": 587,
+        "shipTypeId": 19726,
         "omittedSkills": "untrained",
         "skills": {
-          "3327": 5,
-          "3329": 5,
           "3300": 5,
-          "3302": 5,
-          "3310": 5,
-          "3315": 5,
           "3318": 5,
-          "3303": 5,
-          "3311": 5,
-          "3312": 5,
-          "3317": 5,
-          "3413": 5,
+          "3319": 5,
+          "3321": 5,
+          "3324": 5,
+          "3325": 5,
+          "3327": 5,
+          "3330": 5,
+          "3334": 5,
+          "3338": 5,
           "3402": 5,
-          "3418": 5,
-          "3426": 5,
-          "3427": 5,
-          "3428": 5,
-          "3433": 5,
-          "3434": 5,
-          "3435": 5,
           "3449": 5,
-          "19921": 5,
-          "19759": 5,
-          "19760": 5,
-          "19761": 5,
-          "19766": 5,
-          "19767": 5,
-          "3432": 5
+          "3455": 5,
+          "3456": 5,
+          "11207": 5,
+          "20342": 5,
+          "20530": 5,
+          "20533": 5,
+          "21668": 5,
+          "22043": 5,
+          "33092": 5,
+          "33096": 5,
+          "41409": 5
         },
         "items": [
           {
-            "id": "gun1",
-            "typeId": 484,
-            "chargeTypeId": 178,
-            "slotIndex": 0
+            "id": "xl0",
+            "typeId": 37294,
+            "slotIndex": 0,
+            "active": false,
+            "chargeTypeId": 17859
           },
           {
-            "id": "gun2",
-            "typeId": 484,
-            "chargeTypeId": 178,
-            "slotIndex": 1
+            "id": "xl1",
+            "typeId": 37294,
+            "slotIndex": 1,
+            "active": false,
+            "chargeTypeId": 17859
           },
           {
-            "id": "gun3",
-            "typeId": 484,
-            "chargeTypeId": 178,
-            "slotIndex": 2
-          },
-          {
-            "id": "gyro1",
-            "typeId": 520,
-            "slotIndex": 0
+            "id": "xl2",
+            "typeId": 37294,
+            "slotIndex": 2,
+            "active": false,
+            "chargeTypeId": 17859
           }
         ]
       },
       "position": {
-        "x": -2800,
-        "y": -1600,
+        "x": 0,
+        "y": 0,
         "z": 0
       },
       "velocity": {
         "x": 0,
-        "y": -40,
+        "y": 0,
         "z": 0
       },
-      "lockDurationSeconds": 1,
+      "lockDurationSeconds": null,
+      "targetingPolicy": "scan-signature-community-v1",
       "shieldFraction": 1,
       "armorFraction": 1,
       "hullFraction": 1,
       "capacitorFraction": 1,
       "supplies": {
-        "gun1": {
-          "loaded": 100,
+        "xl0": {
+          "loaded": 15,
           "reserve": 0,
           "automaticReload": false
         },
-        "gun2": {
-          "loaded": 100,
+        "xl1": {
+          "loaded": 15,
           "reserve": 0,
           "automaticReload": false
         },
-        "gun3": {
-          "loaded": 100,
+        "xl2": {
+          "loaded": 15,
           "reserve": 0,
           "automaticReload": false
         }
+      },
+      "ammunitionCargo": {
+        "17859": 2000
       }
     },
     {
-      "id": "blue-laser",
-      "team": "blue",
-      "fit": {
-        "id": "rifter-skill-chain",
-        "buildNumber": 3503375,
-        "shipTypeId": 587,
-        "omittedSkills": "untrained",
-        "skills": {
-          "3327": 5,
-          "3329": 5,
-          "3300": 5,
-          "3302": 5,
-          "3310": 5,
-          "3315": 5,
-          "3318": 5,
-          "3303": 5,
-          "3311": 5,
-          "3312": 5,
-          "3317": 5,
-          "3413": 5,
-          "3402": 5,
-          "3418": 5,
-          "3426": 5,
-          "3427": 5,
-          "3428": 5,
-          "3433": 5,
-          "3434": 5,
-          "3435": 5,
-          "3449": 5,
-          "19921": 5,
-          "19759": 5,
-          "19760": 5,
-          "19761": 5,
-          "19766": 5,
-          "19767": 5,
-          "3432": 5
-        },
-        "items": [
-          {
-            "id": "laser",
-            "typeId": 450,
-            "chargeTypeId": 246,
-            "slotIndex": 0
-          }
-        ]
-      },
-      "position": {
-        "x": -2600,
-        "y": 1700,
-        "z": 0
-      },
-      "velocity": {
-        "x": 0,
-        "y": 40,
-        "z": 0
-      },
-      "lockDurationSeconds": 1,
-      "shieldFraction": 1,
-      "armorFraction": 1,
-      "hullFraction": 1,
-      "capacitorFraction": 1,
-      "supplies": {
-        "laser": {
-          "loaded": 0,
-          "reserve": 0,
-          "automaticReload": false
-        }
-      }
-    },
-    {
-      "id": "red-missile",
+      "id": "typhoon",
       "team": "red",
       "fit": {
-        "id": "caracal-heavy",
+        "id": "typhoon-cruise",
         "buildNumber": 3503375,
-        "shipTypeId": 621,
+        "shipTypeId": 644,
+        "omittedSkills": "untrained",
+        "skills": {
+          "3300": 5,
+          "3318": 5,
+          "3319": 5,
+          "3321": 5,
+          "3324": 5,
+          "3326": 5,
+          "3327": 5,
+          "3329": 5,
+          "3333": 5,
+          "3337": 5,
+          "20212": 5,
+          "33094": 5,
+          "33098": 5
+        },
+        "items": [
+          {
+            "id": "cruise0",
+            "typeId": 19739,
+            "slotIndex": 0,
+            "active": false,
+            "chargeTypeId": 24533
+          },
+          {
+            "id": "cruise1",
+            "typeId": 19739,
+            "slotIndex": 1,
+            "active": false,
+            "chargeTypeId": 24533
+          },
+          {
+            "id": "cruise2",
+            "typeId": 19739,
+            "slotIndex": 2,
+            "active": false,
+            "chargeTypeId": 24533
+          },
+          {
+            "id": "cruise3",
+            "typeId": 19739,
+            "slotIndex": 3,
+            "active": false,
+            "chargeTypeId": 24533
+          },
+          {
+            "id": "cruise4",
+            "typeId": 19739,
+            "slotIndex": 4,
+            "active": false,
+            "chargeTypeId": 24533
+          },
+          {
+            "id": "cruise5",
+            "typeId": 19739,
+            "slotIndex": 5,
+            "active": false,
+            "chargeTypeId": 24533
+          },
+          {
+            "id": "bcs0",
+            "typeId": 22291,
+            "slotIndex": 0,
+            "active": false
+          },
+          {
+            "id": "bcs1",
+            "typeId": 22291,
+            "slotIndex": 1,
+            "active": false
+          }
+        ]
+      },
+      "position": {
+        "x": 22000,
+        "y": 0,
+        "z": 0
+      },
+      "velocity": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "lockDurationSeconds": null,
+      "targetingPolicy": "scan-signature-community-v1",
+      "shieldFraction": 1,
+      "armorFraction": 1,
+      "hullFraction": 1,
+      "capacitorFraction": 1,
+      "supplies": {
+        "cruise0": {
+          "loaded": 15,
+          "reserve": 0,
+          "automaticReload": false
+        },
+        "cruise1": {
+          "loaded": 15,
+          "reserve": 0,
+          "automaticReload": false
+        },
+        "cruise2": {
+          "loaded": 15,
+          "reserve": 0,
+          "automaticReload": false
+        },
+        "cruise3": {
+          "loaded": 15,
+          "reserve": 0,
+          "automaticReload": false
+        },
+        "cruise4": {
+          "loaded": 15,
+          "reserve": 0,
+          "automaticReload": false
+        },
+        "cruise5": {
+          "loaded": 15,
+          "reserve": 0,
+          "automaticReload": false
+        }
+      }
+    },
+    {
+      "id": "bhaalgorn",
+      "team": "red",
+      "fit": {
+        "id": "bhaalgorn-ew",
+        "buildNumber": 3503375,
+        "shipTypeId": 17920,
+        "omittedSkills": "untrained",
+        "skills": {
+          "3327": 5,
+          "3329": 5,
+          "3331": 5,
+          "3333": 5,
+          "3335": 5,
+          "3337": 5,
+          "3339": 5,
+          "3402": 5,
+          "3413": 5,
+          "3423": 5,
+          "3426": 5,
+          "3435": 5,
+          "3449": 5,
+          "33091": 5,
+          "33094": 5,
+          "33095": 5,
+          "33098": 5
+        },
+        "items": [
+          {
+            "id": "neut0",
+            "typeId": 12271,
+            "slotIndex": 0,
+            "active": false
+          },
+          {
+            "id": "neut1",
+            "typeId": 12271,
+            "slotIndex": 1,
+            "active": false
+          },
+          {
+            "id": "neut2",
+            "typeId": 12271,
+            "slotIndex": 2,
+            "active": false
+          },
+          {
+            "id": "web",
+            "typeId": 527,
+            "slotIndex": 3,
+            "active": false
+          }
+        ]
+      },
+      "position": {
+        "x": 18000,
+        "y": 0,
+        "z": 0
+      },
+      "velocity": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "lockDurationSeconds": null,
+      "targetingPolicy": "scan-signature-community-v1",
+      "shieldFraction": 1,
+      "armorFraction": 1,
+      "hullFraction": 1,
+      "capacitorFraction": 1,
+      "supplies": {}
+    },
+    {
+      "id": "keres",
+      "team": "red",
+      "fit": {
+        "id": "keres-damp",
+        "buildNumber": 3503375,
+        "shipTypeId": 11174,
+        "omittedSkills": "untrained",
+        "skills": {
+          "3327": 5,
+          "3328": 5,
+          "3426": 5,
+          "3428": 5,
+          "3433": 5,
+          "28615": 5
+        },
+        "items": [
+          {
+            "id": "damp0",
+            "typeId": 1969,
+            "slotIndex": 0,
+            "active": false
+          },
+          {
+            "id": "damp1",
+            "typeId": 1969,
+            "slotIndex": 1,
+            "active": false
+          }
+        ]
+      },
+      "position": {
+        "x": 55000,
+        "y": -10000,
+        "z": 0
+      },
+      "velocity": {
+        "x": -80,
+        "y": 20,
+        "z": 0
+      },
+      "lockDurationSeconds": null,
+      "targetingPolicy": "scan-signature-community-v1",
+      "shieldFraction": 1,
+      "armorFraction": 1,
+      "hullFraction": 1,
+      "capacitorFraction": 1,
+      "supplies": {}
+    },
+    {
+      "id": "scythe",
+      "team": "red",
+      "fit": {
+        "id": "scythe-logi",
+        "buildNumber": 3503375,
+        "shipTypeId": 631,
+        "omittedSkills": "untrained",
+        "skills": {
+          "3327": 5,
+          "3329": 5,
+          "3333": 5,
+          "3402": 5,
+          "3413": 5,
+          "3422": 5,
+          "33094": 5
+        },
+        "items": [
+          {
+            "id": "remote0",
+            "typeId": 3598,
+            "slotIndex": 0,
+            "active": false
+          },
+          {
+            "id": "remote1",
+            "typeId": 3598,
+            "slotIndex": 1,
+            "active": false
+          }
+        ]
+      },
+      "position": {
+        "x": 60000,
+        "y": 15000,
+        "z": 0
+      },
+      "velocity": {
+        "x": -70,
+        "y": -20,
+        "z": 0
+      },
+      "lockDurationSeconds": null,
+      "targetingPolicy": "scan-signature-community-v1",
+      "shieldFraction": 1,
+      "armorFraction": 1,
+      "hullFraction": 1,
+      "capacitorFraction": 1,
+      "supplies": {}
+    },
+    {
+      "id": "crow",
+      "team": "red",
+      "fit": {
+        "id": "crow-tackle",
+        "buildNumber": 3503375,
+        "shipTypeId": 11176,
         "omittedSkills": "untrained",
         "skills": {
           "3327": 5,
           "3330": 5,
-          "33092": 5,
-          "3334": 5,
-          "3319": 5,
-          "3321": 5,
-          "3324": 5
-        },
-        "items": [
-          {
-            "id": "launcher1",
-            "typeId": 501,
-            "chargeTypeId": 209,
-            "slotIndex": 0
-          },
-          {
-            "id": "launcher2",
-            "typeId": 501,
-            "chargeTypeId": 209,
-            "slotIndex": 1
-          },
-          {
-            "id": "launcher3",
-            "typeId": 501,
-            "chargeTypeId": 209,
-            "slotIndex": 2
-          },
-          {
-            "id": "launcher4",
-            "typeId": 501,
-            "chargeTypeId": 209,
-            "slotIndex": 3
-          },
-          {
-            "id": "launcher5",
-            "typeId": 501,
-            "chargeTypeId": 209,
-            "slotIndex": 4
-          }
-        ]
-      },
-      "position": {
-        "x": 2800,
-        "y": -900,
-        "z": 0
-      },
-      "velocity": {
-        "x": 0,
-        "y": -40,
-        "z": 0
-      },
-      "lockDurationSeconds": 1,
-      "shieldFraction": 1,
-      "armorFraction": 1,
-      "hullFraction": 1,
-      "capacitorFraction": 1,
-      "supplies": {
-        "launcher1": {
-          "loaded": 20,
-          "reserve": 0,
-          "automaticReload": false
-        },
-        "launcher2": {
-          "loaded": 20,
-          "reserve": 0,
-          "automaticReload": false
-        },
-        "launcher3": {
-          "loaded": 20,
-          "reserve": 0,
-          "automaticReload": false
-        },
-        "launcher4": {
-          "loaded": 20,
-          "reserve": 0,
-          "automaticReload": false
-        },
-        "launcher5": {
-          "loaded": 20,
-          "reserve": 0,
-          "automaticReload": false
-        }
-      }
-    },
-    {
-      "id": "red-web",
-      "team": "red",
-      "fit": {
-        "id": "rifter-skill-chain",
-        "buildNumber": 3503375,
-        "shipTypeId": 587,
-        "omittedSkills": "untrained",
-        "skills": {
-          "3327": 5,
-          "3329": 5,
-          "3300": 5,
-          "3302": 5,
-          "3310": 5,
-          "3315": 5,
-          "3318": 5,
-          "3303": 5,
-          "3311": 5,
-          "3312": 5,
-          "3317": 5,
-          "3413": 5,
-          "3402": 5,
-          "3418": 5,
           "3426": 5,
-          "3427": 5,
-          "3428": 5,
-          "3433": 5,
-          "3434": 5,
           "3435": 5,
           "3449": 5,
-          "19921": 5,
-          "19759": 5,
-          "19760": 5,
-          "19761": 5,
-          "19766": 5,
-          "19767": 5,
-          "3432": 5
+          "3450": 5,
+          "3453": 5,
+          "3454": 5,
+          "12092": 5
         },
         "items": [
           {
-            "id": "web",
-            "typeId": 526,
+            "id": "mwd",
+            "typeId": 440,
             "slotIndex": 0,
-            "active": true
+            "active": false
           },
           {
-            "id": "painter",
-            "typeId": 12709,
+            "id": "point",
+            "typeId": 3242,
             "slotIndex": 1,
-            "active": true
+            "active": false
           }
         ]
       },
       "position": {
-        "x": 2100,
-        "y": 1900,
+        "x": 20000,
+        "y": -5000,
         "z": 0
       },
       "velocity": {
-        "x": 0,
-        "y": 40,
+        "x": -150,
+        "y": 30,
         "z": 0
       },
-      "lockDurationSeconds": 1,
+      "lockDurationSeconds": null,
+      "targetingPolicy": "scan-signature-community-v1",
       "shieldFraction": 1,
       "armorFraction": 1,
       "hullFraction": 1,

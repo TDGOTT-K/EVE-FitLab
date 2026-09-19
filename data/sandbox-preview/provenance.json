@@ -1,0 +1,13 @@
+{
+  "experiment": "phoenix-siege-assault",
+  "variant": "near-range supported control",
+  "sourceReadme": "D:/AI/GPT6/N号引擎/experiments/phoenix-siege-assault/README.md",
+  "sourceRequest": "D:\\AI\\GPT6\\N号引擎\\artifacts\\phoenix-siege-assault-study-006\\near-range\\request.json",
+  "sourcePolicy": "D:\\AI\\GPT6\\N号引擎\\artifacts\\phoenix-siege-assault-study-006\\controller.js",
+  "sourceRequestSha256": "05d6799437b6c69b7b8c46ff6a443ae3fec7f03c5ebad65125824227faae5705",
+  "sourcePolicySha256": "3f8ce2e31e9639c7378ecc63ee807c92ec14e0052f6db9b968648c1a86766c58",
+  "recordedWith": "0.210.6-ui.repair1",
+  "duration": 100,
+  "sampleSeconds": 5,
+  "omissions": "Use original supported near-range control, not full siege/capital repair fit; no new mechanics implemented."
+}
