@@ -1,16 +1,17 @@
-export function mountFitTagInput(root,suggestions=[]){
- const tags=new Set();root.classList.add('fit-tag-editor');
- const chips=document.createElement('div');chips.className='fit-tag-chips';
- const input=document.createElement('input');input.placeholder='输入标签，按 Enter 添加';input.setAttribute('aria-label','添加装配标签');input.maxLength=80;
- const choices=document.createElement('div');choices.className='fit-tag-suggestions';
- const add=value=>{for(const text of value.split(/[,，]/).map(s=>s.trim()).filter(Boolean)){if([...tags].join(',').length+text.length<=500)tags.add(text);}input.value='';draw()};
+export function mountFitTagInput(root,initialTags=[],onChange=()=>{}){
+ let tags=[...initialTags],finishEditing=null;root.classList.add('fit-tags-row');
  function draw(){
-  chips.replaceChildren();choices.replaceChildren();
-  for(const tag of tags){const chip=document.createElement('span');chip.className='filter-tag';const text=document.createElement('span');text.textContent=tag;const remove=document.createElement('button');remove.type='button';remove.textContent='×';remove.setAttribute('aria-label','移除标签：'+tag);remove.onclick=()=>{tags.delete(tag);draw()};chip.append(text,remove);chips.append(chip)}
-  const query=input.value.trim().toLowerCase();
-  for(const tag of [...new Set(suggestions)].filter(t=>!tags.has(t)&&t.toLowerCase().includes(query)).slice(0,8)){const b=document.createElement('button');b.type='button';b.className='fit-tag';b.textContent=tag;b.onclick=()=>{add(tag);input.focus()};choices.append(b)}
+  root.replaceChildren();
+  tags.forEach((tag,index)=>{const b=document.createElement('button');b.type='button';b.className='fit-tag';b.textContent=tag;b.title='点击编辑标签';b.onclick=()=>edit(index,b);root.append(b)});
+  const add=document.createElement('button');add.type='button';add.className='add-fit-tag';add.textContent='＋';add.setAttribute('aria-label','添加标签');add.title='添加标签';add.onclick=()=>edit(null,add);root.append(add);
  }
- input.onkeydown=e=>{if(e.isComposing)return;if(e.key==='Enter'||e.key===','){e.preventDefault();e.stopPropagation();add(input.value)}else if(e.key==='Backspace'&&!input.value&&tags.size){tags.delete([...tags].at(-1));draw()}};
- input.oninput=draw;root.append(chips,input,choices);draw();
- return {values(){add(input.value);return [...tags]}};
+ function edit(index,source){
+  if(finishEditing)return;
+  const existing=index!==null,input=document.createElement('input');input.className='fit-tag-input';input.setAttribute('aria-label',existing?'编辑标签':'新标签');input.placeholder='输入标签，回车添加';input.maxLength=40;input.value=existing?tags[index]:'';
+  source.hidden=true;source.after(input);input.focus();let finished=false;
+  const finish=commit=>{if(finished)return;finished=true;finishEditing=null;const text=input.value.trim();if(commit){if(existing){if(text)tags[index]=text;else tags.splice(index,1)}else if(text)tags.push(text);tags=[...new Set(tags)]}draw();if(commit)onChange([...tags])};
+  finishEditing=finish;input.onblur=()=>finish(true);
+  input.onkeydown=e=>{if(e.isComposing)return;if(e.key==='Enter'||e.key==='Escape'){e.preventDefault();e.stopPropagation();finish(e.key==='Enter');root.querySelector('.add-fit-tag')?.focus()}};
+ }
+ draw();return {values(){finishEditing?.(true);return [...tags]}};
 }

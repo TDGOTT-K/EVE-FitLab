@@ -92,12 +92,12 @@ body.light{background:radial-gradient(ellipse at 65% 0,#f4fafc 0,transparent 55%
 .edit-name-icon svg{width:16px;height:16px}
 .edit-name-icon:hover{color:var(--accent);border-color:var(--line)}
 .fit-name-input{font:inherit;font-size:18px;max-width:100%;width:340px;background:var(--bg);border:1px solid var(--accent);color:var(--text);padding:3px 6px}
-#fit-tags{display:flex;align-items:center;flex-wrap:wrap;gap:5px;min-height:22px;margin-top:2px}
+.fit-tags-row{display:flex;align-items:center;flex-wrap:wrap;gap:5px;min-height:22px;margin-top:2px}
 .fit-tag{font-size:10px;padding:2px 7px;color:var(--muted);background:color-mix(in srgb,var(--accent) 5%,transparent);line-height:16px}
 .add-fit-tag{font-size:15px;line-height:16px;padding:1px 5px;border-color:transparent;color:var(--muted)}
 .add-fit-tag:hover{color:var(--accent);border-color:var(--line)}
 .fit-tag-input{width:170px;max-width:100%;font:inherit;font-size:11px;padding:3px 6px;background:var(--bg);color:var(--text);border:1px solid var(--accent)}
-.fit-name-row [hidden],#fit-tags [hidden]{display:none}
+.fit-name-row [hidden],.fit-tags-row [hidden]{display:none}
 
 main[hidden],.head-actions button[hidden]{display:none}
 .library-heading{display:flex;justify-content:space-between;align-items:center;margin:8px 0 25px}
@@ -664,10 +664,4 @@ label:has(>input[type="checkbox"]:disabled){cursor:default;color:var(--muted)}
 .create-fit-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap}
 .create-fit-imports{display:flex;gap:6px;margin-left:auto}
 .create-tags-label{font-size:12px;color:var(--muted);margin-bottom:8px}
-.fit-tag-editor{padding:10px;border:1px solid var(--line);background:var(--bg)}
-.fit-tag-chips,.fit-tag-suggestions{display:flex;flex-wrap:wrap;gap:6px}
-.fit-tag-chips:empty,.fit-tag-suggestions:empty{display:none}
-.flow-body .fit-tag-editor input{border:0;background:none;margin:4px 0;padding:6px 0;font-size:12px}
-.fit-tag-suggestions button{font-size:11px;padding:4px 8px}
-.fit-tag-chips .filter-tag{display:inline-flex;align-items:center;gap:6px}
-.fit-tag-chips button{border:0;background:transparent;padding:0 4px;color:var(--muted)}
+.flow-body .fit-tags-row .fit-tag-input{width:170px;margin:0;font-size:11px;padding:3px 6px}

@@ -425,7 +425,7 @@ window.addEventListener('hashchange',navigateFitPage);
 function createHullFit(hull){
  if(!hull){openHullPicker();return;}
  openFlow('新建装配 · '+hull.name,`<form id="create-fit-form"><label>名称<input id="create-fit-name" aria-label="装配名称" maxlength="120" required value="${esc(hull.name+' · 新装配')}"></label><div class="create-tags-label">标签</div><div id="create-fit-tags"></div><div class="create-fit-actions"><button type="submit">创建装配</button><div class="create-fit-imports"><button type="button" data-create-import="text">从文本导入</button><button type="button" data-create-import="image">从图片导入</button></div></div></form>`);
- const tagInput=mountFitTagInput($('#create-fit-tags'),libraryFits.flatMap(f=>f.tags||[]));
+ const tagInput=mountFitTagInput($('#create-fit-tags'));
  flow.querySelector('[data-create-import="text"]').onclick=()=>{flow.close();importText()};
  flow.querySelector('[data-create-import="image"]').onclick=()=>{flow.close();importImage()};
  $('#create-fit-name').focus();$('#create-fit-name').select();
@@ -454,18 +454,7 @@ $('#rename-fit').onclick=()=>{
  input.onkeydown=e=>{if(e.isComposing)return;if(e.key==='Enter'||e.key==='Escape'){e.preventDefault();e.stopPropagation();finish(e.key==='Enter');button.focus()}};
 };
 function renderFitTags(){
- const root=$('#fit-tags');root.innerHTML=(fitRecord.tags||[]).map((t,i)=>`<button class="fit-tag" data-tag-index="${i}" title="点击编辑标签">${esc(t)}</button>`).join('')+'<button class="add-fit-tag" aria-label="添加标签" title="添加标签">＋</button>';
- const edit=index=>{
-  if(root.querySelector('input'))return;
-  const existing=index!==null,source=existing?root.querySelector(`[data-tag-index="${index}"]`):root.querySelector('.add-fit-tag');
-  const input=document.createElement('input');input.className='fit-tag-input';input.setAttribute('aria-label',existing?'编辑标签':'新标签');input.placeholder='输入标签，回车添加';input.maxLength=40;input.value=existing?fitRecord.tags[index]:'';
-  source.hidden=true;source.after(input);input.focus();let finished=false;
-  const finish=commit=>{if(finished)return;finished=true;const text=input.value.trim();if(commit){const tags=[...(fitRecord.tags||[])];if(existing){if(text)tags[index]=text;else tags.splice(index,1)}else if(text)tags.push(text);mutate(()=>{fitRecord.tags=[...new Set(tags)];},'已修改装配标签')}renderFitTags()};
-  input.onblur=()=>finish(true);
-  input.onkeydown=e=>{if(e.isComposing)return;if(e.key==='Enter'||e.key==='Escape'){e.preventDefault();e.stopPropagation();finish(e.key==='Enter');root.querySelector('.add-fit-tag').focus()}};
- };
- root.querySelector('.add-fit-tag').onclick=()=>edit(null);
- root.querySelectorAll('[data-tag-index]').forEach(b=>b.onclick=()=>edit(Number(b.dataset.tagIndex)));
+ mountFitTagInput($('#fit-tags'),fitRecord.tags||[],tags=>mutate(()=>{fitRecord.tags=tags;},'已修改装配标签'));
 }
 
 try{const draft=JSON.parse(localStorage.getItem('fitlab-working-draft'));if(draft&&byId(draft.shipId))restoreFit(draft);else{updateShip();scheduleAnalysis()}}catch{updateShip();scheduleAnalysis()}
