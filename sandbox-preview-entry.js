@@ -1,0 +1,10 @@
+const entry=document.createElement('a');entry.id='nav-sandbox-preview';entry.href='sandbox-preview.html';
+const labels={'zh-CN':'战斗沙盒','zh-TW':'戰鬥沙盒',en:'Battle sandbox',ja:'戦闘サンドボックス'};
+const label=()=>{entry.textContent=labels[document.documentElement.lang]||labels['zh-CN'];};label();
+new MutationObserver(label).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+document.querySelector('#nav-library')?.after(entry);
+entry.onclick=event=>{event.preventDefault();if(document.querySelector('#sandbox-preview-overlay'))return;
+ const panel=document.createElement('div');panel.id='sandbox-preview-overlay';panel.style.cssText='position:fixed;inset:68px 0 0;z-index:120;background:#090e13';
+ const frame=document.createElement('iframe');frame.title=entry.textContent;frame.src='sandbox-preview.html?lang='+encodeURIComponent(document.documentElement.lang);frame.style.cssText='width:100%;height:100%;border:0';panel.append(frame);document.body.append(panel);entry.setAttribute('aria-current','page');
+ const cleanup=()=>{panel.remove();entry.removeAttribute('aria-current');window.removeEventListener('message',close);document.querySelector('header').removeEventListener('click',navigate);};const close=e=>{if(e.source!==frame.contentWindow||e.origin!==location.origin||e.data!=='fitlab-close-sandbox')return;cleanup();entry.focus();};const navigate=e=>{if(e.target.closest('a')&&e.target.closest('a')!==entry)cleanup();};window.addEventListener('message',close);document.querySelector('header').addEventListener('click',navigate);
+};

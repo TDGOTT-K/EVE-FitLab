@@ -1,0 +1,337 @@
+{
+  "id": "fitlab-preview",
+  "seed": 17,
+  "horizonSeconds": 40,
+  "participants": [
+    {
+      "id": "blue-gun",
+      "team": "blue",
+      "fit": {
+        "id": "rifter-skill-chain",
+        "buildNumber": 3503375,
+        "shipTypeId": 587,
+        "omittedSkills": "untrained",
+        "skills": {
+          "3327": 5,
+          "3329": 5,
+          "3300": 5,
+          "3302": 5,
+          "3310": 5,
+          "3315": 5,
+          "3318": 5,
+          "3303": 5,
+          "3311": 5,
+          "3312": 5,
+          "3317": 5,
+          "3413": 5,
+          "3402": 5,
+          "3418": 5,
+          "3426": 5,
+          "3427": 5,
+          "3428": 5,
+          "3433": 5,
+          "3434": 5,
+          "3435": 5,
+          "3449": 5,
+          "19921": 5,
+          "19759": 5,
+          "19760": 5,
+          "19761": 5,
+          "19766": 5,
+          "19767": 5,
+          "3432": 5
+        },
+        "items": [
+          {
+            "id": "gun1",
+            "typeId": 484,
+            "chargeTypeId": 178,
+            "slotIndex": 0
+          },
+          {
+            "id": "gun2",
+            "typeId": 484,
+            "chargeTypeId": 178,
+            "slotIndex": 1
+          },
+          {
+            "id": "gun3",
+            "typeId": 484,
+            "chargeTypeId": 178,
+            "slotIndex": 2
+          },
+          {
+            "id": "gyro1",
+            "typeId": 520,
+            "slotIndex": 0
+          }
+        ]
+      },
+      "position": {
+        "x": -2800,
+        "y": -1600,
+        "z": 0
+      },
+      "velocity": {
+        "x": 0,
+        "y": -40,
+        "z": 0
+      },
+      "lockDurationSeconds": 1,
+      "shieldFraction": 1,
+      "armorFraction": 1,
+      "hullFraction": 1,
+      "capacitorFraction": 1,
+      "supplies": {
+        "gun1": {
+          "loaded": 100,
+          "reserve": 0,
+          "automaticReload": false
+        },
+        "gun2": {
+          "loaded": 100,
+          "reserve": 0,
+          "automaticReload": false
+        },
+        "gun3": {
+          "loaded": 100,
+          "reserve": 0,
+          "automaticReload": false
+        }
+      }
+    },
+    {
+      "id": "blue-laser",
+      "team": "blue",
+      "fit": {
+        "id": "rifter-skill-chain",
+        "buildNumber": 3503375,
+        "shipTypeId": 587,
+        "omittedSkills": "untrained",
+        "skills": {
+          "3327": 5,
+          "3329": 5,
+          "3300": 5,
+          "3302": 5,
+          "3310": 5,
+          "3315": 5,
+          "3318": 5,
+          "3303": 5,
+          "3311": 5,
+          "3312": 5,
+          "3317": 5,
+          "3413": 5,
+          "3402": 5,
+          "3418": 5,
+          "3426": 5,
+          "3427": 5,
+          "3428": 5,
+          "3433": 5,
+          "3434": 5,
+          "3435": 5,
+          "3449": 5,
+          "19921": 5,
+          "19759": 5,
+          "19760": 5,
+          "19761": 5,
+          "19766": 5,
+          "19767": 5,
+          "3432": 5
+        },
+        "items": [
+          {
+            "id": "laser",
+            "typeId": 450,
+            "chargeTypeId": 246,
+            "slotIndex": 0
+          }
+        ]
+      },
+      "position": {
+        "x": -2600,
+        "y": 1700,
+        "z": 0
+      },
+      "velocity": {
+        "x": 0,
+        "y": 40,
+        "z": 0
+      },
+      "lockDurationSeconds": 1,
+      "shieldFraction": 1,
+      "armorFraction": 1,
+      "hullFraction": 1,
+      "capacitorFraction": 1,
+      "supplies": {
+        "laser": {
+          "loaded": 0,
+          "reserve": 0,
+          "automaticReload": false
+        }
+      }
+    },
+    {
+      "id": "red-missile",
+      "team": "red",
+      "fit": {
+        "id": "caracal-heavy",
+        "buildNumber": 3503375,
+        "shipTypeId": 621,
+        "omittedSkills": "untrained",
+        "skills": {
+          "3327": 5,
+          "3330": 5,
+          "33092": 5,
+          "3334": 5,
+          "3319": 5,
+          "3321": 5,
+          "3324": 5
+        },
+        "items": [
+          {
+            "id": "launcher1",
+            "typeId": 501,
+            "chargeTypeId": 209,
+            "slotIndex": 0
+          },
+          {
+            "id": "launcher2",
+            "typeId": 501,
+            "chargeTypeId": 209,
+            "slotIndex": 1
+          },
+          {
+            "id": "launcher3",
+            "typeId": 501,
+            "chargeTypeId": 209,
+            "slotIndex": 2
+          },
+          {
+            "id": "launcher4",
+            "typeId": 501,
+            "chargeTypeId": 209,
+            "slotIndex": 3
+          },
+          {
+            "id": "launcher5",
+            "typeId": 501,
+            "chargeTypeId": 209,
+            "slotIndex": 4
+          }
+        ]
+      },
+      "position": {
+        "x": 2800,
+        "y": -900,
+        "z": 0
+      },
+      "velocity": {
+        "x": 0,
+        "y": -40,
+        "z": 0
+      },
+      "lockDurationSeconds": 1,
+      "shieldFraction": 1,
+      "armorFraction": 1,
+      "hullFraction": 1,
+      "capacitorFraction": 1,
+      "supplies": {
+        "launcher1": {
+          "loaded": 20,
+          "reserve": 0,
+          "automaticReload": false
+        },
+        "launcher2": {
+          "loaded": 20,
+          "reserve": 0,
+          "automaticReload": false
+        },
+        "launcher3": {
+          "loaded": 20,
+          "reserve": 0,
+          "automaticReload": false
+        },
+        "launcher4": {
+          "loaded": 20,
+          "reserve": 0,
+          "automaticReload": false
+        },
+        "launcher5": {
+          "loaded": 20,
+          "reserve": 0,
+          "automaticReload": false
+        }
+      }
+    },
+    {
+      "id": "red-web",
+      "team": "red",
+      "fit": {
+        "id": "rifter-skill-chain",
+        "buildNumber": 3503375,
+        "shipTypeId": 587,
+        "omittedSkills": "untrained",
+        "skills": {
+          "3327": 5,
+          "3329": 5,
+          "3300": 5,
+          "3302": 5,
+          "3310": 5,
+          "3315": 5,
+          "3318": 5,
+          "3303": 5,
+          "3311": 5,
+          "3312": 5,
+          "3317": 5,
+          "3413": 5,
+          "3402": 5,
+          "3418": 5,
+          "3426": 5,
+          "3427": 5,
+          "3428": 5,
+          "3433": 5,
+          "3434": 5,
+          "3435": 5,
+          "3449": 5,
+          "19921": 5,
+          "19759": 5,
+          "19760": 5,
+          "19761": 5,
+          "19766": 5,
+          "19767": 5,
+          "3432": 5
+        },
+        "items": [
+          {
+            "id": "web",
+            "typeId": 526,
+            "slotIndex": 0,
+            "active": true
+          },
+          {
+            "id": "painter",
+            "typeId": 12709,
+            "slotIndex": 1,
+            "active": true
+          }
+        ]
+      },
+      "position": {
+        "x": 2100,
+        "y": 1900,
+        "z": 0
+      },
+      "velocity": {
+        "x": 0,
+        "y": 40,
+        "z": 0
+      },
+      "lockDurationSeconds": 1,
+      "shieldFraction": 1,
+      "armorFraction": 1,
+      "hullFraction": 1,
+      "capacitorFraction": 1,
+      "supplies": {}
+    }
+  ]
+}
