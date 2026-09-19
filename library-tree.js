@@ -1,5 +1,8 @@
 
 export function createLibraryTree(root,catalog,onChange,onHullMenu,{picker:pickerMode=false,initialPath=[]}={}){
+ // Navigation labels mapped to SDE faction identities, not fitting rules.
+ const factions={'艾玛':500003,'加达里':500001,'盖伦特':500004,'米玛塔尔':500002};
+ const factionIcon=name=>factions[name]?'<img class="faction-tree-icon" src="https://images.evetech.net/corporations/'+factions[name]+'/logo?size=64" alt="" loading="lazy">':'';
  const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let fits=[],filter='',selectedTags=new Set(),expanded=new Set(['舰船']);
  if(pickerMode){expanded=new Set(initialPath.length?initialPath.map((_,i)=>initialPath.slice(0,i+1).join(' › ')):['舰船']);filter=initialPath.length?'g:'+JSON.stringify(initialPath):'';}
@@ -33,7 +36,7 @@ export function createLibraryTree(root,catalog,onChange,onHullMenu,{picker:picke
  const button=(key,label,count,icon='')=>'<button type="button" data-library-filter="'+esc(key)+'" class="'+(key===filter?'active':'')+'">'+icon+'<span>'+esc(label)+'</span>'+(pickerMode?'':'<small>'+count+'</small>')+'</button>';
  function branch(n){
   return [...n.children.values()].sort((a,b)=>(a.name==='未列入市场')-(b.name==='未列入市场')||a.name.localeCompare(b.name,'zh')).map(child=>{
-   const key=JSON.stringify(child.path);return '<details data-branch="'+esc(key)+'" '+(expanded.has(child.path.join(' › '))?'open':'')+'><summary>'+button('g:'+key,child.name,fits.filter(f=>inPath(f,child.path)).length)+'</summary><div class="library-tree-children">'+branch(child)+'</div></details>';
+   const key=JSON.stringify(child.path);return '<details data-branch="'+esc(key)+'" '+(expanded.has(child.path.join(' › '))?'open':'')+'><summary>'+button('g:'+key,child.name,fits.filter(f=>inPath(f,child.path)).length,factionIcon(child.name))+'</summary><div class="library-tree-children">'+branch(child)+'</div></details>';
   }).join('')+n.ships.sort((a,b)=>a.name.localeCompare(b.name,'zh')).map(ship=>button('h:'+ship.id,ship.name,fits.filter(f=>f.shipId===ship.id).length,'<img src="https://images.evetech.net/types/'+ship.id+'/icon?size=32" loading="lazy" alt="">')).join('');
  }
  function draw(){

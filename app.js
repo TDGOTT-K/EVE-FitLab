@@ -1,3 +1,4 @@
+import {mountFitTagInput} from './fit-tag-input.js';
 import {hydrateType,subsystemSlots} from './capability-discovery.js';
 import {analysisStatusText} from './analysis-status.js';
 import {exportFitPackage,importFitPackage} from './fit-package-ui.js';
@@ -364,8 +365,9 @@ $('#save-fit').onclick=guarded(persistFit);
 function exportFitImage(fit){return showShareImage(withoutScenario(fit),{calculate:getCalculation,catalog,getPrice:getValuation})}
 $('#share-fit').onclick=()=>exportFitImage(currentFit());
 const importText=()=>showTextImport({api,calculate:getCalculation,onSaved:record=>{libraryFits.unshift(record);refreshLibraryRows();location.hash='library';libraryMessage('已导入新装配：'+record.name)}});
-for(const id of ['import-fit-text','import-editor-text'])$('#'+id).onclick=importText;
-$('#import-fit-image').onclick=()=>showImageImport({catalog,calculate:getCalculation,save:fit=>api('save',fit),onSaved:record=>{libraryFits.unshift(record);refreshLibraryRows();libraryMessage('已导入新装配：'+record.name)}});
+$('#import-editor-text').onclick=importText;
+const importImage=()=>showImageImport({catalog,calculate:getCalculation,save:fit=>api('save',fit),onSaved:record=>{libraryFits.unshift(record);refreshLibraryRows();libraryMessage('已导入新装配：'+record.name)}});
+$('#import-fit-image').onclick=importImage;
 const libraryNavigationSaves=new Map();
 let libraryFits=[],pageMode=null,navigationVersion=0,lastWorkPage='library',libraryLoaded=false;const pageScrollStates=new Map();let editorFitDeleted=false;let fitClipboard=null;try{fitClipboard=JSON.parse(sessionStorage.getItem('fitlab-fit-clipboard'))}catch{}
 const libraryTree=createLibraryTree($('#library-nav'),catalog,drawFitLibrary,(event,hull,origin)=>{
@@ -375,7 +377,6 @@ const libraryTree=createLibraryTree($('#library-nav'),catalog,drawFitLibrary,(ev
  ]}}));
 });
 function drawFitLibrary(){
- const selectedHull=libraryTree.selectedHull();$('#new-fit').hidden=!selectedHull;$('#new-fit').disabled=false;$('#new-fit').title=selectedHull?'为'+selectedHull.name+'新建装配':'';
 
  const q=$('#library-search').value.trim().toLowerCase(),fits=libraryFits.filter(f=>libraryTree.matches(f)&&((q&&matchesName(byId(f.shipId),q))||(f.name+' '+byId(f.shipId)?.name+' '+(f.tags||[]).join(' ')+' '+(f.notes||'')).toLowerCase().includes(q)));
  $('#library-count').textContent=fits.length+' / '+libraryFits.length+' 份装配';
@@ -421,12 +422,14 @@ $('#library-search').oninput=drawFitLibrary;
 $('#fit-library').onclick=()=>{location.hash='library'};
 window.addEventListener('hashchange',navigateFitPage);
 
-$('#new-fit').onclick=()=>createHullFit(libraryTree.selectedHull());
 function createHullFit(hull){
  if(!hull){openHullPicker();return;}
- openFlow('新建装配 · '+hull.name,`<form id="create-fit-form"><label>名称<input id="create-fit-name" aria-label="装配名称" maxlength="120" required value="${esc(hull.name+' · 新装配')}"></label><label>标签<input id="create-fit-tags" aria-label="装配标签" placeholder="用逗号分隔，例如：深渊、舰队" maxlength="500"></label><button type="submit">创建装配</button></form>`);
+ openFlow('新建装配 · '+hull.name,`<form id="create-fit-form"><label>名称<input id="create-fit-name" aria-label="装配名称" maxlength="120" required value="${esc(hull.name+' · 新装配')}"></label><div class="create-tags-label">标签</div><div id="create-fit-tags"></div><div class="create-fit-actions"><button type="submit">创建装配</button><div class="create-fit-imports"><button type="button" data-create-import="text">从文本导入</button><button type="button" data-create-import="image">从图片导入</button></div></div></form>`);
+ const tagInput=mountFitTagInput($('#create-fit-tags'),libraryFits.flatMap(f=>f.tags||[]));
+ flow.querySelector('[data-create-import="text"]').onclick=()=>{flow.close();importText()};
+ flow.querySelector('[data-create-import="image"]').onclick=()=>{flow.close();importImage()};
  $('#create-fit-name').focus();$('#create-fit-name').select();
- $('#create-fit-form').onsubmit=e=>{e.preventDefault();const name=$('#create-fit-name').value.trim();if(!name){$('#flow-error').textContent='请输入装配名称';return}const tags=[...new Set($('#create-fit-tags').value.split(/[,，]/).map(t=>t.trim()).filter(Boolean))];restoreFit({name,tags,shipId:hull.id,skills:[],characterName:'无技能 · 基础对照',slots:[]});flow.close();location.hash='fitting'};
+ $('#create-fit-form').onsubmit=e=>{e.preventDefault();const name=$('#create-fit-name').value.trim();if(!name){$('#flow-error').textContent='请输入装配名称';return}const tags=tagInput.values();restoreFit({name,tags,shipId:hull.id,skills:[],characterName:'无技能 · 基础对照',slots:[]});flow.close();location.hash='fitting'};
 };
 function openHullPicker(){
  const path=libraryTree.selectedPath();

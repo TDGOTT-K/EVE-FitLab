@@ -659,3 +659,15 @@ label:has(>input[type="checkbox"]:disabled){cursor:default;color:var(--muted)}
 .ship-info-group li b{color:var(--accent);font-variant-numeric:tabular-nums}
 .ship-required-skill{display:flex;justify-content:space-between;gap:18px;padding:10px 4px;border-bottom:1px solid var(--line);font-size:12px}
 .ship-required-skill b{color:var(--accent)}
+.scan-fit-image{display:grid;place-items:center;width:36px;height:36px;padding:7px}
+.scan-fit-image svg{width:22px;height:22px}
+.create-fit-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap}
+.create-fit-imports{display:flex;gap:6px;margin-left:auto}
+.create-tags-label{font-size:12px;color:var(--muted);margin-bottom:8px}
+.fit-tag-editor{padding:10px;border:1px solid var(--line);background:var(--bg)}
+.fit-tag-chips,.fit-tag-suggestions{display:flex;flex-wrap:wrap;gap:6px}
+.fit-tag-chips:empty,.fit-tag-suggestions:empty{display:none}
+.flow-body .fit-tag-editor input{border:0;background:none;margin:4px 0;padding:6px 0;font-size:12px}
+.fit-tag-suggestions button{font-size:11px;padding:4px 8px}
+.fit-tag-chips .filter-tag{display:inline-flex;align-items:center;gap:6px}
+.fit-tag-chips button{border:0;background:transparent;padding:0 4px;color:var(--muted)}
