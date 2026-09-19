@@ -20,8 +20,8 @@ class BoosterPlans(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             p=Path(directory);(p/'plan.json').write_text(json.dumps(response['nativePlan']),encoding='utf-8')
             subprocess.run([str(b.root/'.tools/dotnet/dotnet.exe'),str(b.root/'src/NEngine.Cli/bin/Debug/net10.0/NEngine.Cli.dll'),
-                'sde-booster-plan','--data',str(b.root/b.baseline['dataDirectory']),'--plan',str(p/'plan.json'),'--out',str(p/'result.json')],check=True,capture_output=True)
-            self.assertEqual(json.loads((p/'result.json').read_text(encoding='utf-8-sig')),analysis)
+                'sde-booster-plan-summary','--data',str(b.root/b.baseline['dataDirectory']),'--plan',str(p/'plan.json'),'--out',str(p/'result.json')],check=True,capture_output=True)
+            self.assertEqual(json.loads((p/'result.json').read_text(encoding='utf-8-sig')),{'analysis':analysis,**response['summary']})
 
     def plan(self):return {'name':'test','implants':[],'boosters':[{'slot':1,'typeId':9950,'enabledSideEffects':[]}], 'seed':123}
 

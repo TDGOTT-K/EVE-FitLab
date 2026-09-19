@@ -30,7 +30,8 @@ def native_plan(body, roll=False):
 
 def analyze_plan(body):
     plan=native_plan(body)
-    return {'nativePlan':plan,'analysis':bridge().call('booster_plan_analyze',{'plan':plan})['result']}
+    result=bridge().call('booster_plan_summary',{'plan':plan})['result']
+    return {'nativePlan':plan,'analysis':result['analysis'],'summary':{key:value for key,value in result.items() if key!='analysis'}}
 
 
 def roll_plan(body):

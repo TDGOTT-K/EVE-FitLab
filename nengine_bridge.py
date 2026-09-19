@@ -91,7 +91,7 @@ class NEngineBridge:
             return reply['result']
 
     def call(self, name, arguments=None):
-        if name not in {'character_skill_snapshot','skill_points','fit_create','fit_inspect','fit_preview','fit_preview_input','fit_execute','fit_export','fit_import','engine_status','catalog_search','catalog_item','catalog_type_details','catalog_variants','fit_analyze','fit_valuation','fit_output_curves','fit_attributes','mutation_rule','mutation_roll','booster_plan_analyze','booster_plan_roll','booster_plan_verify','capacitor_scenario'}:
+        if name not in {'booster_plan_summary','character_skill_snapshot','skill_points','fit_create','fit_inspect','fit_preview','fit_preview_input','fit_execute','fit_export','fit_import','engine_status','catalog_search','catalog_item','catalog_type_details','catalog_variants','fit_analyze','fit_valuation','fit_output_curves','fit_attributes','mutation_rule','mutation_roll','booster_plan_analyze','booster_plan_roll','booster_plan_verify','capacitor_scenario'}:
             raise ValueError('此适配层只开放静态装配和目录查询')
         with self.lock:
             self._start()

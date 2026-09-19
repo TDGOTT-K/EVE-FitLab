@@ -1,3 +1,4 @@
+import {renderPlanAffixes} from './plan-affixes.js';
 import {applyImplantSet,implantSetChanges} from './implant-sets.js';
 import {parentFolder,folderName,normalizeLayout,relocateLibrary,installLibraryDrag} from './plan-library-tree.js';
 import {installPlanResize} from './plan-resize.js';
@@ -134,7 +135,7 @@ export function installLoadoutManager(host,{api}){
  function draw(){
   cache();drawList();browser.refresh();
   if(!draft){$('.plan-toolbar').innerHTML=returnToFit?'<button data-back>返回装配</button>':'';$('.plan-content').innerHTML='<button type="button" class="plan-create-slot"><span class="plan-create-plus" aria-hidden="true">＋</span><span>创建新方案</span></button>';$('.plan-create-slot').onclick=()=>newPlan('');host.querySelector('[data-back]')?.addEventListener('click',()=>location.hash='fitting');return;}
-  $('.plan-toolbar').innerHTML='<div class="plan-name-row fit-name-row"><h2>'+esc(draft.name)+'</h2><button class="edit-name-icon" data-rename aria-label="编辑方案名称" title="编辑名称"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15Z"/></svg></button></div><span class="plan-dirty">'+(dirty?'未保存':'已保存')+'</span><button data-save>保存方案</button><button data-more aria-haspopup="menu" aria-label="更多方案操作">更多 ···</button>'+(returnToFit?'<button data-use>应用到装配</button><button data-back>返回装配</button>':'');
+  $('.plan-toolbar').innerHTML='<div class="plan-name-row fit-name-row"><h2>'+esc(draft.name)+'</h2><button class="edit-name-icon" data-rename aria-label="编辑方案名称" title="编辑名称"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15Z"/></svg></button></div><section class="plan-affixes" aria-label="方案效果汇总"><div class="plan-affixes-title">方案加成</div><div data-plan-affixes>查询引擎…</div></section><span class="plan-dirty">'+(dirty?'未保存':'已保存')+'</span><button data-save>保存方案</button><button data-more aria-haspopup="menu" aria-label="更多方案操作">更多 ···</button>'+(returnToFit?'<button data-use>应用到装配</button><button data-back>返回装配</button>':'');
   $('.plan-content').innerHTML='<div class="plan-meta"><label>计算角色 <select data-plan-pilot aria-label="方案计算角色"><option value="snapshot">'+esc(draft.pilot?.name||'无技能 · 基础对照')+'</option><option value="untrained">无技能 · 基础对照</option>'+pilots.map((p,i)=>'<option value="'+i+'">'+esc(p.name)+'</option>').join('')+'</select></label><small data-plan-analysis>查询引擎…</small></div><div class="plan-section-head"><b>脑插</b><span>'+draft.implants.length+' / 10</span></div><div class="plan-slots"></div><div class="plan-section-head"><b>增效剂</b><button data-roll-boosters title="每种副作用独立抽取；概率由引擎按当前角色和脑插计算">⚄ 随机服用一次</button></div><div class="plan-boosters"></div><p class="plan-scope">概率与时长由 N 引擎计算 · 非实际服用</p>';
    $('[data-rename]').onclick=rename;$('.plan-name-row h2').onclick=rename;
   $('[data-save]').onclick=save;$('[data-more]').onclick=openPlanActions;
@@ -159,11 +160,12 @@ export function installLoadoutManager(host,{api}){
  function refreshPlanAnalysis(){
   clearTimeout(analysisTimer);const token=++analysisToken;
   const status=$('[data-plan-analysis]');if(status)status.textContent='查询引擎…';
+  const affixes=$('[data-plan-affixes]');if(affixes)affixes.textContent='查询引擎…';
   host.querySelectorAll('[data-effect] small').forEach(n=>n.textContent='…');
   analysisTimer=setTimeout(async()=>{
    try{
     const response=await api('booster-plan/analyze',structuredClone(draft));if(token!==analysisToken||host.hidden)return;
-    const a=response.analysis;
+    const a=response.analysis;renderPlanAffixes($('[data-plan-affixes]'),response.summary,{find});
     status.textContent=!a.projectionComplete?'部分效果不可计算':a.pilotPrerequisitesSatisfied?'角色条件满足':'角色条件未满足';
     status.title=a.issues.map(i=>i.code+' · '+i.message).join('；');
     host.querySelectorAll('[data-effect]').forEach(button=>{const row=a.boosters.find(b=>b.typeId===Number(button.dataset.booster)),effect=row?.sideEffects.find(e=>e.effectId===Number(button.dataset.effect));
@@ -178,7 +180,7 @@ export function installLoadoutManager(host,{api}){
     }
     const scope=$('.plan-scope');scope.textContent='概率与时长来自 N 引擎 · '+(draft.pilot?.name||'无技能基准')+(receipt?' · '+(matches?'当前选择与最近回执一致':'保留历史回执，当前方案已改变'):'');
     if(receipt){const b=document.createElement('button');b.type='button';b.textContent='核验回执';b.onclick=()=>run(async()=>{await api('booster-plan/verify',{receipt});message('历史回执重放一致 · 不代表当前装配准入')});scope.append(' ',b)}
-   }catch(e){if(token===analysisToken){status.textContent='分析不可用';status.title=e.message;host.querySelectorAll('[data-effect] small').forEach(n=>n.textContent='—');message(e.message)}}
+   }catch(e){if(token===analysisToken){status.textContent='分析不可用';status.title=e.message;const affixes=$('[data-plan-affixes]');if(affixes){affixes.textContent='加成暂不可用';affixes.title=e.message;}host.querySelectorAll('[data-effect] small').forEach(n=>n.textContent='—');message(e.message)}}
   },150);
  }
  function drawSlots(){
