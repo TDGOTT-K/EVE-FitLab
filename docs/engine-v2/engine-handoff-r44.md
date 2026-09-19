@@ -27,6 +27,19 @@
 | ENG-44-07 | P1 | 已有规则的能力发现/接口缺口，混合UI接线 | 按[能力驱动接入审计](capability-driven-ui-gap-audit.md)补舰船、槽位/模式、状态与装填的公开描述；复用现有catalog capabilities和preview |
 | ENG-44-08 | P2 | 已有元数据组合遗漏 | 深渊改善方向未读取dogmaAttributes.highIsGood；见审计CAP-11 |
 | ENG-44-09 | P2 | 已确认当前缺公开技能点能力 | 技能点逐项/总量与来源；见审计CAP-13，不要求UI开发训练公式 |
+| ENG-44-10 | P1 | 已复现静态重型鱼雷齐射不可用 | 独眼巨人II ability19返回EVE_FIGHTER_ROCKET_BINDING，核查重型齐射与轻型火箭共用编译路径 |
+| ENG-44-11 | P2 | 已确认炸弹口径条件缺失 | 白蚁II ability7有炸弹投影，但DPS与中队齐射requires_policy；复用已有投影明确静态政策 |
+
+### ENG-44-10/11：具体舰载机副武器复现（2026-09-19）
+
+先前CAP-08仅泛指能力枚举问题，并未具体登记这两个回执。此次实跑UI只读/api/analyze，底层使用当前r44原生分析。原生最小输入构造：shipTypeId23911（夜神），omittedSkills=untrained、skills={}、items=[]，fighters两队：id=cyclops/typeId40563、id=termite/typeId40566，各6个独立memberIds、deployed=true；固定buildNumber3503375。无技能会产生独立技能前置诊断，不能将诊断数值当合法装配，但下述能力回执及源码边界可核实。后续用满足前置的技能快照再做合法输入验收。
+
+- 独眼巨人II（40563）主武器ability24可用；鱼雷齐射ability19、kind=fighter_rockets的nominalCycleDps/loadedCycleDps/volleyDamage均unsupported，reason=EVE_FIGHTER_ROCKET_BINDING。OutputContributions.Build.cs按effect6431进入火箭分支；核查EveFighterRockets.cs中的角色/绑定限制，不要把轻型火箭已支持误认为所有重型鱼雷已接通。需交付实际适用角色、原生静态伤害/周期和有限次数条件，若缺机制则明确列出，不由UI补公式或放开不可用数值。
+- 白蚁II（40566）能力45磁轨炮、5微型跳跃引擎、7发射炸弹。炸弹nominalCycleDps及loadedCycleDps返回BOMB_LAUNCH_RATE_AND_SUPPLY_POLICY_REQUIRED；volleyDamage返回BOMB_COUNT_PER_MEMBER_AND_LIVING_MEMBER_POLICY_REQUIRED。已有单枚载荷投影不等于中队齐射或持续DPS；要求明确现有可查询字段、缺失政策及是否可在已有机制内交付，不要求新战斗时间线。
+- UI另有确定漏项：fighter-ui.js只按duration.source.attributeId 2233/2182/2401筛武器，白蚁炸弹使用2349而被隐藏。此为CAP-08的具体证据，不能算引擎没有该能力元数据。后续UI按原生abilities/role与输出身份展示，保留不可用原因；本次仅核查登记。
+- 对照轻型火箭、重型鱼雷、白蚁炸弹和暗影一次性牺牲；每项返回值、单位、state/reason及选集范围，MCP/CLI同输入核对。不要把一次性伤害除以任意时长当DPS。
+
+证据摘要保存在本地output/fighter-ability-audit.json（只读分析的贡献项摘录，非完整原生请求/回执交付包）。此次未修改UI及引擎逻辑。
 
 ### ENG-44-07～09：能力驱动接入的执行边界
 
