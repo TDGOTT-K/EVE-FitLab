@@ -760,3 +760,12 @@ label:has(>input[type="checkbox"]:disabled){cursor:default;color:var(--muted)}
 .plan-affix-preview-content{min-height:0;overflow:auto;padding:10px 14px;overscroll-behavior:contain;scrollbar-width:thin}
 .plan-affix-preview .plan-affix-row.benefit b{color:#87ccad}
 .plan-affix-preview .plan-affix-row.penalty b{color:#ed858b}
+.bay-compartment{margin:12px 0;border:1px solid var(--line);background:color-mix(in srgb,var(--panel) 85%,var(--row))}
+.bay-compartment>summary{display:flex;align-items:center;justify-content:space-between;gap:9px;padding:11px 10px;margin:0;list-style:none;letter-spacing:0;font-size:11px;color:var(--text)}
+.bay-compartment>summary::before{content:'▸';color:var(--muted)}
+.bay-compartment[open]>summary::before{content:'▾'}
+.bay-compartment>summary>span:first-of-type{flex:1}
+.bay-compartment>summary::-webkit-details-marker{display:none}
+.bay-compartment>.bay-config-section{padding:0 10px 10px;margin:0}
+.bay-compartment[open]>summary{border-bottom:1px solid var(--line);margin-bottom:8px}
+.bay-unavailable{font-size:11px;color:var(--muted);margin:4px 0}
