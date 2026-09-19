@@ -38,3 +38,5 @@ async function copy(text){
 }
 document.querySelector('#copy-qq')?.addEventListener('click',()=>copy('2377951590'));document.querySelector('#copy-address').onclick=()=>copy('TYDiRLFWukWdHpiZKQdGLoX7ivH2PFtPBS');
 document.querySelectorAll('.copy-group').forEach(button=>button.addEventListener('click',()=>copy('704164562')));
+
+document.querySelectorAll('.copy-discord').forEach(button=>button.addEventListener('click',()=>copy('https://discord.gg/WY8DG8Tqj5')));

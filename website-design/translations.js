@@ -950,3 +950,42 @@ Object.assign(window.siteTranslations, {
     "ja": "第2回公開テスト版 · 2026-09-20"
   }
 });
+
+Object.assign(window.siteTranslations, {
+  "交流社区": {
+    "zh-CN": "交流社区",
+    "zh-TW": "交流社群",
+    "en": "Community",
+    "ja": "コミュニティ"
+  },
+  "加入 QQ 或 Discord，交流装配、反馈问题、获取版本消息。": {
+    "zh-CN": "加入 QQ 或 Discord，交流装配、反馈问题、获取版本消息。",
+    "zh-TW": "加入 QQ 或 Discord，交流裝配、回報問題、取得版本消息。",
+    "en": "Join us on QQ or Discord to discuss fits, share feedback and get release news.",
+    "ja": "QQ または Discord で装備を語り合い、問題を報告し、更新情報をチェックしましょう。"
+  },
+  "Discord 服务器": {
+    "zh-CN": "Discord 服务器",
+    "zh-TW": "Discord 伺服器",
+    "en": "Discord server",
+    "ja": "Discord サーバー"
+  },
+  "加入服务器": {
+    "zh-CN": "加入服务器",
+    "zh-TW": "加入伺服器",
+    "en": "Join server",
+    "ja": "参加する"
+  },
+  "点击加入 Discord，一起交流装配与反馈问题。": {
+    "zh-CN": "点击加入 Discord，一起交流装配与反馈问题。",
+    "zh-TW": "點擊加入 Discord，一起交流裝配與回報問題。",
+    "en": "Join Discord to discuss fits and share feedback.",
+    "ja": "Discord に参加して装備の相談やフィードバックを。"
+  },
+  "复制邀请链接": {
+    "zh-CN": "复制邀请链接",
+    "zh-TW": "複製邀請連結",
+    "en": "Copy invite link",
+    "ja": "招待リンクをコピー"
+  }
+});
