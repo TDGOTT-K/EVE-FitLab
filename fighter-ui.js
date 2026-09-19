@@ -6,6 +6,16 @@ const types=await fetch('./api/fighters').then(r=>{if(!r.ok)throw Error('舰载�
 const icon=t=>`<img class="fighter-type-icon" src="https://images.evetech.net/types/${t.id}/icon?size=64" alt="" width="32" height="32" draggable="false" loading="lazy">`;
 const type=id=>types.find(t=>t.id===Number(id));
 let drag=null,selected=null,owner=null;
+function clearFighterDrag(){
+ drag=null;
+ document.querySelectorAll('.fighter-drop').forEach(el=>el.classList.remove('fighter-drop'));
+}
+function fighterIssueMessage(issue,resources=[]){
+ const label=({'fighterClass.light':'轻型','fighterClass.support':'支援','fighterClass.heavy':'重型'})[issue.message];
+ if(!label)return issue.message;
+ const resource=resources?.find(r=>r.id===issue.message);
+ return Number.isFinite(resource?.capacity)?label+'舰载机已部署中队超过上限（'+resource.used+'/'+resource.capacity+'）':label+'舰载机部署超限';
+}
 function menu(event,origin,item,entries,header=null){
  event.preventDefault();event.stopPropagation();
  origin=origin.querySelector('.fighter-pick')||origin;
@@ -20,7 +30,7 @@ export function mountFighters(root,{ship,fit,report,mutate,browse,say,validate,o
  if(!fighterHull(ship))return;
  const bay=report?.native?.fighterBay;const count=bay?.maximumSquadrons||0;
  const state=fit.fighterLoadout||{tubes:Array(count).fill(null),reserve:[]};
- const change=async (fn,newSquadronId=null)=>{if(host._busy)return;host._busy=true;const next=structuredClone(state);fn(next);say('正在校验舰载机配置…');try{const result=await validate({...fit,fighterLoadout:next});if(!host.isConnected)return;const blocking=result.issues.filter(e=>e.code==='STATIC_COVERAGE_INCOMPLETE'||e.code.startsWith('FIGHTER_')||e.code.startsWith('EVE_FIGHTER'));if(blocking.length){say('无法装载：'+blocking.map(e=>e.message).join('；'));return}const defaults=newSquadronId?defaultFighterOutput(next,result.native?.outputContributions?.items||[],newSquadronId):null;mutate(()=>{fit.fighterLoadout=defaults?.loadout||next;if(defaults)fit.outputMetric=defaults.metric},'舰载机已更新 · N 号引擎校验')}catch(e){say(e.message)}finally{host._busy=false}};
+ const change=async (fn,newSquadronId=null)=>{if(host._busy)return;host._busy=true;const next=structuredClone(state);fn(next);say('正在校验舰载机配置…');try{const result=await validate({...fit,fighterLoadout:next});if(!host.isConnected)return;const blocking=result.issues.filter(e=>e.code==='STATIC_COVERAGE_INCOMPLETE'||e.code.startsWith('FIGHTER_')||e.code.startsWith('EVE_FIGHTER'));if(blocking.length){say('无法装载：'+blocking.map(e=>fighterIssueMessage(e,result.native?.resources)).join('；'));return}const defaults=newSquadronId?defaultFighterOutput(next,result.native?.outputContributions?.items||[],newSquadronId):null;mutate(()=>{fit.fighterLoadout=defaults?.loadout||next;if(defaults)fit.outputMetric=defaults.metric},'舰载机已更新 · N 号引擎校验')}catch(e){say(e.message)}finally{host._busy=false}};
  const host=document.createElement('section');host.id='fighter-config';root.prepend(host);host._catalogMenu=(e,el,t)=>menu(e,el,t,[['装入发射管',()=>{},{disabled:true,title:'等待可用的装配计算结果'}],['加入备用机库',()=>{},{disabled:true,title:'等待可用的装配计算结果'}],['详细信息',()=>onInfo(t)]]);if(!bay||!types.length){host.innerHTML='<div class="slot-heading">铁骑舰载机</div><p class="profile-note">'+(catalogError||'等待引擎返回发射管与机库参数…')+'</p>';return;}
  const row=(entry,index,reserve=false)=>{
   const t=entry&&type(entry.typeId),key=reserve?'reserve':'tubes';
@@ -37,16 +47,24 @@ export function mountFighters(root,{ship,fit,report,mutate,browse,say,validate,o
   return `<span class="fighter-class-quota" title="已部署中队 / 上限；待命和备用不计入">${({light:'轻型',support:'支援',heavy:'重型'})[kind]} <b class="${color}">${Number.isFinite(used)?used:'—'}</b>/${Number.isFinite(capacity)?capacity:'—'}</span>`;
  }).join('');
  host.innerHTML=`<div class="slot-heading"><button class="bay-filter" data-browse>铁骑舰载机</button><span class="fighter-mock">N 引擎</span><span>${state.tubes.filter(Boolean).length} / ${count}</span></div><div class="fighter-quotas">${quotas}<span class="fighter-bay-capacity">机库 ${report.native.resources.find(r=>r.id==="fighterBay")?.used.toLocaleString()} / ${bay.capacityCubicMeters.toLocaleString()} m³</span></div><div class="fighter-tubes">${Array.from({length:count},(_,i)=>row(state.tubes[i],i)).join('')}</div><details class="fighter-reserve" open><summary>备用机库 <span>${state.reserve.length} 中队</span></summary><div class="fighter-reserve-drop">${state.reserve.map((e,i)=>row(e,i,true)).join('')}<button class="fighter-reserve-add">＋ 添加备用中队</button></div></details>`;
- const select=(list,index)=>{selected={list,index};browse()};
+ const paintSelection=()=>host.querySelectorAll('.fighter-row').forEach(el=>{
+  const active=selected?.list===el.dataset.fighterList&&selected?.index===Number(el.dataset.fighterIndex);
+  el.classList.toggle('fighter-selected',active);el.querySelector('.fighter-pick').setAttribute('aria-pressed',String(active));
+ });
+ const select=(list,index)=>{clearFighterDrag();selected=selected?.list===list&&selected?.index===index?null:{list,index};paintSelection();browse(!selected)};
+ host._clearSelection=()=>{selected=null;paintSelection();browse(true)};
+ paintSelection();
  host.querySelector('[data-browse]').onclick=()=>select('tubes',state.tubes.findIndex(x=>!x));
  host.querySelector('.fighter-reserve-add').onclick=()=>select('reserve',state.reserve.length);
 
  const drop=(target,index)=>{
   if(!drag)return;
+  const sourceDrag=drag;clearFighterDrag();
+  if(host._busy){say('舰载机配置正在校验，请稍后重试');return;}
   const next=structuredClone(state);
-  if(drag.list){const source=next[drag.list][drag.index];if(!source)return;const old=next[target][index]||null;next[target][index]=source;next[drag.list][drag.index]=old;if(drag.list==='reserve')next.reserve=next.reserve.filter(Boolean)}
-  else next[target][index]={id:'squadron-'+crypto.randomUUID(),typeId:drag.type,quantity:type(drag.type).max,active:true};
-  change(s=>Object.assign(s,next),drag.list?null:next[target][index].id);
+  if(sourceDrag.list){const source=next[sourceDrag.list][sourceDrag.index];if(!source)return;const old=next[target][index]||null;next[target][index]=source;next[sourceDrag.list][sourceDrag.index]=old;if(sourceDrag.list==='reserve')next.reserve=next.reserve.filter(Boolean)}
+  else next[target][index]={id:'squadron-'+crypto.randomUUID(),typeId:sourceDrag.type,quantity:type(sourceDrag.type).max,active:true};
+  change(s=>Object.assign(s,next),sourceDrag.list?null:next[target][index].id);
  };
  function weaponHeader(t,entry,list,index){
   const ident=entry.id||'fighter-'+list+'-'+index,projection=report?.native?.fighterEntities?.[ident];
@@ -85,8 +103,8 @@ export function mountFighters(root,{ship,fit,report,mutate,browse,say,validate,o
   el.querySelectorAll('[data-delta]').forEach(b=>b.onclick=()=>change(s=>{s[list][index].quantity=Math.max(1,Math.min(type(entry.typeId).max,entry.quantity+Number(b.dataset.delta)))}));
   const active=el.querySelector('[data-active]');if(active)active.onclick=()=>change(s=>s[list][index].active=!entry.active);
   el.ondragstart=e=>{drag={list,index};e.dataTransfer.setData('application/x-fitlab-fighter','1');e.dataTransfer.effectAllowed='move'};
-  el.ondragend=()=>{drag=null;document.querySelectorAll('.fighter-drop').forEach(x=>x.classList.remove('fighter-drop'))};
-  el.ondragover=e=>{if(!drag)return;e.preventDefault();e.stopPropagation();el.classList.add('fighter-drop')};
+  el.ondragend=clearFighterDrag;
+  el.ondragover=e=>{if(!drag||host._busy)return;e.preventDefault();e.stopPropagation();document.querySelectorAll('.fighter-drop').forEach(x=>{if(x!==el)x.classList.remove('fighter-drop')});el.classList.add('fighter-drop')};
   el.ondragleave=()=>el.classList.remove('fighter-drop');
   el.ondrop=e=>{if(!drag)return;e.preventDefault();e.stopPropagation();drop(list,index);drag=null};
  });
@@ -129,8 +147,12 @@ export function bindFighterBrowserItem(el,item,onInfo){
   else menu(e,el,t,[['装入发射管',()=>{},{disabled:true,title:'当前舰船没有舰载机发射管'}],['详细信息',()=>onInfo(item)]]);
  });
  el.ondragstart=e=>{if(!document.querySelector('#fighter-config')?._install){e.preventDefault();return;}drag={type:t.id};e.dataTransfer.setData('application/x-fitlab-fighter','1');e.dataTransfer.effectAllowed='copy'};
- el.ondragend=()=>drag=null;
+ el.ondragend=clearFighterDrag;
 }
 document.addEventListener('dragover',e=>{if(drag?.list&&e.target.closest('.browser')){e.preventDefault();e.dataTransfer.dropEffect='move'}},true);
 document.addEventListener('drop',e=>{if(drag?.list&&e.target.closest('.browser')){e.preventDefault();e.stopImmediatePropagation();document.querySelector('.browser').onfighterremove?.()}},true);
-document.addEventListener('contextmenu',e=>{if(drag){e.preventDefault();e.stopImmediatePropagation();drag=null;document.querySelectorAll('.fighter-drop').forEach(x=>x.classList.remove('fighter-drop'))}},true);
+document.addEventListener('dragend',clearFighterDrag,true);
+document.addEventListener('drop',clearFighterDrag);
+window.addEventListener('blur',clearFighterDrag);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){clearFighterDrag();if(selected)document.querySelector('#fighter-config')?._clearSelection?.()}});
+document.addEventListener('contextmenu',e=>{if(drag){e.preventDefault();e.stopImmediatePropagation();clearFighterDrag()}},true);

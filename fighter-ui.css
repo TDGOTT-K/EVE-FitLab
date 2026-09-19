@@ -2,6 +2,7 @@
 
 .fighter-quotas{font-size:10px;color:#87a1ae;padding:6px 8px;display:flex;gap:8px;flex-wrap:wrap}.fighter-quotas .fighter-bay-capacity{margin-left:auto}.fighter-class-quota{white-space:nowrap;font-variant-numeric:tabular-nums}.fighter-class-quota b{font-weight:500}.native-status{padding:10px 14px}.native-status summary{font-size:11px;color:#dfbb87;cursor:pointer}
 
+.fighter-row.fighter-selected{box-shadow:inset 2px 0 var(--accent);background-color:#438da31a}
 #menu .fighter-weapon-header{padding:7px 5px 10px}
 .fighter-weapon-caption{display:flex;align-items:center;justify-content:space-between;margin:0 4px 9px;color:var(--text)}
 .fighter-weapon-caption small{color:var(--muted);font-size:10px}
