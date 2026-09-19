@@ -1,3 +1,5 @@
+import {pilotPortrait} from './pilot-portrait.js';
+import {showFitTextExport} from './fit-text-export.js';
 import {mountFitTagInput} from './fit-tag-input.js';
 import {hydrateType,subsystemSlots} from './capability-discovery.js';
 import {analysisStatusText} from './analysis-status.js';
@@ -53,6 +55,7 @@ let ship=byId(587),fitRecord={id:crypto.randomUUID(),name:'裂谷级 · 我的�
 const nativeHistory=createNativeEditHistory(api);let editTransition=null;
 const cachedItem=requestCache(id=>api('items/'+id),128);
 const cachedCalculation=requestCache(fit=>api('analyze',fit),12);
+let pilotPortraitCharacters=[];
 let attackMode='dps';try{attackMode=localStorage.getItem('fitlab-attack-mode')==='edps'?'edps':'dps'}catch{}
 function getCalculation(fit){fit={...fit,attackMode};if(fit.activeScenarioId||Object.keys(fit.scenario||{}).length)return api('analyze',fit);return cachedCalculation(JSON.stringify(fit),fit)}
 const treeOpen=new Set(),searchCollapsed=new Set();
@@ -384,9 +387,14 @@ function openFlow(title,body){flow.innerHTML=`<div class="flow-head"><b>${esc(ti
 function guarded(fn){return async()=>{try{await fn()}catch(e){say(e.message);if(flow.open)$('#flow-error').textContent=e.message}}}
 $('#save-fit').onclick=guarded(persistFit);
 function exportFitImage(fit){return showShareImage(withoutScenario(fit),{calculate:getCalculation,catalog,getPrice:getValuation})}
-$('#share-fit').onclick=()=>exportFitImage(currentFit());
+const exportMenu=document.createElement('div');exportMenu.className='fit-export-menu';exportMenu.setAttribute('popover','auto');exportMenu.role='menu';exportMenu.innerHTML='<button role="menuitem" data-format="text">文本</button><button role="menuitem" data-format="image">图片</button>';document.body.append(exportMenu);
+const exportButton=$('#export-fit');exportButton.onclick=()=>{if(exportMenu.matches(':popover-open')){exportMenu.hidePopover();return}exportMenu.showPopover();const r=exportButton.getBoundingClientRect();exportMenu.style.left=Math.max(8,Math.min(r.right+6,innerWidth-exportMenu.offsetWidth-8))+'px';exportMenu.style.top=Math.max(8,Math.min(r.top,innerHeight-exportMenu.offsetHeight-8))+'px';exportMenu.querySelector('button').focus();};
+exportMenu.addEventListener('toggle',()=>exportButton.setAttribute('aria-expanded',String(exportMenu.matches(':popover-open'))));
+exportMenu.querySelectorAll('button').forEach(b=>b.onclick=()=>{exportMenu.hidePopover();if(b.dataset.format==='text')showFitTextExport(api,currentFit());else exportFitImage(currentFit());});
+exportMenu.onkeydown=e=>{const buttons=[...exportMenu.querySelectorAll('button')];if(['ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();buttons[(buttons.indexOf(document.activeElement)+1)%buttons.length].focus()}if(e.key==='Escape'){exportMenu.hidePopover();exportButton.focus()}};
+
 const importText=()=>showTextImport({api,calculate:getCalculation,onSaved:record=>{libraryFits.unshift(record);refreshLibraryRows();location.hash='library';libraryMessage('已导入新装配：'+record.name)}});
-$('#import-editor-text').onclick=importText;
+
 const importImage=()=>showImageImport({catalog,calculate:getCalculation,save:fit=>api('save',fit),onSaved:record=>{libraryFits.unshift(record);refreshLibraryRows();libraryMessage('已导入新装配：'+record.name)}});
 $('#import-fit-image').onclick=importImage;
 const libraryNavigationSaves=new Map();
@@ -462,7 +470,7 @@ function openHullPicker(){
  requestAnimationFrame(()=>{if(root.isConnected)picker.scrollToSelection()});
 }
 
-installPilotPicker($('#pilot'),{api,catalog,current:()=>fitRecord.characterName,select:c=>mutate(()=>{fitRecord.skills=structuredClone(c.skills);fitRecord.characterName=c.name;},'已更换驾驶员')});
+installPilotPicker($('#pilot'),{api,catalog,current:()=>fitRecord.characterName,select:c=>mutate(()=>{fitRecord.skills=structuredClone(c.skills);fitRecord.characterName=c.name;fitRecord.characterId=c.id;fitRecord.eveCharacterId=c.eveCharacterId||null;},'已更换驾驶员')});
 
 $('#rename-fit').onclick=()=>{
  const heading=$('.title h1'),button=$('#rename-fit');
@@ -552,13 +560,13 @@ document.addEventListener('fitlab-use-loadout',e=>applyLoadout(e.detail));
 function renderImplantEntry(){
  let button=$('#implant-config');if(!button){button=document.createElement('button');button.id='implant-config';button.type='button';button.setAttribute('aria-haspopup','menu');$('#pilot').after(button);}
  const snapshot=fitRecord.loadoutPlan||(fitRecord.implantPlan?.length?{name:'自定义脑插',implants:fitRecord.implantPlan.map(x=>({...x,slot:implantCatalog.find(t=>t.id===x.typeId)?.slot})),boosters:[],customized:true}:null);
- button.textContent=(snapshot?.name||'脑插与增效剂')+' ▾';button.title='选择独立方案 · 随当前装配计算';
+ button.innerHTML='<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M20 27h-9v-5l-4-2 3-5v-4a9 9 0 0 1 18 0v7l-5 5v4"/><rect x="14" y="9" width="8" height="8" rx="2"/><path d="M16 6v3m4-3v3m-4 8v3m4-3v3M11 11h3m-3 4h3m8-4h3m-3 4h3"/></svg>';button.setAttribute('aria-label','脑插与增效剂'+(snapshot?.name?'：'+snapshot.name:''));button.title=(snapshot?.name||'脑插与增效剂')+' · 选择方案';
  button.onclick=()=>openLoadoutPicker(button,{api,snapshot,onSelect:applyLoadout,onManage:()=>{location.hash='characters?from=fitting';document.dispatchEvent(new CustomEvent('fitlab-manage-loadout',{detail:{id:snapshot?.id,initial:snapshot,fromFit:true}}));}});
 }
 function renderPilot(){renderImplantEntry();
  const full=fitRecord.characterName||'选择角色技能',name=full==='全技能 V · 模拟角色'?'全技能 V':full;
  const button=$('#pilot');button.classList.add('pilot-identity');button.setAttribute('aria-label','切换驾驶员：'+name);button.setAttribute('aria-haspopup','dialog');button.title=full;
- button.innerHTML=`<span class="pilot-portrait"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M10 12a6 6 0 0 1 12 0v3a6 6 0 0 1-12 0Z"/><path d="M10 12h12M12 21l4 3 4-3M5 29v-3c0-3 4-5 7-5m8 0c3 0 7 2 7 5v3"/></svg></span><span class="pilot-copy"><span class="pilot-caption">驾驶员</span><span class="pilot-name">${esc(name)}</span></span><svg class="pilot-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg>`;
+ button.innerHTML=`<span class="pilot-portrait">${pilotPortrait(pilotPortraitCharacters.find(c=>fitRecord.characterId?c.id===fitRecord.characterId:c.name===fitRecord.characterName)||{id:fitRecord.characterId,name:fitRecord.characterName,eveCharacterId:fitRecord.eveCharacterId})}</span><span class="pilot-copy"><span class="pilot-caption">驾驶员</span><span class="pilot-name">${esc(name)}</span></span><svg class="pilot-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg>`;
 }
 
 installWorkspaceResize(document.querySelector('#editor-page .workspace'));
@@ -881,3 +889,5 @@ async function editCrystal(typeId,key=null,id=null){
 
 // Fighter metadata must not gate the library. Refresh only its dependent surfaces.
 fighterCatalogReady.then(()=>{renderTree();const old=document.querySelector('#fighter-config');if(old)old._key=null;renderBayConfig();});
+
+api('characters').then(rows=>{pilotPortraitCharacters=rows;renderPilot()}).catch(()=>{});
