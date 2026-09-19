@@ -738,3 +738,13 @@ label:has(>input[type="checkbox"]:disabled){cursor:default;color:var(--muted)}
 .mutation-edit-row [data-change][data-state=improved]{color:#87ccad}.mutation-edit-row [data-change][data-state=degraded]{color:#ed858b}.mutation-effect{position:absolute;top:0;height:100%;z-index:1;pointer-events:none;background:#9b8a9e}.mutation-effect[data-state=improved]{background:#43ba83}.mutation-effect[data-state=degraded]{background:#db666f}.mutation-effect[data-state=unchanged]{background:transparent}.mutation-marker-label{position:absolute;font-size:10px;line-height:14px;font-style:normal;font-variant-numeric:tabular-nums;white-space:nowrap;color:#b4e6d9;pointer-events:none;z-index:6}.mutation-marker-label.reference{color:#f18790}.mutation-marker-label.current{color:#fff0df}.mutation-range .mutation-point{z-index:2}
 .metric-layout-placeholder{display:contents;visibility:hidden;pointer-events:none}.fitting,.inspector{scrollbar-gutter:stable;overflow-anchor:none}.inspector #engine-status{min-height:2.8em}
 .fit-export-menu{position:fixed;margin:0;padding:4px;min-width:90px;background:var(--panel);border:1px solid var(--accent);box-shadow:0 8px 25px #0008;color:var(--text)}.fit-export-menu button{display:block;width:100%;text-align:left;border:0;padding:9px 16px}.pilot-portrait img{width:36px;height:36px;object-fit:cover;border-radius:3px}.pilot-portrait svg{width:36px;height:36px}#implant-config{width:40px;height:40px;padding:5px;display:inline-flex;align-items:center;justify-content:center}#implant-config svg{width:28px;height:28px}.share-dialog textarea[aria-label="装配导出文本"]{width:100%;resize:vertical;font:12px/1.5 monospace}
+/* Shared identities in the fitting toolbar and pilot chooser. */
+#editor-page>.title{grid-template-columns:minmax(280px,1fr) auto auto;gap:12px}
+.fit-actions{column-gap:10px;max-width:400px}
+#pilot.pilot-identity{max-width:190px;min-width:0}
+.pilot-tree-person>.pilot-list-portrait{flex:0 0 36px;width:36px;height:36px;overflow:hidden}
+#implant-config{width:auto;max-width:195px;height:auto;min-height:46px;gap:8px;padding:5px 8px;border:0;text-align:left;justify-content:flex-start}
+#implant-config>svg{flex:0 0 28px}
+#implant-config .pilot-caption{letter-spacing:1px;white-space:nowrap}
+@media(max-width:900px){#editor-page>.title{grid-template-columns:minmax(240px,1fr) auto}.fit-actions{max-width:380px}}
+@media(max-width:650px){#editor-page>.title{grid-template-columns:minmax(0,1fr)}.fit-actions{grid-column:1;grid-row:2;justify-content:flex-start;max-width:100%}.fit-edit-tools{grid-row:3}.fit-actions #save{text-align:left}}
