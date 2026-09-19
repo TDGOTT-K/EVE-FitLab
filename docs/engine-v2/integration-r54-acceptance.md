@@ -4,6 +4,8 @@
 
 ## 环境与来源
 
+运行隔离修正：旧56432曾从正在编辑的同一目录加载新前端，但Python服务仍是旧代码，造成/api/capabilities不存在、特性/技能字段缺失。现将旧服务代码及静态资源固定到output/r44-web-cd65c5e（git archive cd65c5e完整快照），保留原integration-r43-ui-001的UI库、原生状态和浏览器来源；新功能只在56454验收。实查新/api/items/92823有15条traits和3项requiredSkills，旧item-info.js不再混入新资料模块。没有迁移或删除旧数据。
+
 启动scripts/start-r54.ps1，地址http://127.0.0.1:56454/#library；原生状态output/integration-r54-ui-001/native，UI库output/integration-r54-ui-001/state，存储配置output/integration-r54-ui-001/storage.json。旧56432状态不迁移、不删除；新端口隔离浏览器草稿。新引擎源码未修改。交付UI-BASELINE声明LOCAL009已包含static-inspector-v2，不能将r44旧补丁覆盖回去。
 
 ## 已接线
