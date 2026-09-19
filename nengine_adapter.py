@@ -39,7 +39,9 @@ def native_fit(f, build):
             ident=row.get('id') or f'fighter-{location}-{i}'
             fighters.append({'id':ident,'typeId':row['typeId'],
                 'memberIds':[f'{ident}-{j}' for j in range(row['quantity'])],
-                'deployed':location=='tubes' and row.get('active',True)})
+                'deployed':location=='tubes' and row.get('active',True),
+                'location':'tube' if location=='tubes' else 'reserve',
+                'tubeIndex':i if location=='tubes' else None})
     if len(fighters)>200: raise ValueError('本适配层一次最多分析 200 个舰载机中队')
     result={'id':f.get('nativeFitId') or f.get('id') or 'fitlab-draft','name':f.get('name'),'tags':f.get('tags',[]),'buildNumber':build,
         'shipTypeId':f['shipId'],'omittedSkills':'untrained',

@@ -27,7 +27,7 @@ function bindMenu(element,open){
 }
 export function mountFighters(root,{ship,fit,report,mutate,browse,say,validate,onInfo}){
  root.querySelector('#fighter-config')?.remove();if(owner!==fit){owner=fit;selected=null;}
- if(!fighterHull(ship))return;
+ if(!report?.native?.fighterBay&&!fit.fighterLoadout&&report?.native?.bayReadouts?.fighterBay?.state!=='unknown')return;
  const bay=report?.native?.fighterBay;const count=bay?.maximumSquadrons||0;
  const state=fit.fighterLoadout||{tubes:Array(count).fill(null),reserve:[]};
  const change=async (fn,newSquadronId=null)=>{if(host._busy)return;host._busy=true;const next=structuredClone(state);fn(next);say('正在校验舰载机配置…');try{const result=await validate({...fit,fighterLoadout:next});if(!host.isConnected)return;const blocking=result.issues.filter(e=>e.code==='STATIC_COVERAGE_INCOMPLETE'||e.code.startsWith('FIGHTER_')||e.code.startsWith('EVE_FIGHTER'));if(blocking.length){say('无法装载：'+blocking.map(e=>fighterIssueMessage(e,result.native?.resources)).join('；'));return}const defaults=newSquadronId?defaultFighterOutput(next,result.native?.outputContributions?.items||[],newSquadronId):null;mutate(()=>{fit.fighterLoadout=defaults?.loadout||next;if(defaults)fit.outputMetric=defaults.metric},'舰载机已更新 · N 号引擎校验')}catch(e){say(e.message)}finally{host._busy=false}};
@@ -40,11 +40,11 @@ export function mountFighters(root,{ship,fit,report,mutate,browse,say,validate,o
   ${entry?`<div class="fighter-number"><button data-delta="-1" aria-label="减少中队数量">−</button><b>${entry.quantity}<small> / ${t.max}</small></b><button data-delta="1" aria-label="增加中队数量">＋</button></div>${!reserve?`<button class="fighter-active ${entry.active?'on':''}" data-active aria-pressed="${entry.active}">${entry.active?'参战':'待命'}</button>`:''}`:''}</div>`;
  };
  const quotas=Object.entries(bay.classLimits).map(([kind,limit])=>{
-  const resource=report.native.resources?.find(r=>r.id==='fighterClass.'+kind);
-  const used=resource?.used,capacity=resource?.capacity??limit;
+  const resource=report.native.fighterOccupancy?.loadedClasses?.[kind];
+  const used=resource?.totalCount,capacity=resource?.limit??limit;
   const known=Number.isFinite(used)&&Number.isFinite(capacity);
   const color=known?(used>capacity?'limit-over':used===capacity?'limit-full':'limit-free'):'';
-  return `<span class="fighter-class-quota" title="已部署中队 / 上限；待命和备用不计入">${({light:'轻型',support:'支援',heavy:'重型'})[kind]} <b class="${color}">${Number.isFinite(used)?used:'—'}</b>/${Number.isFinite(capacity)?capacity:'—'}</span>`;
+  return `<span class="fighter-class-quota" title="管内中队 / 上限；包含待命，备用不计入">${({light:'轻型',support:'支援',heavy:'重型'})[kind]} <b class="${color}">${Number.isFinite(used)?used:'—'}</b>/${Number.isFinite(capacity)?capacity:'—'}</span>`;
  }).join('');
  host.innerHTML=`<div class="slot-heading"><button class="bay-filter" data-browse>铁骑舰载机</button><span class="fighter-mock">N 引擎</span><span>${state.tubes.filter(Boolean).length} / ${count}</span></div><div class="fighter-quotas">${quotas}<span class="fighter-bay-capacity">机库 ${report.native.resources.find(r=>r.id==="fighterBay")?.used.toLocaleString()} / ${bay.capacityCubicMeters.toLocaleString()} m³</span></div><div class="fighter-tubes">${Array.from({length:count},(_,i)=>row(state.tubes[i],i)).join('')}</div><details class="fighter-reserve" open><summary>备用机库 <span>${state.reserve.length} 中队</span></summary><div class="fighter-reserve-drop">${state.reserve.map((e,i)=>row(e,i,true)).join('')}<button class="fighter-reserve-add">＋ 添加备用中队</button></div></details>`;
  const paintSelection=()=>host.querySelectorAll('.fighter-row').forEach(el=>{
@@ -68,7 +68,7 @@ export function mountFighters(root,{ship,fit,report,mutate,browse,say,validate,o
  };
  function weaponHeader(t,entry,list,index){
   const ident=entry.id||'fighter-'+list+'-'+index,projection=report?.native?.fighterEntities?.[ident];
-  const abilities=projection?.abilityMetadata?.abilities?.filter(a=>[2233,2182,2401].includes(a.duration?.source?.attributeId))||[];
+  const abilities=projection?.abilityMetadata?.abilities?.filter(a=>report.native.outputContributions?.items.some(i=>i.source.squadronId===ident&&i.source.officialAbilityId===a.abilityId&&i.kind!=='fighter_utility'))||[];
   if(!abilities.length)return null;
   const header=document.createElement('div');header.className='menu-title fighter-weapon-header';
   const caption=document.createElement('div');caption.className='fighter-weapon-caption';
