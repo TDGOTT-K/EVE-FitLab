@@ -11,3 +11,20 @@ restored[0].loadedCharges=50;record.cargo.push({item:185,quantity:50});
 assert.deepEqual(empty.cargo,[]);assert.equal(empty.slots[0].loadedCharges,0);
 assert.equal(record.name,'Draft');
 console.log('Edit history preserves unknown inventory, explicit empty/zero and independent snapshots');
+
+const {cloneCurrentFit}=await import('./fitting-edit-snapshot.js');
+const {detachUnmatchedCrystals,mountCrystal}=await import('./crystal-stock.js');
+const live={id:'test',crystals:[{id:'worn',typeId:23089,moduleId:'high-0',damage:.4}],cargo:[{item:185,quantity:20}]};
+const liveSlots=[{key:'high-0',item:455,ammo:23089}];
+const baseline=cloneCurrentFit(live,587,liveSlots,()=> 'Active');
+const candidate=cloneCurrentFit(live,587,liveSlots,()=> 'Active');
+candidate.slots[0].ammo=247;detachUnmatchedCrystals(candidate);
+candidate.crystals.push({id:'new',typeId:247,moduleId:'high-0',damage:0});
+assert.equal(live.crystals.length,1);assert.equal(live.crystals[0].moduleId,'high-0');
+assert.equal(liveSlots[0].ammo,23089);assert.deepEqual(baseline.crystals,live.crystals);
+candidate.cargo[0].quantity=0;assert.equal(live.cargo[0].quantity,20);
+// Unloading the live fit must not mutate the transaction's before snapshot.
+liveSlots[0].ammo=null;detachUnmatchedCrystals({...live,slots:liveSlots});
+assert.equal(baseline.crystals[0].moduleId,'high-0');assert.equal(baseline.crystals[0].damage,.4);
+assert.equal(candidate.crystals[0].moduleId,null);assert.equal(candidate.crystals[0].damage,.4);
+console.log('Candidate crystal installation and baseline isolation pass');

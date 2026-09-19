@@ -9,3 +9,10 @@ export function restoreEditSnapshot(record,snapshot){
  for(const key of fields){if(Object.hasOwn(snapshot,key))record[key]=structuredClone(snapshot[key]);else delete record[key];}
  return structuredClone(snapshot.slots);
 }
+
+// Candidates and transaction baselines must own every nested inventory/instance.
+export function cloneCurrentFit(record,shipId,slots,stateOf){
+ const fit=structuredClone({...record,shipId,slots});
+ fit.slots=fit.slots.map(s=>s.item?{...s,state:stateOf(s),online:stateOf(s)!=='Offline'}:s);
+ return fit;
+}

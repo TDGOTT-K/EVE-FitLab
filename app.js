@@ -5,7 +5,7 @@ import {exportFitPackage,importFitPackage} from './fit-package-ui.js';
 import {createValuationReader,valuationSummary,valuationMarkup} from './valuation-view.js';
 import {createFitSaver,sameSavedContent} from './fit-save-controller.js';
 import {createNativeEditHistory} from './native-edit-history.js';
-import {captureEditSnapshot,restoreEditSnapshot} from './fitting-edit-snapshot.js';
+import {captureEditSnapshot,restoreEditSnapshot,cloneCurrentFit} from './fitting-edit-snapshot.js';
 import {showTextImport} from './text-import.js';
 import {effectiveModuleState} from './module-state.js';
 import {planAttributeInspection} from './plan-attribute-inspection.js';
@@ -69,7 +69,7 @@ function abyssalItem(record){const type=byId(record.resultTypeId);return type&&r
 const acceptsAmmo=(mod,ammo)=>mod&&ammo?.kind==='ammo'&&mod.capabilities?.moduleConfiguration?.declaredChargeGroups.some(g=>(typeof g==='number'?g:g.value)===ammo.group)&&(!mod.capabilities.moduleConfiguration.declaredChargeSize||mod.capabilities.moduleConfiguration.declaredChargeSize.value===ammo.attrs['128']);
 const needsAmmo=mod=>!!mod?.capabilities?.moduleConfiguration?.declaredChargeGroups?.length;
 function say(text){$('#message').textContent=text}
-function currentFit(){return {...fitRecord,shipId:ship.id,slots:structuredClone(slots).map(s=>s.item?{...s,state:moduleState(s),online:moduleState(s)!=='Offline'}:s)}}
+function currentFit(){return cloneCurrentFit(fitRecord,ship.id,slots,moduleState)}
 function save(){try{localStorage.setItem('fitlab-working-draft',JSON.stringify(currentFit()));$('#save').textContent='草稿已保留 · 待保存到装配库'}catch{$('#save').textContent='草稿存储失败，请保存装配'}scheduleAnalysis()}
 function canEditNow(){const state=nativeHistory.state();if(state.busy||state.pending){say(state.busy?'正在提交装配，请稍后':state.pendingSave?'上次保存结果待确认，请再次保存':'上次编辑结果待确认，请点击重试编辑');return false;}return true;}
 function refreshEditView(){updateShip();save();renderSlots();renderResources();renderShipStats();renderTree();$('#undo').disabled=!history.length;$('#redo').disabled=!redoHistory.length;}
@@ -201,6 +201,7 @@ function loadedCountText(slot){
 }
 const crystalSlot=slot=>byId(slot?.item)?.capabilities?.moduleConfiguration?.chargePolicy==="installed_crystal_not_consumable_magazine";
 async function fillNewAmmo(candidate,keys){
+ detachUnmatchedCrystals(candidate);
  for(const key of keys){const slot=candidate.slots.find(s=>s.key===key);if(!slot?.ammo)continue;
   if(crystalSlot(slot)){
    candidate.crystals??=[];
@@ -352,7 +353,7 @@ installExplanations();
 
 async function api(path,body){const response=await fetch('/api/'+path,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await response.json();if(!response.ok){const error=Error(typeof data.error==='string'?data.error:data.error?.message||'请求失败');error.code=data.error?.code||data.diagnostic?.code;error.status=response.status;throw error;}return data}
 function updateShip(){ship=byId(fitRecord.shipId);counts.subsystem=subsystemSlots(ship).length;for(const [kind,id] of Object.entries({high:14,mid:13,low:12,rig:1137}))counts[kind]=ship.attrs[id]||0;$('.title h1').textContent=fitRecord.name;renderFitTags();$('#ship .ship-label').textContent=ship.en;renderShipBadge();$('#ship img').src=`https://images.evetech.net/types/${ship.id}/render?size=512`;$('#ship img').alt=ship.name;$('#ship .ship-caption').innerHTML=`${esc(ship.name)}<small>拖入装备安装 · 拖入弹药批量装填</small>`;renderPilot();}
-function restoreFit(record){nativeHistory.reset();editTransition=null;$('#editor-page').inert=false;$('#retry-native-edit')?.remove();fitSaver.reset();editorFitDeleted=false;cancelInstallPreview();selectedSlots.clear();selectionAnchor=null;analysisVersion++;report=null;fitRecord={...structuredClone(record),id:record.id||crypto.randomUUID(),...scenarioFields(scenarioPresets(record))};fitRecord.drones=fitRecord.nativeFitId?structuredClone(fitRecord.drones||[]):splitDroneStacks(fitRecord.drones||[]);updateShip();slots=fresh().map(s=>record.slots?.find(x=>x.key===s.key)||s);for(const s of record.slots||[])if(s.item&&!slots.some(x=>x.key===s.key))slots.push(structuredClone(s));filter=subsystemSlots(ship).length?{key:'subsystem-0',ammo:false}:null;history=[];redoHistory=[];$('#undo').disabled=true;$('#redo').disabled=true;$('#search').value='';treeOpen.clear();renderSlots();renderTree();renderResources();renderShipStats();save()}
+function restoreFit(record){nativeHistory.reset();editTransition=null;$('#editor-page').inert=false;$('#retry-native-edit')?.remove();fitSaver.reset();editorFitDeleted=false;cancelInstallPreview();selectedSlots.clear();selectionAnchor=null;analysisVersion++;report=null;fitRecord={...structuredClone(record),id:record.id||crypto.randomUUID(),...scenarioFields(scenarioPresets(record))};fitRecord.drones=fitRecord.nativeFitId?structuredClone(fitRecord.drones||[]):splitDroneStacks(fitRecord.drones||[]);updateShip();slots=fresh().map(s=>fitRecord.slots?.find(x=>x.key===s.key)||s);for(const s of fitRecord.slots||[])if(s.item&&!slots.some(x=>x.key===s.key))slots.push(structuredClone(s));const recoveredCrystals=detachUnmatchedCrystals({...fitRecord,slots});filter=subsystemSlots(ship).length?{key:'subsystem-0',ammo:false}:null;history=[];redoHistory=[];$('#undo').disabled=true;$('#redo').disabled=true;$('#search').value='';treeOpen.clear();renderSlots();renderTree();renderResources();renderShipStats();save();if(recoveredCrystals)say('已修复晶体挂载关系：'+recoveredCrystals+' 枚不匹配晶体已保留在货舱')}
 const fitSaver=createFitSaver({read:currentFit,capture:()=>nativeHistory.capture(),write:(input,owner)=>nativeHistory.save(input,request=>api('save',request),owner),accept:(saved,{unchanged})=>{fitRecord={...fitRecord,id:saved.id,revision:saved.revision,updatedAt:saved.updatedAt};localStorage.setItem('fitlab-working-draft',JSON.stringify(currentFit()));$('#save').textContent=unchanged?'已保存 · '+new Date(saved.updatedAt).toLocaleTimeString():'已保存上一版本 · 当前改动待保存';}});
 function persistFit(){return fitSaver.save()}
 document.addEventListener('fitlab-attack-mode',e=>{attackMode=e.detail==='edps'?'edps':'dps';try{localStorage.setItem('fitlab-attack-mode',attackMode)}catch{}scheduleAnalysis()});
