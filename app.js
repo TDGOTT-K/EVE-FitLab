@@ -52,7 +52,7 @@ const $=s=>document.querySelector(s), typeIndex=new Map(catalog.map(t=>[t.id,t])
 let ship=byId(587),fitRecord={id:crypto.randomUUID(),name:'裂谷级 · 我的装配',shipId:587,skills:[],characterName:'无技能 · 基础对照'},report=null,reportVersion=-1,analysisVersion=0,analysisTimer,analysisState='pending';
 const nativeHistory=createNativeEditHistory(api);let editTransition=null;
 const cachedItem=requestCache(id=>api('items/'+id),128);
-const cachedCalculation=requestCache(fit=>api('analyze',fit),4);
+const cachedCalculation=requestCache(fit=>api('analyze',fit),12);
 let attackMode='dps';try{attackMode=localStorage.getItem('fitlab-attack-mode')==='edps'?'edps':'dps'}catch{}
 function getCalculation(fit){fit={...fit,attackMode};if(fit.activeScenarioId||Object.keys(fit.scenario||{}).length)return api('analyze',fit);return cachedCalculation(JSON.stringify(fit),fit)}
 const treeOpen=new Set(),searchCollapsed=new Set();
@@ -75,13 +75,13 @@ function canEditNow(){const state=nativeHistory.state();if(state.busy||state.pen
 function refreshEditView(){updateShip();save();renderSlots();renderResources();renderShipStats();renderTree();$('#undo').disabled=!history.length;$('#redo').disabled=!redoHistory.length;}
 function historyRollback(){return {snapshot:editSnapshot(),undo:[...history],redo:[...redoHistory]};}
 function watchEdit(task,owner,rollback,message){
- const transition={owner,rollback,message};editTransition=transition;$('#editor-page').inert=true;$('#retry-native-edit')?.remove();say('正在提交装配…');
+ const transition={owner,rollback,message};editTransition=transition;$('#retry-native-edit')?.remove();say('正在提交装配…');
  const settle=promise=>promise.then(()=>{if(editTransition===transition&&nativeHistory.capture()===owner){editTransition=null;$('#retry-native-edit')?.remove();say(message);}}).catch(error=>{
   if(editTransition!==transition||nativeHistory.capture()!==owner)return;
   if(error.code&&error.code!=='EDIT_STATE_CONFLICT'){
    nativeHistory.rejectPending(owner);applyEditSnapshot(rollback.snapshot);history=rollback.undo;redoHistory=rollback.redo;editTransition=null;refreshEditView();say('编辑未提交：'+error.message);
   }else{
-   say('编辑结果待确认：'+error.message);const button=document.createElement('button');button.id='retry-native-edit';button.textContent='重试编辑';button.onclick=()=>{button.remove();$('#editor-page').inert=true;settle(nativeHistory.retry(owner));};$('.fit-actions').append(button);
+   say('编辑结果待确认：'+error.message);const button=document.createElement('button');button.id='retry-native-edit';button.textContent='重试编辑';button.onclick=()=>{button.remove();settle(nativeHistory.retry(owner));};$('.fit-actions').append(button);
   }
  }).finally(()=>{if(nativeHistory.capture()===owner)$('#editor-page').inert=false;});
  settle(task);
@@ -142,6 +142,16 @@ function installLimit(t,key){
  return installationLimitReason(t,key,slots,byId,report?.attributes);
 }
 function shipInstallTarget(t){return slots.find(s=>!s.item&&canInstall(t,s.key))?.key;}
+// Candidate identity (including new crystals) is shared by hover and installation.
+const cachedInstallCandidate=requestCache(async({before,item,key})=>{
+ const candidate=structuredClone(before);applyCandidate(candidate.slots.find(s=>s.key===key),item);detachUnmatchedCrystals(candidate);
+ if(candidate.slots.find(s=>s.key===key)?.ammo)await fillNewAmmo(candidate,[key]);
+ return candidate;
+},12);
+async function installCandidate(before,item,key){
+ const input={before,item,key,attackMode};
+ return structuredClone(await cachedInstallCandidate(JSON.stringify({before,key,attackMode,itemId:item.id,abyssal:item.abyssal||null}),input));
+}
 async function install(t,key){
  if(!t)return;
  const discoveryVersion=analysisVersion;try{await hydrateType(t);if(t.kind==='ammo')await Promise.all(slots.filter(s=>s.item).map(s=>hydrateType(byId(s.item))));}catch(e){say(e.message);return;}if(discoveryVersion!==analysisVersion)return;
@@ -152,8 +162,8 @@ async function install(t,key){
  if(!key||!canInstall(t,key)){say(selectedSlots.size>1?'请先选择一个目标槽位，或拖到指定槽位':'无法安装：请选择兼容槽位，或检查弹药组、尺寸及空槽');return;}
  const limitReason=installLimit(t,key);if(limitReason){say('无法安装：'+limitReason);return;}
  if(report?.provider==='nengine'){
-  const version=analysisVersion,candidate=currentFit();applyCandidate(candidate.slots.find(s=>s.key===key),t);candidate.crystals=structuredClone(candidate.crystals||[]);detachUnmatchedCrystals(candidate);
-  try{if(candidate.slots.find(s=>s.key===key)?.ammo)await fillNewAmmo(candidate,[key]);const checked=await getCalculation(candidate);if(version!==analysisVersion){say('装配已变化，请重新安装');return;}const blocked=checked.issues.filter(e=>['HARDPOINT_LIMIT','QUANTITY_LIMIT','ACTIVE_GROUP_LIMIT','SLOT_UNAVAILABLE','SLOT_OCCUPIED','SLOT_UNSUPPORTED'].includes(e.code));if(blocked.length){say('无法安装：'+blocked.map(e=>e.code+' · '+e.message).join('；'));return;}mutate(()=>{slots=candidate.slots;fitRecord.crystals=candidate.crystals},`已${t.kind==='ammo'?'装填':'安装'} ${t.name}`);return;}catch(e){say('安装校验失败：'+e.message);return;}
+  const version=analysisVersion;
+  try{const candidate=await installCandidate(currentFit(),t,key);const checked=await getCalculation(candidate);if(version!==analysisVersion){say('装配已变化，请重新安装');return;}const blocked=checked.issues.filter(e=>['HARDPOINT_LIMIT','QUANTITY_LIMIT','ACTIVE_GROUP_LIMIT','SLOT_UNAVAILABLE','SLOT_OCCUPIED','SLOT_UNSUPPORTED'].includes(e.code));if(blocked.length){say('无法安装：'+blocked.map(e=>e.code+' · '+e.message).join('；'));return;}mutate(()=>{slots=candidate.slots;fitRecord.crystals=candidate.crystals},`已${t.kind==='ammo'?'装填':'安装'} ${t.name}`);return;}catch(e){say('安装校验失败：'+e.message);return;}
  }
  mutate(()=>applyCandidate(slots.find(s=>s.key===key),t),`已${t.kind==='ammo'?'装填':'安装'} ${t.name}`);
 }
@@ -212,6 +222,7 @@ async function fillNewAmmo(candidate,keys){
    delete slot.loadedCharges;
   }else slot.loadedCharges=0;
  }
+ if(!keys.some(key=>{const slot=candidate.slots.find(s=>s.key===key);return slot?.ammo&&!crystalSlot(slot)}))return candidate;
  const checked=await getCalculation(candidate);
  for(const key of keys){const slot=candidate.slots.find(s=>s.key===key);if(!slot?.ammo||crystalSlot(slot))continue;
   const row=checked.native?.inventory?.magazines.find(m=>m.moduleId===key);
@@ -721,6 +732,7 @@ function applyPreviewValues(result,fit){
  }
  // Original nodes, handlers, scroll position and scenario controls stay in place.
 }
+let previewInFlight=null;
 function queueInstallPreview(key,id=dragged,source='drag',instance=draggedInstance){
  const version=analysisVersion,identity=(instance?.abyssal?.id||id)+':'+key+':'+version+':'+source;
  if(previewKey===identity)return;cancelInstallPreview();previewKey=identity;const token=previewToken;
@@ -738,14 +750,21 @@ function queueInstallPreview(key,id=dragged,source='drag',instance=draggedInstan
   const ammoNote=item.kind!=='ammo'&&previousAmmo&&!slot.ammo?' · 原弹药不兼容，将卸下':'';
   banner('预览计算中…'+ammoNote);
   try{
-   if(report?.provider==='nengine'&&slot.ammo)await fillNewAmmo(fit,[key]);
-   const result=report?.provider==='nengine'?await api('preview',{before,after:fit}):await getCalculation(fit);
+   if(token!==previewToken||version!==analysisVersion)return;
+   while(previewInFlight){await previewInFlight.catch(()=>{});if(token!==previewToken||version!==analysisVersion)return;}
+   const pending=(async()=>{
+    const candidate=report?.provider==='nengine'?await installCandidate(currentFit(),item,key):fit;
+    if(token!==previewToken||version!==analysisVersion)return null;
+    return {candidate,result:await getCalculation(candidate)};
+   })();previewInFlight=pending;
+   let completed;try{completed=await pending;}finally{if(previewInFlight===pending)previewInFlight=null;}
+   if(!completed)return;const {candidate,result}=completed;
    if(token!==previewToken||version!==analysisVersion||!host.isConnected||(source==='drag'&&dragged!==id))return;
    document.dispatchEvent(new CustomEvent('fitlab-calculation-invalidated'));
-   applyPreviewValues(result,fit);$('.inspector').classList.add('install-preview-active');
+   applyPreviewValues(result,candidate);$('.inspector').classList.add('install-preview-active');
    banner((result.isValid?hint:'装配受限：'+result.issues.map(i=>i.message).join('；'))+ammoNote);
   }catch(e){if(token===previewToken&&host.isConnected){if(previewRestore){previewRestore();previewRestore=null;}banner('预览不可用：'+e.message);}}
- },source==='drag'?180:350);
+ },source==='drag'?100:150);
 }
 document.addEventListener('dragover',e=>{if(previewKey&&!e.target.closest('#slots .slot'))cancelInstallPreview()});
 document.addEventListener('dragend',cancelInstallPreview);

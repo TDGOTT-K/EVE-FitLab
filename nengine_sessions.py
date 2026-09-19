@@ -24,9 +24,19 @@ def request(action,arguments,client=None):
         return {'ok':True,'result':prepare_ui_edit(arguments['before'],arguments['after'],status['source']['source']['buildNumber'])}
     if action not in OPERATIONS:raise ValueError('未知装配事务操作')
     name,allowed=OPERATIONS[action]
+    if not isinstance(arguments,dict):raise ValueError('装配事务需要对象参数')
+    arguments=dict(arguments)
+    receipt_only=arguments.pop('receiptOnly',False)
+    if receipt_only and action not in ('preview-input','execute','inspect'):raise ValueError('此操作不支持简要回执')
     if not isinstance(arguments,dict) or set(arguments)-allowed:raise ValueError('装配事务包含未知字段')
     client=client or bridge()
     client.discover()
     # Preserve expected revision, request identity and raw engine diagnostics.
     # Never generate another request ID after a lost execute response.
-    return client.call(name,arguments)
+    response=client.call(name,arguments)
+    if receipt_only and response.get('ok'):
+        result=dict(response['result'])
+        for field in ('analysis','baselineAnalysis'):
+            if field in result:result[field]={'fitHash':result[field]['fitHash']}
+        response={**response,'result':result}
+    return response

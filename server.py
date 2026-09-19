@@ -194,7 +194,12 @@ class Handler(SimpleHTTPRequestHandler):
   super().end_headers()
  def log_message(self,*args):pass
  def reply(self,data,status=200):
-  b=json.dumps(data,ensure_ascii=False).encode();self.send_response(status);self.send_header('Content-Type','application/json; charset=utf-8');self.send_header('Cache-Control','no-store');self.send_header('Content-Length',str(len(b)));self.end_headers();self.wfile.write(b)
+  b=json.dumps(data,ensure_ascii=False,separators=(',',':')).encode()
+  zipped=len(b)>8192 and any(part.split(';')[0].strip()=='gzip' and not any(param.strip() in ('q=0','q=0.0','q=0.00','q=0.000') for param in part.split(';')[1:]) for part in self.headers.get('Accept-Encoding','').split(','))
+  if zipped:b=gzip.compress(b,compresslevel=1)
+  self.send_response(status);self.send_header('Content-Type','application/json; charset=utf-8');self.send_header('Cache-Control','no-store');self.send_header('Vary','Accept-Encoding')
+  if zipped:self.send_header('Content-Encoding','gzip')
+  self.send_header('Content-Length',str(len(b)));self.end_headers();self.wfile.write(b)
  def reply_catalog(self,data):
   with self.document_lock:
    key=self.path

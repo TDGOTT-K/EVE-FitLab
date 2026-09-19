@@ -3,7 +3,7 @@
 export function createNativeEditHistory(api){
  let current=fresh();
  function fresh(){return {id:'edit-'+crypto.randomUUID(),revision:0,opened:false,undo:[],redo:[],pending:null,busy:false};}
- async function call(action,args){const response=await api('native-session/'+action,args);return response.result;}
+ async function call(action,args){const response=await api('native-session/'+action,['preview-input','execute','inspect'].includes(action)?{...args,receiptOnly:true}:args);return response.result;}
  function conflict(message){const error=new Error(message);error.code='EDIT_STATE_CONFLICT';return error;}
  async function ensure(owner,fit,hash){
   if(owner.opened)return;
