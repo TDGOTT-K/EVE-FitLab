@@ -29,7 +29,14 @@ export function mountFighters(root,{ship,fit,report,mutate,browse,say,validate,o
   <button class="fighter-pick" aria-label="${entry?t.name:'选择发射管 '+(index+1)+' 的舰载机'}">${t?icon(t):'<span class="fighter-empty">＋</span>'}<span>${t?t.name:'空发射管'}<small>${t?t.kind:'选择或拖入中队'}</small></span></button>
   ${entry?`<div class="fighter-number"><button data-delta="-1" aria-label="减少中队数量">−</button><b>${entry.quantity}<small> / ${t.max}</small></b><button data-delta="1" aria-label="增加中队数量">＋</button></div>${!reserve?`<button class="fighter-active ${entry.active?'on':''}" data-active aria-pressed="${entry.active}">${entry.active?'参战':'待命'}</button>`:''}`:''}</div>`;
  };
- host.innerHTML=`<div class="slot-heading"><button class="bay-filter" data-browse>铁骑舰载机</button><span class="fighter-mock">N 引擎</span><span>${state.tubes.filter(Boolean).length} / ${count}</span></div><div class="fighter-quotas">${Object.entries(bay.classLimits).map(([k,n])=>({light:"轻型",support:"支援",heavy:"重型"})[k]+" "+n).join(" · ")}<span>机库 ${report.native.resources.find(r=>r.id==="fighterBay")?.used.toLocaleString()} / ${bay.capacityCubicMeters.toLocaleString()} m³</span></div><div class="fighter-tubes">${Array.from({length:count},(_,i)=>row(state.tubes[i],i)).join('')}</div><details class="fighter-reserve" open><summary>备用机库 <span>${state.reserve.length} 中队</span></summary><div class="fighter-reserve-drop">${state.reserve.map((e,i)=>row(e,i,true)).join('')}<button class="fighter-reserve-add">＋ 添加备用中队</button></div></details>`;
+ const quotas=Object.entries(bay.classLimits).map(([kind,limit])=>{
+  const resource=report.native.resources?.find(r=>r.id==='fighterClass.'+kind);
+  const used=resource?.used,capacity=resource?.capacity??limit;
+  const known=Number.isFinite(used)&&Number.isFinite(capacity);
+  const color=known?(used>capacity?'limit-over':used===capacity?'limit-full':'limit-free'):'';
+  return `<span class="fighter-class-quota" title="已部署中队 / 上限；待命和备用不计入">${({light:'轻型',support:'支援',heavy:'重型'})[kind]} <b class="${color}">${Number.isFinite(used)?used:'—'}</b>/${Number.isFinite(capacity)?capacity:'—'}</span>`;
+ }).join('');
+ host.innerHTML=`<div class="slot-heading"><button class="bay-filter" data-browse>铁骑舰载机</button><span class="fighter-mock">N 引擎</span><span>${state.tubes.filter(Boolean).length} / ${count}</span></div><div class="fighter-quotas">${quotas}<span class="fighter-bay-capacity">机库 ${report.native.resources.find(r=>r.id==="fighterBay")?.used.toLocaleString()} / ${bay.capacityCubicMeters.toLocaleString()} m³</span></div><div class="fighter-tubes">${Array.from({length:count},(_,i)=>row(state.tubes[i],i)).join('')}</div><details class="fighter-reserve" open><summary>备用机库 <span>${state.reserve.length} 中队</span></summary><div class="fighter-reserve-drop">${state.reserve.map((e,i)=>row(e,i,true)).join('')}<button class="fighter-reserve-add">＋ 添加备用中队</button></div></details>`;
  const select=(list,index)=>{selected={list,index};browse()};
  host.querySelector('[data-browse]').onclick=()=>select('tubes',state.tubes.findIndex(x=>!x));
  host.querySelector('.fighter-reserve-add').onclick=()=>select('reserve',state.reserve.length);

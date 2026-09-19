@@ -342,6 +342,10 @@ UI消费零速不适用原因、validationState、电容贡献缺项和独立容
 
 test_library_navigation.mjs实跑导航函数：保存悬而未决时页面已经切换并绘制；失败保留草稿；离开后回执不覆盖另一艘船。既有保存并发专项和64模块检查通过。56432实际点击后已进入装配库，同时当前草稿条目仍在后台保存，确认不再等待保存完成才切页面。未修改引擎、接口或UI布局，不宣称减少了底层保存耗时。
 
+## NUI-61：舰载机分类配额（待验收）
+
+分类限制改为已部署中队数/上限，读取现有公开分析 resources 的 fighterClass.light/support/heavy，待命与备用不计入。缺失已用数显示—，不当作0。复用挂点 limit-free/full/over 颜色，分别表示未满、已满、超限；0/0按已满显示。悬停说明统计范围。仅UI展示调整，引擎与r44接口不变。65个浏览器业务模块检查通过。
+
 ## NUI-60：舰载机有限次数武器直接选择（待验收）
 
 用户确认复用现有武器按钮完成口径切换，不恢复已撤销的独立下拉。只有原生nominal读数为FINITE_ABILITY_USE_LOADED_CYCLE_BASIS且loadedCycleDps有可用有限数值与aggregationKey时，允许从名义口径直接选择。点击将武器选择和outputMetric一同写入草稿；任一中队（含待命预选）仍选择有限次数能力时保持loadedCycleDps，全部取消后恢复nominalCycleDps。待命单位仍由既有选集逻辑排除，不混入当前DPS。
