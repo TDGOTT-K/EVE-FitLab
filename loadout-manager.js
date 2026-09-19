@@ -1,3 +1,4 @@
+import {installAffixFloat} from './plan-affix-float.js';
 import {renderPlanAffixes} from './plan-affixes.js';
 import {applyImplantSet,implantSetChanges} from './implant-sets.js';
 import {parentFolder,folderName,normalizeLayout,relocateLibrary,installLibraryDrag} from './plan-library-tree.js';
@@ -14,6 +15,7 @@ export function installLoadoutManager(host,{api}){
  let plans=[],pilots=[],draft=null,dirty=false,busy=false,drag=null,returnToFit=false,analysisToken=0,analysisTimer;
  host.innerHTML='<div class="plan-workspace"><aside class="plan-library"><div class="plan-library-head"><button data-toggle-library aria-expanded="true" aria-controls="plan-library-body"><span class="plan-library-chevron">▾</span> 方案库</button><span class="plan-library-current"></span><button type="button" class="plan-library-add" aria-label="新建最外层方案" title="新建方案 · 最外层">＋</button></div><div id="plan-library-body"><input class="plan-search" aria-label="搜索方案" placeholder="搜索方案或分组"><div class="plan-list plan-folder-list" tabindex="0" aria-label="脑插与增效剂方案列表"></div><div class="plan-library-blank" tabindex="0" aria-label="方案库空白区域" title="右键新建分组"></div><small>Ctrl+C / V 复制粘贴</small></div></aside><aside class="plan-browser"></aside><section class="plan-editor"><div class="plan-toolbar"></div><p class="plan-message" role="status"></p><div class="plan-content"></div></section></div>';
  const $=s=>host.querySelector(s),message=text=>$('.plan-message').textContent=text;
+ const affixFloat=installAffixFloat(host);
  let layout={revision:0,folders:[],order:[]};const folderOpen=new Set(['']);let activeFolder=null,extraFolders=[];try{extraFolders=JSON.parse(localStorage.getItem('fitlab-plan-folders')||'[]').filter(x=>typeof x==='string')}catch{}
  const storeFolders=()=>localStorage.setItem('fitlab-plan-folders',JSON.stringify(extraFolders));
  let libraryCollapsed=false;try{libraryCollapsed=localStorage.getItem('fitlab-plan-library-collapsed')==='true'}catch{}
@@ -133,9 +135,10 @@ export function installLoadoutManager(host,{api}){
   input.onblur=()=>finish(true);input.onkeydown=e=>{if(e.isComposing)return;if(e.key==='Enter'||e.key==='Escape'){e.preventDefault();e.stopPropagation();finish(e.key==='Enter');button.focus();}};
  }
  function draw(){
+  affixFloat.setVisible(Boolean(draft));
   cache();drawList();browser.refresh();
   if(!draft){$('.plan-toolbar').innerHTML=returnToFit?'<button data-back>返回装配</button>':'';$('.plan-content').innerHTML='<button type="button" class="plan-create-slot"><span class="plan-create-plus" aria-hidden="true">＋</span><span>创建新方案</span></button>';$('.plan-create-slot').onclick=()=>newPlan('');host.querySelector('[data-back]')?.addEventListener('click',()=>location.hash='fitting');return;}
-  $('.plan-toolbar').innerHTML='<div class="plan-name-row fit-name-row"><h2>'+esc(draft.name)+'</h2><button class="edit-name-icon" data-rename aria-label="编辑方案名称" title="编辑名称"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15Z"/></svg></button></div><section class="plan-affixes" aria-label="方案效果汇总"><div class="plan-affixes-title">方案加成</div><div data-plan-affixes>查询引擎…</div></section><span class="plan-dirty">'+(dirty?'未保存':'已保存')+'</span><button data-save>保存方案</button><button data-more aria-haspopup="menu" aria-label="更多方案操作">更多 ···</button>'+(returnToFit?'<button data-use>应用到装配</button><button data-back>返回装配</button>':'');
+  $('.plan-toolbar').innerHTML='<div class="plan-name-row fit-name-row"><h2>'+esc(draft.name)+'</h2><button class="edit-name-icon" data-rename aria-label="编辑方案名称" title="编辑名称"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15Z"/></svg></button></div><span class="plan-dirty">'+(dirty?'未保存':'已保存')+'</span><button data-save>保存方案</button><button data-more aria-haspopup="menu" aria-label="更多方案操作">更多 ···</button>'+(returnToFit?'<button data-use>应用到装配</button><button data-back>返回装配</button>':'');
   $('.plan-content').innerHTML='<div class="plan-meta"><label>计算角色 <select data-plan-pilot aria-label="方案计算角色"><option value="snapshot">'+esc(draft.pilot?.name||'无技能 · 基础对照')+'</option><option value="untrained">无技能 · 基础对照</option>'+pilots.map((p,i)=>'<option value="'+i+'">'+esc(p.name)+'</option>').join('')+'</select></label><small data-plan-analysis>查询引擎…</small></div><div class="plan-section-head"><b>脑插</b><span>'+draft.implants.length+' / 10</span></div><div class="plan-slots"></div><div class="plan-section-head"><b>增效剂</b><button data-roll-boosters title="每种副作用独立抽取；概率由引擎按当前角色和脑插计算">⚄ 随机服用一次</button></div><div class="plan-boosters"></div><p class="plan-scope">概率与时长由 N 引擎计算 · 非实际服用</p>';
    $('[data-rename]').onclick=rename;$('.plan-name-row h2').onclick=rename;
   $('[data-save]').onclick=save;$('[data-more]').onclick=openPlanActions;
@@ -220,7 +223,7 @@ export function installLoadoutManager(host,{api}){
   }
   if(!await guard())return;draft=structuredClone(p);duplicate();
  });
- return {async show({id,initial,fromFit=false}={}){host.hidden=false;returnToFit=fromFit;try{[plans,layout,pilots]=await Promise.all([api('loadout-plans'),api('loadout-layout'),api('characters')]);if(layout.revision>0)extraFolders=layout.folders.slice();if(initial&&(!id||!plans.some(p=>p.id===id))&&await guard()){draft=structuredClone(initial);delete draft.id;delete draft.revision;dirty=true;id=null;}if(id&&(!draft||draft.id!==id)&&await guard()){draft=structuredClone(plans.find(p=>p.id===id)||null);dirty=false;}if(!draft&&plans.length)draft=structuredClone(plans[0]);draw();}catch(e){message(e.message);}},hide(){host.hidden=true;analysisToken++;clearTimeout(analysisTimer);}};
+ return {async show({id,initial,fromFit=false}={}){host.hidden=false;returnToFit=fromFit;try{[plans,layout,pilots]=await Promise.all([api('loadout-plans'),api('loadout-layout'),api('characters')]);if(layout.revision>0)extraFolders=layout.folders.slice();if(initial&&(!id||!plans.some(p=>p.id===id))&&await guard()){draft=structuredClone(initial);delete draft.id;delete draft.revision;dirty=true;id=null;}if(id&&(!draft||draft.id!==id)&&await guard()){draft=structuredClone(plans.find(p=>p.id===id)||null);dirty=false;}if(!draft&&plans.length)draft=structuredClone(plans[0]);draw();}catch(e){message(e.message);}},hide(){affixFloat.setVisible(false);host.hidden=true;analysisToken++;clearTimeout(analysisTimer);}};
 }
 
 export async function openLoadoutPicker(anchor,{api,snapshot,onSelect,onManage}){
