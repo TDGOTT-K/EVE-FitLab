@@ -463,3 +463,17 @@ skill-points.js原实现固定返回横线。改为明确空技能列表或全�
 引擎独立副本0.210.1-ui.sp1、契约55（r55-ui-sp1）、34工具，原静态v59及SDE3503375不变。本次用户特许新增机制，补丁UI-LOCAL-010登记于引擎docs/ui-local-changes.md，下一次升级必须核对。新增POST /api/skill-points仅转换技能数组为原生字典并转发，保留原生完整回执，不计算公式。原引擎交付基线与历史契约不改，新增UI-LOCAL-BASELINE.json绑定本地派生。
 
 验证：引擎逐级、空集、混合集合、全V、未知/非法输入CLI/MCP对照通过；3项契约通过；UI68模块与Python编译通过；真实浏览器角色列表、详情、选择器的0和全V均显示正确，无页面异常。证据output/skill-points-characters.png和skill-points-picker.png。UI交互等待用户验收，不发布。
+
+## NUI-82：官网授权真实角色导入（待真实账号验收）
+
+修复SSO发起端56454、固定回调5207落入旧进程的断链。当前服务通过同进程回调监听共享PKCE/单次state/browser-cookie上下文，5207回调完成后明确返回发起端；非回调访问5207重定向到当前角色管理。占用时给出明确错误，不把用户送进错误实例。此次暂停5207旧对照服务以释放已注册回调端口，未改历史源码或旧角色数据。
+
+授权仅esi-skills.read_skills.v1，令牌只在一次请求中使用，不写磁盘；访问日志不输出授权码。保存完整技能快照：active/trained等级、逐技能SP、total_sp、unallocated_sp、URL/抓取时间/HTTP日期/过期时间/响应SHA256。导入前用公开character_skill_snapshot验证，按eve:角色ID更新同一记录。装配使用活动等级；角色总SP用官网值，不能用最低SP代替。失败和取消保留原因并不写入角色；重新授权刷新快照。
+
+UI改动只在已有入口、显示与悬停说明：角色管理＋→从EVE官网导入；官网角色右键重新授权更新；列表/详情/驾驶员选择器使用真实SP。复制为自定义角色后使用等级SP，不继承账号实际SP口径。
+
+无头：新增POST /api/character-skills转发公开MCP。python eve_sso.py --library 路径/library.json --character eve:ID --out snapshot-query.json 导出同输入；随后sde-character-skills --data DIRECTORY --query snapshot-query.json，或MCP character_skill_snapshot(query=同JSON)。文件含用户角色数据、不含OAuth凭据。
+
+引擎0.210.2-ui.sso1/本地r56-ui-sso1/35工具，LOCAL-011依赖LOCAL-010。静态v59/SDE未变，未来升级须核对上游合入，详见引擎docs/ui-local-changes.md。
+
+验证：六项SSO专项（PKCE浏览器绑定/单次state/过期/缺权限、导入再导入、固定5207→发起端回跳、取消不落库）通过，使用合成身份+真实引擎查询；引擎九组CLI/MCP快照对照及三项契约通过；68模块/Python编译通过。真实浏览器确认5207跳回56454、官网入口到达login.eveonline.com。官网要求真人CAPTCHA，已停止自动化；真实登录、同意授权、账号返回尚待用户亲自验收。

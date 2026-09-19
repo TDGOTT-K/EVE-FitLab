@@ -261,13 +261,21 @@ class Handler(SimpleHTTPRequestHandler):
     cookies=SimpleCookie(self.headers.get('Cookie',''));browser=cookies.get('fitlab-sso')
     try:
      c=eve_sso.finish(urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query),browser.value if browser else '')
-     validate_fit({'shipId':587,'name':'skill-check','slots':[],'skills':c['skills']})
+     from nengine_adapter import bridge
+     client=bridge()
+     analysis=client.call('character_skill_snapshot',{'query':{'buildNumber':client.baseline['buildNumber'],'snapshot':c['skillSnapshot']}})['result']
+     c['skills']=[{'skillTypeId':int(k),'level':v} for k,v in analysis['activeSkills'].items()]
+     c['skillSnapshotHash']=analysis['snapshotHash']
      with LOCK:
       lib=read_library();old=next((x for x in lib['characters'] if x['id']==c['id']),{});c.update(updatedAt=now(),revision=old.get('revision',0)+1)
       lib['characters']=[x for x in lib['characters'] if x['id']!=c['id']]+[c];write_library(lib)
      destination='/#characters?imported='+urllib.parse.quote(c['id'])
-    except Exception:destination='/#characters?authError=1'
-    self.send_response(303);self.send_header('Location',destination);self.send_header('Set-Cookie','fitlab-sso=; Path=/api/eve; HttpOnly; SameSite=Lax; Max-Age=0');self.send_header('Referrer-Policy','no-referrer');self.end_headers();return
+    except ValueError as error:
+     message=str(error) if not str(error).startswith('{') else '官网技能数据校验失败，请重新授权或联系维护者。'
+     destination='/#characters?authError='+urllib.parse.quote(message[:250])
+    except Exception:destination='/#characters?authError='+urllib.parse.quote('官网技能导入或本机保存失败，请重新授权。')
+    destination=getattr(self.server,'fitlab_origin','http://127.0.0.1:'+str(self.server.server_port))+destination
+    self.send_response(303);self.send_header('Location',destination);self.send_header('Set-Cookie','fitlab-sso=; Path=/api/eve; HttpOnly; SameSite=Lax; Max-Age=0');self.send_header('Referrer-Policy','no-referrer');self.send_header('Cache-Control','no-store');self.end_headers();return
    if self.path.startswith('/api/'):return self.reply({'error':'接口不存在'},404)
    path=self.path.split('?')[0]
    if not(path=='/' or re.fullmatch(r'/[\w-]+\.(html|css|js)',path) or re.fullmatch(r'/data/(full-catalog|market-icons|locale-game)\.json',path) or re.fullmatch(r'/locales/(source|en|zh-TW|ja)\.json',path) or re.fullmatch(r'/assets/[\w-]+\.png',path)):return self.reply({'error':'资源不存在'},404)
@@ -307,6 +315,10 @@ class Handler(SimpleHTTPRequestHandler):
     try:return self.reply(request(self.path.removeprefix('/api/native-session/'),body))
     except NEngineError as error:
      return self.reply(error.payload,409 if error.error.get('code') in ('STALE_REVISION','REQUEST_CONFLICT') else 400)
+   if self.path=='/api/character-skills':
+    from nengine_adapter import bridge
+    client=bridge()
+    return self.reply(client.call('character_skill_snapshot',{'query':{'buildNumber':client.baseline['buildNumber'],'snapshot':body['snapshot']}})['result'])
    if self.path=='/api/skill-points':
     from nengine_adapter import bridge
     rows=body.get('skills')
@@ -337,6 +349,7 @@ class Handler(SimpleHTTPRequestHandler):
      before=validate_fit(body['before']);after=validate_fit(body['after'])
      return self.reply(preview_fit(before,after,analyze))
    if self.path=='/api/eve/login':
+    ensure_sso_callback(self.server)
     client=sso_client()
     url,browser=eve_sso.begin(client)
     data=json.dumps({'url':url}).encode();self.send_response(200);self.send_header('Content-Type','application/json');self.send_header('Content-Length',str(len(data)));self.send_header('Set-Cookie','fitlab-sso='+browser+'; Path=/api/eve; HttpOnly; SameSite=Lax; Max-Age=600');self.end_headers();self.wfile.write(data);return
@@ -394,6 +407,28 @@ class Handler(SimpleHTTPRequestHandler):
    self.reply({'error':'接口不存在'},404)
   except (ValueError,KeyError,TypeError) as e:self.reply({'error':str(e)},400)
   except Exception:self.reply({'error':'计算服务不可用或本机存储失败，请检查服务日志后重试。'},503)
+
+_callback_lock=threading.Lock()
+_callback_server=None
+def ensure_sso_callback(main_server):
+ global _callback_server
+ origin='http://127.0.0.1:'+str(main_server.server_port)
+ main_server.fitlab_origin=origin
+ if main_server.server_port==5207:return
+ with _callback_lock:
+  if _callback_server is not None:
+   if _callback_server.fitlab_origin!=origin:raise ValueError('官网回调已绑定另一个 FitLab 实例。')
+   return
+  class CallbackHandler(Handler):
+   def do_GET(self):
+    if urllib.parse.urlsplit(self.path).path=='/api/eve/callback':return super().do_GET()
+    self.send_response(303);self.send_header('Location',origin+'/#characters');self.send_header('Cache-Control','no-store');self.end_headers()
+   def do_POST(self):return self.reply({'error':'此端口仅接收官网授权回调'},404)
+  try:callback=ThreadingHTTPServer(('127.0.0.1',5207),CallbackHandler)
+  except OSError:raise ValueError('官网回调端口 5207 被其他程序占用，请关闭旧版 FitLab 后重新授权。') from None
+  callback.fitlab_origin=origin;_callback_server=callback
+  threading.Thread(target=callback.serve_forever,daemon=True).start()
+
 if __name__=='__main__':
  print('FitLab: http://127.0.0.1:5207',flush=True)
  ThreadingHTTPServer(('127.0.0.1',5207),Handler).serve_forever()

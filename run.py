@@ -10,7 +10,11 @@ def main():
   status=bridge().discover()
   print('NEngine '+status['engineVersion']+' / independent UI copy',flush=True)
   port=int(os.environ.get('FITLAB_API_PORT','5208'))
-  try:server.ThreadingHTTPServer(('127.0.0.1',port),server.Handler).serve_forever()
+  http=server.ThreadingHTTPServer(('127.0.0.1',port),server.Handler)
+  try:
+   try:server.ensure_sso_callback(http)
+   except ValueError as error:print(str(error),flush=True)
+   http.serve_forever()
   finally:bridge().close()
   return
 
