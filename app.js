@@ -269,7 +269,7 @@ function renderShipStats(){if(report){renderEngineStats();return}$('#ship-stats'
 let infoOrigin=null;
 function closeInfo(){const panel=$('#info-window');if(panel.hidden)return;panel.hidden=true;if(infoOrigin?.isConnected)infoOrigin.focus({preventScroll:true})}
 let infoRequest=0;
-async function showInfo(t,slotKey=null,droneIndex=null,fittedObject=null,baseOnly=false){infoOrigin=document.activeElement;const request=++infoRequest,panel=$('#info-window'),captured=currentFit(),selected=slotKey?captured.slots.find(s=>s.key===slotKey):null;$('#info-title').textContent=t.path.join(' › ');$('#info-title').title='在装备浏览器中定位此物品';$('#info-title').onclick=e=>{e.preventDefault();if(t.kind!=='loadout')locateItem(t)};if(t.kind==='loadout')$('#info-title').title='脑插与增效剂 · 物品详情';$('#info-content').innerHTML='<p class="profile-note">正在读取物品属性…</p>';panel.hidden=false;if(!panel.style.left){panel.style.left=Math.max(8,(innerWidth-panel.offsetWidth)/2)+'px';panel.style.top='100px'}clampInfo();$('#info-close').focus({preventScroll:true});
+async function showInfo(t,slotKey=null,droneIndex=null,fittedObject=null,baseOnly=false){if(t.kind==='fighter')t={...t,...fighterBrowserItems(catalog).find(item=>item.id===t.id)};infoOrigin=document.activeElement;const request=++infoRequest,panel=$('#info-window'),captured=currentFit(),selected=slotKey?captured.slots.find(s=>s.key===slotKey):null;$('#info-title').textContent=t.path.join(' › ');$('#info-title').title='在装备浏览器中定位此物品';$('#info-title').onclick=e=>{e.preventDefault();if(t.kind!=='loadout')locateItem(t)};if(t.kind==='loadout')$('#info-title').title='脑插与增效剂 · 物品详情';$('#info-content').innerHTML='<p class="profile-note">正在读取物品属性…</p>';panel.hidden=false;if(!panel.style.left){panel.style.left=Math.max(8,(innerWidth-panel.offsetWidth)/2)+'px';panel.style.top='100px'}clampInfo();$('#info-close').focus({preventScroll:true});
  const useNative=!!t.metadataSource||!!fittedObject||!!t.planContext;
  const calculationRequest=!baseOnly&&!useNative&&(selected||droneIndex!==null||t.kind==='ship')?getCalculation(captured):Promise.resolve(null);
  // Attach rejection handling immediately, even while item metadata is in flight.
@@ -309,7 +309,9 @@ async function showInfo(t,slotKey=null,droneIndex=null,fittedObject=null,baseOnl
 }
 
 function locateItem(t){
- if(t.kind==='fighter'){filter={fighters:true};$('#search').value=t.name;renderTree();return;}
+ t=fighterBrowserItems(catalog).find(item=>item.id===t.id)||t;
+ if(abyssalLibrary.active)document.querySelector('.equipment-browser-switch').click();
+ cancelInstallPreview();
  if(['ship','skill'].includes(t.kind)){say('此物品不属于装备浏览器');return}
  $('#search').value='';filter=null;let path='';for(const p of [...t.path,...(t.kind==='ammo'?[]:[t.meta||'未标注科技分类'])]){path+='/'+p;treeOpen.add(path)}renderSlots();renderTree();const item=$(`#tree [data-id="${t.id}"]`);if(item){item.classList.add('located');item.scrollIntoView({block:'center'});item.focus({preventScroll:true});say('已定位：'+t.name)}
 }
@@ -333,12 +335,14 @@ function openMenu(e,id,type){e.preventDefault();e.stopPropagation();menuOrigin=e
  if(type==='ammo'){if(t)entries.push(['同种弹药装填全部兼容装备',()=>loadAll(t)],['卸载此处弹药',()=>unload(id),true,'danger']);}
  if(type==='ship')entries.push(['卸载所有弹药',()=>mutate(()=>slots.forEach(s=>s.ammo=null),'已卸载所有弹药'),slots.some(s=>s.ammo),'danger']);
  if(type==='item'&&abyssalLibrary.eligible(t))entries.push(['在深渊库中寻找',()=>abyssalLibrary.locate(t)]);
+ if(t&&!['ship','skill'].includes(t.kind))entries.push(['在浏览器中定位',()=>locateItem(t)]);
  if(t)entries.push(['查看信息',()=>showInfo(t,s?.key)]);const menu=$('#menu');if(!entries.length){closeMenu(false);return}menu.innerHTML=`<div class="menu-title">${esc(t?.name||(type==='ammo'?'空弹药槽':labels[s?.kind]+' · 空槽'))}</div>`;for(const [label,fn,enabled=true,cls=''] of entries){const b=document.createElement('button');b.type='button';b.role='menuitem';const checked=label.startsWith('✓ '),text=checked?label.slice(2):label;b.setAttribute('aria-label',text);b.innerHTML=menuIcon(text)+`<span class="menu-action-label">${esc(text)}</span>${checked?'<svg class="menu-selected-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>':''}`;if(checked)b.setAttribute('aria-current','true');b.disabled=!enabled;b.className=cls;b.onclick=()=>{closeMenu();fn()};menu.append(b)}menu.hidden=false;const r=menuOrigin.getBoundingClientRect();const x=e.type==='keydown'?r.left:e.clientX,y=e.type==='keydown'?r.bottom:e.clientY;menu.style.left=Math.max(8,Math.min(x,innerWidth-menu.offsetWidth-8))+'px';menu.style.top=Math.max(8,Math.min(y,innerHeight-menu.offsetHeight-8))+'px';menu.querySelector('button:not(:disabled)')?.focus({preventScroll:true});}
 document.addEventListener('fitlab-loadout-menu',event=>{
  const {event:e,item,origin,entries,header,showDetails=true,planContext}=event.detail;menuOrigin=origin;
  const menu=$('#menu');menu.innerHTML='<div class="menu-title">'+esc(item.name)+'</div>';
  if(header)menu.querySelector('.menu-title').replaceWith(header);
- const actions=[...entries,...(showDetails?[['详细信息',()=>showInfo({...item,planContext,kind:'loadout',path:['脑插与增效剂',...(item.benefitLabels||[])],attrs:{}})]]:[])];
+ const browseItem=fighterBrowserItems(catalog).find(t=>t.id===item.id)||byId(item.id);
+ const actions=[...entries.filter(([label])=>label!=='在浏览器中定位'),...(browseItem&&!['ship','skill'].includes(browseItem.kind)?[['在浏览器中定位',()=>locateItem(browseItem)]]:[]),...(showDetails?[['详细信息',()=>showInfo({...item,planContext,kind:'loadout',path:['脑插与增效剂',...(item.benefitLabels||[])],attrs:{}})]]:[])];
  for(const [label,fn,options={}] of actions){const b=document.createElement('button');b.type='button';b.role='menuitem';b.disabled=!!options.disabled;b.title=options.title||'';b.setAttribute('aria-label',label);b.innerHTML=menuIcon(label==='详细信息'?'查看信息':label==='卸下'?'卸载装备':label)+'<span class="menu-action-label">'+esc(label)+'</span>';if(options.description){const small=document.createElement('small');small.className='set-action-summary';small.textContent=options.description;b.append(small);}if(label==='卸下')b.className='danger';b.onclick=()=>{closeMenu();fn()};menu.append(b);}
  menu.hidden=false;const r=origin.getBoundingClientRect(),keyboard=e.type==='keydown';menu.style.left=Math.max(8,Math.min(keyboard?r.left:e.clientX,innerWidth-menu.offsetWidth-8))+'px';menu.style.top=Math.max(8,Math.min(keyboard?r.bottom:e.clientY,innerHeight-menu.offsetHeight-8))+'px';menu.querySelector('button:not(:disabled)')?.focus({preventScroll:true});
 });
@@ -630,7 +634,7 @@ function renderBayConfigBody(){
 
    row.querySelectorAll('input').forEach(input=>input.onchange=()=>{const field=input.dataset.bayField,e=fitRecord[kind][index],value=Number(input.value);if(!Number.isInteger(value)||value<(field==='active'?0:1)||value>100000||field==='active'&&value>e.quantity){say('数量无效，出动数不能超过携带数');renderBayConfig();return}mutate(()=>{e[field]=value;if(field==='quantity'&&e.active>value)e.active=value},'已调整数量')});
    const open=e=>{e.preventDefault();e.stopPropagation();const item=byId(fitRecord[kind][index].item);menuOrigin=row;const menu=$('#menu');menu.innerHTML='<div class="menu-title">'+esc(item.name)+'</div>';
-    for(const [text,action] of [['查看信息',()=>showInfo(item,null,kind==='drones'?index:null)],['移出'+(kind==='drones'?'无人机库':'货舱'),()=>mutate(()=>fitRecord[kind].splice(index,1),'已移出物品')]]){const b=document.createElement('button');b.role='menuitem';b.textContent=text;b.onclick=()=>{closeMenu(false);action()};menu.append(b)}
+    for(const [text,action] of [['在浏览器中定位',()=>locateItem(item)],['查看信息',()=>showInfo(item,null,kind==='drones'?index:null)],['移出'+(kind==='drones'?'无人机库':'货舱'),()=>mutate(()=>fitRecord[kind].splice(index,1),'已移出物品')]]){const b=document.createElement('button');b.role='menuitem';b.textContent=text;b.onclick=()=>{closeMenu(false);action()};menu.append(b)}
     menu.hidden=false;const rect=row.getBoundingClientRect();menu.style.left=Math.max(8,Math.min(e.clientX||rect.left,innerWidth-menu.offsetWidth-8))+'px';menu.style.top=Math.max(8,Math.min(e.clientY||rect.bottom,innerHeight-menu.offsetHeight-8))+'px';menu.querySelector('button').focus()};
    row.oncontextmenu=open;row.onkeydown=e=>{if(e.target===row&&(e.key==='ContextMenu'||e.shiftKey&&e.key==='F10'))open(e)};
   });

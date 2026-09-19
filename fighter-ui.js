@@ -101,7 +101,7 @@ export function mountFighters(root,{ship,fit,report,mutate,browse,say,validate,o
     [entry.active?'设为待命':'设为参战',()=>change(s=>s.tubes[index].active=!entry.active),{disabled:host._busy}],
     ['移入备用机库',()=>change(s=>{s.reserve.push({...s.tubes[index],active:false});s.tubes[index]=null}),{disabled:host._busy}],
    ]:[['装入空发射管',()=>change(s=>{s.tubes[empty]={...s.reserve[index],active:true};s.reserve.splice(index,1)}),{disabled:host._busy||empty===undefined,title:empty===undefined?'没有空发射管':''}]];
-   menu(e,el,t,[...actions,['在浏览器中定位',()=>{select(list,index);document.querySelector('#search').value=t.name;document.querySelector('#search').dispatchEvent(new Event('input',{bubbles:true}))}],['卸下',()=>change(s=>{if(list==='reserve')s.reserve.splice(index,1);else s.tubes[index]=null}),{disabled:host._busy}],['详细信息',()=>onInfo(t,'fighter.'+(entry.id||'fighter-'+list+'-'+index),(list==='tubes'?'发射管 '+(index+1):'备用中队 '+(index+1))+' · 单架属性 · 中队 '+entry.quantity+' 架')]],weaponHeader(t,entry,list,index));
+   menu(e,el,t,[...actions,['卸下',()=>change(s=>{if(list==='reserve')s.reserve.splice(index,1);else s.tubes[index]=null}),{disabled:host._busy}],['详细信息',()=>onInfo(t,'fighter.'+(entry.id||'fighter-'+list+'-'+index),(list==='tubes'?'发射管 '+(index+1):'备用中队 '+(index+1))+' · 单架属性 · 中队 '+entry.quantity+' 架')]],weaponHeader(t,entry,list,index));
   });
   el.querySelectorAll('[data-delta]').forEach(b=>b.onclick=()=>change(s=>{s[list][index].quantity=Math.max(1,Math.min(type(entry.typeId).max,entry.quantity+Number(b.dataset.delta)))}));
   const active=el.querySelector('[data-active]');if(active)active.onclick=()=>change(s=>s[list][index].active=!entry.active);
