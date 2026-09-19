@@ -23,6 +23,28 @@
 | ENG-44-03 | P1 | 新接口契约审查与回归 | 补足选集、来源、部分结果和跨口径验证 |
 | ENG-44-04 | 调查 | 未证明缺机制 | 持续维修：盘点已有能力与公开MCP/CLI覆盖，不直接开机制开发 |
 | ENG-44-05 | 调查 | 未证明缺机制 | 采集：区分静态属性可读、采集量投影与运行时能力 |
+| ENG-44-06 | P1 | 已确认静态输入契约缺口；装载规则待核实 | 舰载机管内待命与备用机库无法区分，分类/管位配额仅统计部署中队 |
+
+### ENG-44-06：舰载机管位状态丢失及装载配额
+
+**已确认的技术缺口：**r44静态EveFitFighter只有Id、TypeId、MemberIds、Deployed。无法表达管位编号、管内待命与备用机库。EveFighters.AddResources仅使用Deployed=true统计fighterTubes及fighterClass.*。UI有tubes/reserve和active两层状态，但原生转换后管内待命与备用均为deployed=false。
+
+证据：
+
+- 引擎src/NEngine.Core/Dogma/EveFighters.cs：EveFitFighter声明及AddResources。
+- UI nengine_adapter.py native_fit：deployed = location == 'tubes' and active。
+- 实跑native_fit对照：同一稳定身份中队分别放入tubes且active=false、reserve且active=false，生成的完整原生请求相等。此对照证明表达能力缺口，不是游戏规则的外部证明。
+- 用户反馈：分类数量超额不能预装进发射管，只能少装不能多装。官方Fighter Controls确认装入和发射是分开操作，但没有明确写出分类超额预装限制：https://support.eveonline.com/hc/en-us/articles/207659599-Fighter-Controls 。维护任务需核实该规则；不要把聊天反馈或现有引擎实现本身当成官方规则证明。
+
+影响：将中队设为待命会释放原生分类计数，可能允许UI在管内保存超过分类上限的中队。将所有管内中队强行传deployed=true会把待命贡献混入部署输出，不能作为修复。
+
+所需交付：
+
+1. 在公开静态输入/持久化/编辑接口中区分备用、已装管待命、部署及稳定管位身份；复用已有机制，若需新增游戏机制先提交边界方案。
+2. 依据核实后的规则分别返回装载与部署配额、容量、合法性诊断及来源；确认分类上限为0的类型限制，不能只校验总管数。
+3. 待命不计部署输出；备用不占管位，但占机库体积。显式输出预选不能改变位置或部署状态。
+4. 验证：分类上限3、总管位4时，3管同类中队加第4管；其中一队切待命；同一队移到备用；类上限0；重复管位；总管位超限；保存/恢复。分别核对装载合法性与输出选集。
+5. 提供同输入MCP/CLI回执、契约版本及兼容边界。UI在新契约交付后接位置字段和管内计数；当前未私自在UI增加独有配额规则，也未修改引擎。
 
 ### ENG-44-01：合入UI-LOCAL-009
 
