@@ -104,11 +104,20 @@ export function mountFighters(root,{ship,fit,report,mutate,browse,say,validate,o
   menu(e,el,t,[[available?(state.tubes[index]?'替换第 ':'装入第 ')+(index+1)+' 发射管':'装入发射管',()=>install('tubes',index),{disabled:host._busy||!available,title:available?'':'没有空发射管，请先选择替换位置'}],['加入备用机库',()=>install('reserve',state.reserve.length),{disabled:host._busy}],['详细信息',()=>onInfo(t)]]);
  };
 }
+// Navigation only: SDE 3248221 marketGroups 157 -> 2236 -> 2410 -> 840/2239/1310.
+// All 53 pinned fighter type IDs were checked against that market tree.
+const fighterMarketRoot=['无人机','铁骑舰载机','航母铁骑舰载机'];
+const fighterMarketLeaves={light:'轻型铁骑舰载机',support:'后勤铁骑舰载机',heavy:'重型铁骑舰载机'};
+export const fighterMarketIcons=Object.fromEntries([
+ ...fighterMarketRoot.map((_,i)=>fighterMarketRoot.slice(0,i+1)),
+ ...Object.values(fighterMarketLeaves).map(leaf=>[...fighterMarketRoot,leaf])
+].map(path=>['/'+path.join('/'),'assets/market-1084.png']));
 export function fighterBrowserItems(catalog){
  const metaNames=new Map(catalog.filter(t=>t.metaGroupId&&t.meta).map(t=>[t.metaGroupId,t.meta]));
  return [...types].sort((a,b)=>['light','support','heavy'].indexOf(a.class)-['light','support','heavy'].indexOf(b.class)||(a.meta??99)-(b.meta??99)||a.name.localeCompare(b.name,'zh-CN')).map(t=>({...t,kind:'fighter',attrs:{},effects:[],metaGroupId:t.meta,
   meta:metaNames.get(t.meta)||({1:'一级科技',2:'二级科技',4:'势力'})[t.meta]||'未标注科技分类',
-  path:['铁骑舰载机',t.kind+'舰载机']}));
+  path:[...fighterMarketRoot,fighterMarketLeaves[t.class]],
+  navigationSource:'SDE-3248221-marketGroups',marketGroupId:({light:840,support:2239,heavy:1310})[t.class]}));
 }
 export function bindFighterBrowserItem(el,item,onInfo){
  const t=type(item.id);

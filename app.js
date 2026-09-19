@@ -9,7 +9,7 @@ import {effectiveModuleState} from './module-state.js';
 import {planAttributeInspection} from './plan-attribute-inspection.js';
 import {detachUnmatchedCrystals,exchangeCrystalSlots,mountCrystal,crystalProjection,crystalWearText,crystalErrorText} from './crystal-stock.js';
 import {mountNativeStats,nativeResources,nativeSlotMetrics} from './nengine-view.js';
-import {fighterHull,mountFighters,fighterBrowserItems,bindFighterBrowserItem} from './fighter-ui.js';
+import {fighterHull,mountFighters,fighterBrowserItems,bindFighterBrowserItem,fighterMarketIcons} from './fighter-ui.js';
 import {installAbyssalLibrary} from './abyssal-library.js';
 import {openLoadoutPicker} from './loadout-manager.js';
 import {implantCatalog} from './loadout-catalog.js';
@@ -39,6 +39,7 @@ const [,catalog,marketIcons]=await Promise.all([
  fetch('./api/catalog').then(r=>r.json()),
  fetch('./data/market-icons.json').then(r=>r.json())
 ]);
+Object.assign(marketIcons,fighterMarketIcons);
 
 const tLabel=t;
 const $=s=>document.querySelector(s), typeIndex=new Map(catalog.map(t=>[t.id,t])), byId=id=>typeIndex.get(Number(id));
