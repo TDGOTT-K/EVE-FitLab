@@ -53,6 +53,13 @@ def catalog_kind(category,effects):
 
 def refresh_catalog(catalog):
     data=index_metadata();result=[];legacy={t['id']:t for t in catalog}
+    # New types share the same functional branch as existing types in their SDE
+    # group. Meta level (including officer) is a leaf filter, not a root category.
+    from collections import Counter,defaultdict
+    paths=defaultdict(Counter)
+    for item in catalog:
+        if item.get('path') and item['path'][0] in ('舰船装备','军火和弹药','舰船和装备改装件','无人机'):
+            paths[item.get('group')][tuple(item['path'])]+=1
     for ident,t in sorted(data['types'].items()):
         if not t.get('published'):continue
         group=data['groups'].get(t['groupID'],{});category=group.get('categoryID')
@@ -68,13 +75,16 @@ def refresh_catalog(catalog):
         # No marketGroups table is shipped in the pinned index. Retain historical
         # navigation for existing IDs, explicitly label its separate provenance.
         path=old.get('path') or [name(data['categories'].get(category,{})),name(group)]
+        if kind in ('high','mid','low','rig','ammo','drone') and (not old.get('path') or path[0] in ('装备','弹药','未列入市场')):
+            root={'rig':'舰船和装备改装件','ammo':'军火和弹药','drone':'无人机'}.get(kind,'舰船装备')
+            path=list(paths[t['groupID']].most_common(1)[0][0]) if paths[t['groupID']] else [root,name(group)]
         meta=data['metaGroups'].get(t.get('metaGroupID'),{})
         result.append({'id':ident,'kind':kind,'attrs':attrs,'effects':effects,'group':t['groupID'],
             'category':category,'published':True,'name':name(t),'en':t['name'].get('en',name(t)),
             'names':t['name'],'volume':t.get('volume'),'capacity':t.get('capacity'),
             'meta':name(meta) if meta else None,'metaGroupId':t.get('metaGroupID'),
             'path':path,'marketGroupId':t.get('marketGroupID'),
-            'navigationSource':'fitlab-market-tree-sde-3248221' if old.get('path') else 'pinned-category-group',
+            'navigationSource':'fitlab-functional-group-navigation-v1',
             'metadataSource':{'typeId':ident,'table':'types','dogmaTable':'typeDogma','buildNumber':data['source']['buildNumber'],'indexSha256':data['source']['indexSha256']},
             **activation_capabilities(ident)})
     return result

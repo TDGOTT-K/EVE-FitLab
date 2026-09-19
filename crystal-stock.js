@@ -27,7 +27,7 @@ export function crystalProjection(report,id){
 export function crystalWearText(projection){
  if(!projection)return '损伤待计算';
  const settings=projection.wearInput.settings;
- return settings.takesDamage?'损伤 '+projection.item.wear.initialDamage+' / '+settings.hitpoints:'不磨损';
+ return (100*(1-projection.item.wear.initialDamage/settings.hitpoints)).toLocaleString('zh-CN',{maximumFractionDigits:2})+'%';
 }
 export function crystalErrorText(error){
  let diagnostic;

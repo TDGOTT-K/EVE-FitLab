@@ -12,4 +12,6 @@ fit.slots[1].ammo=null;assert.equal(detachUnmatchedCrystals(fit),1);
 assert.equal(fit.crystals[2].damage,.25);
 assert.equal(before.crystals[0].moduleId,'high-0');
 assert.equal(crystalWearText(null),'损伤待计算');
+assert.equal(crystalWearText({wearInput:{settings:{hitpoints:2,takesDamage:true}},item:{wear:{initialDamage:1}}}),'50%');
+assert.equal(crystalWearText({wearInput:{settings:{hitpoints:2,takesDamage:true}},item:{wear:{initialDamage:0}}}),'100%');
 console.log('Crystal identity, swap, replacement, unload and unknown display pass');
