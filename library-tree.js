@@ -1,17 +1,19 @@
 
-export function createLibraryTree(root,catalog,onChange,onHullMenu){
+export function createLibraryTree(root,catalog,onChange,onHullMenu,{picker=false,initialPath=[]}={}){
  const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let fits=[],filter='',selectedTags=new Set(),expanded=new Set(['舰船']);
- try{expanded=new Set(JSON.parse(localStorage.getItem('fitlab-library-expanded')||'["舰船"]'))}catch{}
+ if(picker){expanded=new Set(initialPath.length?initialPath.map((_,i)=>initialPath.slice(0,i+1).join(' › ')):['舰船']);filter=initialPath.length?'g:'+JSON.stringify(initialPath):'';}
+ else try{expanded=new Set(JSON.parse(localStorage.getItem('fitlab-library-expanded')||'["舰船"]'))}catch{}
  const hulls=catalog.filter(t=>t.kind==='ship'),index=new Map(hulls.map(t=>[t.id,t])),tree={children:new Map(),ships:[],path:[]};
  for(const ship of hulls){let n=tree;for(const label of ship.path){if(!n.children.has(label))n.children.set(label,{name:label,path:[...n.path,label],children:new Map(),ships:[]});n=n.children.get(label)}n.ships.push(ship)}
  const inPath=(f,path)=>path.every((p,i)=>index.get(f.shipId)?.path[i]===p);
  const hullMatch=f=>!filter||filter.startsWith('h:')?(!filter||String(f.shipId)===filter.slice(2)):inPath(f,JSON.parse(filter.slice(2)));
  const match=f=>hullMatch(f)&&[...selectedTags].every(t=>t==='__untagged__'?!(f.tags||[]).length:(f.tags||[]).includes(t));
  function closeTagPicker(restore=false){const picker=root.querySelector('.library-tag-picker');if(picker)picker.hidden=true;const add=root.querySelector('.add-filter-tag');add?.setAttribute('aria-expanded','false');if(restore)add?.focus()}
- document.addEventListener('pointerdown',e=>{if(!e.target.closest('.library-tag-filter'))closeTagPicker()});
- window.addEventListener('hashchange',()=>closeTagPicker());
+ if(!picker){document.addEventListener('pointerdown',e=>{if(!e.target.closest('.library-tag-filter'))closeTagPicker()});
+ window.addEventListener('hashchange',()=>closeTagPicker());}
  function drawTags(){
+  if(picker)return;
   const scoped=fits.filter(hullMatch),tags=[...new Set(scoped.flatMap(f=>f.tags||[]))].sort((a,b)=>a.localeCompare(b,'zh'));
   const choices=[...tags.map(t=>[t,t]),...(scoped.some(f=>!(f.tags||[]).length)?[['__untagged__','无标签']]:[])];
   for(const t of selectedTags)if(!choices.some(([key])=>key===t))selectedTags.delete(t);
@@ -28,7 +30,7 @@ export function createLibraryTree(root,catalog,onChange,onHullMenu){
   picker.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();closeTagPicker(true)}if(e.target.matches('button')&&['ArrowDown','ArrowUp'].includes(e.key)){e.preventDefault();const buttons=[...list.querySelectorAll('button')],i=buttons.indexOf(e.target);buttons[(i+(e.key==='ArrowDown'?1:-1)+buttons.length)%buttons.length]?.focus()}};
  }
 
- const button=(key,label,count,icon='')=>'<button data-library-filter="'+esc(key)+'" class="'+(key===filter?'active':'')+'">'+icon+'<span>'+esc(label)+'</span><small>'+count+'</small></button>';
+ const button=(key,label,count,icon='')=>'<button type="button" data-library-filter="'+esc(key)+'" class="'+(key===filter?'active':'')+'">'+icon+'<span>'+esc(label)+'</span>'+(picker?'':'<small>'+count+'</small>')+'</button>';
  function branch(n){
   return [...n.children.values()].sort((a,b)=>(a.name==='未列入市场')-(b.name==='未列入市场')||a.name.localeCompare(b.name,'zh')).map(child=>{
    const key=JSON.stringify(child.path);return '<details data-branch="'+esc(key)+'" '+(expanded.has(child.path.join(' › '))?'open':'')+'><summary>'+button('g:'+key,child.name,fits.filter(f=>inPath(f,child.path)).length)+'</summary><div class="library-tree-children">'+branch(child)+'</div></details>';
@@ -36,9 +38,10 @@ export function createLibraryTree(root,catalog,onChange,onHullMenu){
  }
  function draw(){
   const scroll=root.querySelector('.library-tree-scroll')?.scrollTop||0;
-  const search=document.querySelector('#library-search');
+  const search=picker?null:document.querySelector('#library-search');
   root.innerHTML='<div class="library-nav-heading">舰船</div><div class="library-tag-filter"></div><div class="library-tree-scroll">'+button('','全部装配',fits.length)+branch(tree)+'</div>';
-  const searchWrap=document.createElement('div');searchWrap.className='library-nav-search';searchWrap.append(search);root.querySelector('.library-nav-heading').after(searchWrap);drawTags();
+  if(search){const searchWrap=document.createElement('div');searchWrap.className='library-nav-search';searchWrap.append(search);root.querySelector('.library-nav-heading').after(searchWrap);}drawTags();
+  if(picker){root.querySelector('.library-tag-filter').remove();root.querySelector('[data-library-filter=""]').remove();}
   root.querySelector('.library-tree-scroll').scrollTop=scroll;
 
   root.querySelectorAll('[data-library-filter]').forEach(b=>b.onclick=e=>{filter=b.dataset.libraryFilter;if(filter.startsWith('g:')){e.preventDefault();const d=b.closest('details');d.open=!d.open}root.querySelectorAll('[data-library-filter]').forEach(x=>x.classList.toggle('active',x===b));drawTags();onChange()});
@@ -47,9 +50,9 @@ export function createLibraryTree(root,catalog,onChange,onHullMenu){
    b.oncontextmenu=open;
    b.onkeydown=e=>{if(e.key==='ContextMenu'||e.shiftKey&&e.key==='F10')open(e)};
   });
-  root.querySelectorAll('details').forEach(d=>d.ontoggle=()=>{if(!d.isConnected)return;const key=JSON.parse(d.dataset.branch).join(' › ');if(d.open)expanded.add(key);else expanded.delete(key);try{localStorage.setItem('fitlab-library-expanded',JSON.stringify([...expanded]))}catch{}});
+  root.querySelectorAll('details').forEach(d=>d.ontoggle=()=>{if(!d.isConnected)return;const key=JSON.parse(d.dataset.branch).join(' › ');if(d.open)expanded.add(key);else expanded.delete(key);if(!picker)try{localStorage.setItem('fitlab-library-expanded',JSON.stringify([...expanded]))}catch{}});
  }
- return {matches:match,selectedHull(){
+ return {matches:match,selectedPath(){return filter.startsWith('g:')?JSON.parse(filter.slice(2)):[]},explicitHull(){return filter.startsWith('h:')?index.get(Number(filter.slice(2))):null},scrollToSelection(){const b=[...root.querySelectorAll('[data-library-filter]')].find(b=>b.dataset.libraryFilter===filter);if(b){const area=root.querySelector('.library-tree-scroll');area.scrollTop+=b.getBoundingClientRect().top-area.getBoundingClientRect().top;}},selectedHull(){
 
   if(filter.startsWith('h:'))return index.get(Number(filter.slice(2)))||null;
   if(filter.startsWith('g:')){const path=JSON.parse(filter.slice(2)),matches=hulls.filter(h=>path.every((p,i)=>h.path[i]===p));return matches.length===1?matches[0]:null}

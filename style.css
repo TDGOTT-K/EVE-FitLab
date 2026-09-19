@@ -642,3 +642,13 @@ label:has(>input[type="checkbox"]:disabled){cursor:default;color:var(--muted)}
 #ship-stats .section-summary .attack-total{font-size:13px;white-space:nowrap}
 #ship-stats .native-output-details>label{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11px;margin:10px 0}
 #ship-stats .native-output-metric{min-width:0;max-width:100%}
+.library-hull-picker .library-tree-scroll{height:340px;max-height:42vh;overflow:auto;scrollbar-width:thin}
+.library-hull-picker button[data-library-filter]{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:0;background:transparent;padding:8px;color:var(--text)}
+.library-hull-picker button.active{background:color-mix(in srgb,var(--accent) 15%,transparent);color:var(--accent)}
+.library-hull-picker button:hover{background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.library-hull-picker img{width:28px;height:28px}
+.library-hull-picker .library-tree-children{padding-left:14px}
+.library-hull-picker summary{cursor:pointer;display:flex;align-items:center}
+.library-hull-picker summary::before{content:'▸';color:var(--muted)}
+.library-hull-picker details[open]>summary::before{content:'▾'}
+.new-fit-hull-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:12px}

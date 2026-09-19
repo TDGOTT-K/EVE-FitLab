@@ -423,11 +423,20 @@ window.addEventListener('hashchange',navigateFitPage);
 
 $('#new-fit').onclick=()=>createHullFit(libraryTree.selectedHull());
 function createHullFit(hull){
- if(!hull)return;
+ if(!hull){openHullPicker();return;}
  openFlow('新建装配 · '+hull.name,`<form id="create-fit-form"><label>名称<input id="create-fit-name" aria-label="装配名称" maxlength="120" required value="${esc(hull.name+' · 新装配')}"></label><label>标签<input id="create-fit-tags" aria-label="装配标签" placeholder="用逗号分隔，例如：深渊、舰队" maxlength="500"></label><button type="submit">创建装配</button></form>`);
  $('#create-fit-name').focus();$('#create-fit-name').select();
  $('#create-fit-form').onsubmit=e=>{e.preventDefault();const name=$('#create-fit-name').value.trim();if(!name){$('#flow-error').textContent='请输入装配名称';return}const tags=[...new Set($('#create-fit-tags').value.split(/[,，]/).map(t=>t.trim()).filter(Boolean))];restoreFit({name,tags,shipId:hull.id,skills:[],characterName:'无技能 · 基础对照',slots:[]});flow.close();location.hash='fitting'};
 };
+function openHullPicker(){
+ const path=libraryTree.selectedPath();
+ openFlow('新建装配 · 选择舰船','<div id="new-fit-hull-picker" class="library-hull-picker"></div><div class="new-fit-hull-actions"><span id="new-fit-hull-name">请选择具体舰船</span><button type="button" id="new-fit-hull-next" disabled>下一步</button></div>');
+ const root=$('#new-fit-hull-picker'),next=$('#new-fit-hull-next');
+ const picker=createLibraryTree(root,catalog,()=>{const hull=picker.explicitHull();next.disabled=!hull;$('#new-fit-hull-name').textContent=hull?.name||'请选择具体舰船';},null,{picker:true,initialPath:path});
+ picker.update([]);
+ next.onclick=()=>{const hull=picker.explicitHull();if(hull)createHullFit(hull)};
+ requestAnimationFrame(()=>{if(root.isConnected)picker.scrollToSelection()});
+}
 
 installPilotPicker($('#pilot'),{api,catalog,current:()=>fitRecord.characterName,select:c=>mutate(()=>{fitRecord.skills=structuredClone(c.skills);fitRecord.characterName=c.name;},'已更换驾驶员')});
 
@@ -764,7 +773,7 @@ function libraryMenu(e,fit=null){
   ['重命名',()=>{openFlow('重命名装配','<form id="library-rename-form"><label>名称<input name="name" maxlength="120" required value="'+esc(fit.name)+'"></label><button>保存</button></form>');const input=$('#library-rename-form input');input.focus();input.select();$('#library-rename-form').onsubmit=async e=>{e.preventDefault();const name=input.value.trim();if(!name)return;try{const source=structuredClone(fit);delete source._workingDraft;source.name=name;const saved=await api('save',source);libraryFits=libraryFits.filter(f=>f!==fit&&(!fit.id||f.id!==fit.id));libraryFits.unshift(saved);if(fit.id&&fitRecord.id===fit.id){restoreFit(saved)}refreshLibraryRows();flow.close();libraryMessage('名称已更新')}catch(error){$('#flow-error').textContent=error.message}}}],
   ['复制',()=>{fitClipboard=structuredClone(fit);for(const k of ['id','revision','updatedAt','_workingDraft'])delete fitClipboard[k];try{sessionStorage.setItem('fitlab-fit-clipboard',JSON.stringify(fitClipboard))}catch{}libraryMessage('已复制「'+fit.name+'」，在列表底部空白处右键粘贴。')}],
   ['删除',()=>{openFlow('删除装配','<p>删除「'+esc(fit.name)+'」？</p><button id="library-confirm-delete">删除装配</button>');$('#library-confirm-delete').onclick=async()=>{try{if(fit.id&&fit.revision)await api('fit/delete',{id:fit.id,revision:fit.revision});libraryFits=libraryFits.filter(f=>f!==fit&&(!fit.id||f.id!==fit.id));const draft=JSON.parse(localStorage.getItem('fitlab-working-draft')||'null');if(draft&&(fit.id?draft.id===fit.id:!draft.id&&draft.name===fit.name))localStorage.removeItem('fitlab-working-draft');if(fitRecord.id===fit.id)editorFitDeleted=true;refreshLibraryRows();flow.close();libraryMessage('装配已删除')}catch(error){$('#flow-error').textContent=error.message}}}]
- ]:[['导入完整装配文件',()=>importFitPackage(api,record=>{libraryFits.unshift(record);refreshLibraryRows();libraryMessage('已导入新装配：'+record.name)})],['粘贴',async()=>{if(!fitClipboard)return;const copy=structuredClone(fitClipboard);const names=new Set(libraryFits.map(f=>f.name));let suffix=' · 副本',n=2;while(names.has(copy.name.slice(0,110)+suffix))suffix=' · 副本 '+n++;copy.name=copy.name.slice(0,110)+suffix;const saved=await api('save',copy);libraryFits.unshift(saved);$('#library-search').value='';libraryTree.update(libraryFits);libraryTree.revealHull(saved.shipId);drawFitLibrary();$('#library-list').scrollTop=0;libraryMessage('已粘贴「'+saved.name+'」')},!!fitClipboard]];
+ ]:[['导入完整装配文件',()=>importFitPackage(api,record=>{libraryFits.unshift(record);refreshLibraryRows();libraryMessage('已导入新装配：'+record.name)})],['新建装配',()=>createHullFit(libraryTree.explicitHull())],['粘贴',async()=>{if(!fitClipboard)return;const copy=structuredClone(fitClipboard);const names=new Set(libraryFits.map(f=>f.name));let suffix=' · 副本',n=2;while(names.has(copy.name.slice(0,110)+suffix))suffix=' · 副本 '+n++;copy.name=copy.name.slice(0,110)+suffix;const saved=await api('save',copy);libraryFits.unshift(saved);$('#library-search').value='';libraryTree.update(libraryFits);libraryTree.revealHull(saved.shipId);drawFitLibrary();$('#library-list').scrollTop=0;libraryMessage('已粘贴「'+saved.name+'」')},!!fitClipboard]];
  for(const [name,fn,enabled=true] of entries){const b=document.createElement('button');b.role='menuitem';b.textContent=name;b.disabled=!enabled;if(name==='删除')b.className='danger';b.onclick=async()=>{closeMenu(false);try{await fn()}catch(error){libraryMessage(error.message)}};menu.append(b)}
  menu.hidden=false;const r=menuOrigin.getBoundingClientRect();menu.style.left=Math.max(8,Math.min(e.type==='keydown'?r.left:e.clientX,innerWidth-menu.offsetWidth-8))+'px';menu.style.top=Math.max(8,Math.min(e.type==='keydown'?r.bottom:e.clientY,innerHeight-menu.offsetHeight-8))+'px';menu.querySelector('button:not(:disabled)')?.focus();
 }
