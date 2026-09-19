@@ -1,7 +1,7 @@
 import {analysisStatusText} from './analysis-status.js';
 import {exportFitPackage,importFitPackage} from './fit-package-ui.js';
 import {createValuationReader,valuationSummary,valuationMarkup} from './valuation-view.js';
-import {createFitSaver} from './fit-save-controller.js';
+import {createFitSaver,sameSavedContent} from './fit-save-controller.js';
 import {createNativeEditHistory} from './native-edit-history.js';
 import {captureEditSnapshot,restoreEditSnapshot} from './fitting-edit-snapshot.js';
 import {showTextImport} from './text-import.js';
@@ -359,6 +359,7 @@ $('#share-fit').onclick=()=>exportFitImage(currentFit());
 const importText=()=>showTextImport({api,calculate:getCalculation,onSaved:record=>{libraryFits.unshift(record);refreshLibraryRows();location.hash='library';libraryMessage('已导入新装配：'+record.name)}});
 for(const id of ['import-fit-text','import-editor-text'])$('#'+id).onclick=importText;
 $('#import-fit-image').onclick=()=>showImageImport({catalog,calculate:getCalculation,save:fit=>api('save',fit),onSaved:record=>{libraryFits.unshift(record);refreshLibraryRows();libraryMessage('已导入新装配：'+record.name)}});
+const libraryNavigationSaves=new Map();
 let libraryFits=[],pageMode=null,navigationVersion=0,lastWorkPage='library',libraryLoaded=false;const pageScrollStates=new Map();let editorFitDeleted=false;let fitClipboard=null;try{fitClipboard=JSON.parse(sessionStorage.getItem('fitlab-fit-clipboard'))}catch{}
 const libraryTree=createLibraryTree($('#library-nav'),catalog,drawFitLibrary);
 function drawFitLibrary(){
@@ -366,7 +367,7 @@ function drawFitLibrary(){
 
  const q=$('#library-search').value.trim().toLowerCase(),fits=libraryFits.filter(f=>libraryTree.matches(f)&&((q&&matchesName(byId(f.shipId),q))||(f.name+' '+byId(f.shipId)?.name+' '+(f.tags||[]).join(' ')+' '+(f.notes||'')).toLowerCase().includes(q)));
  $('#library-count').textContent=fits.length+' / '+libraryFits.length+' 份装配';
- $('#library-list').innerHTML=fits.length?fits.map(f=>`<button class="library-row" data-fit="${libraryFits.indexOf(f)}">${img(byId(f.shipId))}<span class="library-fit-identity"><b><span translate="no">${esc(f.name)}</span>${f._workingDraft?' · 草稿':''}</b><small>${esc(byId(f.shipId)?.name||'未知舰船')} · <span translate="no">${esc(f.characterName||'无技能')}</span></small><span class="library-tags">${(f.tags||[]).map(t=>`<span>${esc(t)}</span>`).join('')}</span></span><span class="library-fit-notes ${f.notes?'':'is-empty'}" title="${esc(f.notes||'右键添加备注')}">${esc(f.notes||'暂无备注')}</span><span class="library-fit-price" data-fit-price="${libraryFits.indexOf(f)}"><small>参考估价</small><b>读取中…</b></span></button>`).join(''):'<div class="library-empty">'+(libraryFits.length?'此分类下没有匹配装配，可调整分类或搜索条件。':'装配库还没有配置，请在左侧选择船型后新建装配。')+'</div>';
+ $('#library-list').innerHTML=fits.length?fits.map(f=>`<button class="library-row" ${libraryNavigationSaves.has(f.id)?'disabled aria-busy="true"':''} data-fit="${libraryFits.indexOf(f)}">${img(byId(f.shipId))}<span class="library-fit-identity"><b><span translate="no">${esc(f.name)}</span>${f._workingDraft?' · 草稿':''}</b><small>${esc(byId(f.shipId)?.name||'未知舰船')} · <span translate="no">${esc(f.characterName||'无技能')}</span></small><span class="library-tags">${(f.tags||[]).map(t=>`<span>${esc(t)}</span>`).join('')}</span></span><span class="library-fit-notes ${f.notes?'':'is-empty'}" title="${esc(f.notes||'右键添加备注')}">${esc(f.notes||'暂无备注')}</span><span class="library-fit-price" data-fit-price="${libraryFits.indexOf(f)}"><small>参考估价</small><b>读取中…</b></span></button>`).join(''):'<div class="library-empty">'+(libraryFits.length?'此分类下没有匹配装配，可调整分类或搜索条件。':'装配库还没有配置，请在左侧选择船型后新建装配。')+'</div>';
  renderLibraryPrices();
  $('#library-list').insertAdjacentHTML('beforeend','<div class="library-paste-space" tabindex="0" aria-label="装配库空白区域，可右键粘贴"></div>');
  $('#library-list').querySelectorAll('[data-fit]').forEach(b=>{const f=libraryFits[Number(b.dataset.fit)];b.onclick=()=>{const record={...f};delete record._workingDraft;restoreFit(record);location.hash='fitting'};b.oncontextmenu=e=>libraryMenu(e,f);b.onkeydown=e=>{if(e.key==='ContextMenu'||e.shiftKey&&e.key==='F10')libraryMenu(e,f)}});
@@ -379,7 +380,8 @@ async function navigateFitPage(){
  const version=++navigationVersion,next=location.hash.startsWith('#characters')?'characters':location.hash==='#fitting'?'editor':'library',previous=pageMode;
  if(previous&&previous!==next)capturePageScroll(previous);
  if(next==='editor'&&editorFitDeleted){location.hash='library';return}
- if(next==='library'&&previous==='editor'){try{await persistFit()}catch(e){say('草稿已保留，保存失败：'+e.message)}}
+ const leavingEditor=next==='library'&&previous==='editor';
+ if(leavingEditor){storeWorkingDraft();const draft=currentFit();libraryFits=libraryFits.filter(f=>f.id!==draft.id);libraryFits.unshift({...draft,_workingDraft:true});}
  if(version!==navigationVersion)return;
  pageMode=next;if(next!=='characters')lastWorkPage=next;$('#nav-library').href=next==='characters'&&lastWorkPage==='editor'?'#fitting':'#library';if(next==='characters')characterManager.show();else characterManager.hide();if(next==='characters')$('#manage-characters').setAttribute('aria-current','page');else $('#manage-characters').removeAttribute('aria-current');if(next==='library'||next==='editor')$('#nav-library').setAttribute('aria-current','page');else $('#nav-library').removeAttribute('aria-current');$('#editor-page').hidden=next!=='editor';$('#library-page').hidden=next!=='library';
  for(const id of ['fit-library','save-fit','undo','redo'])$('#'+id).hidden=next!=='editor';
@@ -387,7 +389,15 @@ async function navigateFitPage(){
  document.title=t(next==='characters'?'EVE FitLab · 角色管理':next==='library'?'EVE FitLab · 装配库':'EVE FitLab · 装配工作台');
  restorePageScroll(next);
  if(next==='library'&&!(previous==='characters'&&libraryLoaded)){
-  $('#library-list').innerHTML='<div class="library-empty">正在读取装配库…</div>';
+  const pending=leavingEditor?{id:fitRecord.id,snapshot:currentFit()}:null;
+  if(pending)libraryNavigationSaves.set(pending.id,pending);
+  if(libraryLoaded||libraryFits.length){libraryTree.update(libraryFits);drawFitLibrary();restorePageScroll(next);}
+  else $('#library-list').innerHTML='<div class="library-empty">正在读取装配库…</div>';
+  if(leavingEditor){
+   try{const saved=await persistFit();const index=libraryFits.findIndex(f=>f.id===pending.id);if(index>=0&&sameSavedContent(libraryFits[index],pending.snapshot))libraryFits[index]=saved;}catch(e){say('草稿已保留，保存失败：'+e.message)}
+   finally{if(libraryNavigationSaves.get(pending.id)===pending){libraryNavigationSaves.delete(pending.id);if(pageMode==='library')drawFitLibrary();}}
+  }
+  if(version!==navigationVersion)return;
   try{const fits=await api('library');if(version!==navigationVersion)return;libraryFits=fits.sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||''));
  const draft=JSON.parse(localStorage.getItem('fitlab-working-draft')||'null');
  if(draft&&byId(draft.shipId)){const stored=libraryFits.find(f=>f.id===draft.id),fields=['name','notes','shipId','slots','tags','skills','outputMetric','capacitorHorizon','damageProfile','damageLocks','defenseMode','tacticalModeTypeId','loadoutPlan','implantPlan','fighterLoadout','drones','cargo','crystals','scenario','scenarios','activeScenarioId'];if(!stored||fields.some(k=>JSON.stringify(stored[k])!==JSON.stringify(draft[k]))){libraryFits=libraryFits.filter(f=>!draft.id||f.id!==draft.id);libraryFits.unshift({...draft,_workingDraft:true})}}
@@ -732,6 +742,7 @@ window.addEventListener('blur',cancelInstallPreview);
 function libraryMessage(message){let el=$('#library-notice');if(!el){el=document.createElement('span');el.id='library-notice';el.role='status';$('#library-count').after(el)}el.textContent=message}
 function refreshLibraryRows(){libraryTree.update(libraryFits);drawFitLibrary();libraryLoaded=true;restorePageScroll('library')}
 function libraryMenu(e,fit=null){
+ if(fit&&libraryNavigationSaves.has(fit.id)){e.preventDefault();return;}
  e.preventDefault();e.stopPropagation();menuOrigin=e.target.closest('[data-fit],.library-paste-space')||$('#library-list');const menu=$('#menu');menu.innerHTML='<div class="menu-title">'+esc(fit?.name||'装配库')+'</div>';
  const entries=fit?[
   ['生成图片',()=>exportFitImage(fit)],
