@@ -858,3 +858,60 @@ window.siteTranslations = {
     "ja": "ブラウザーが自動コピーを許可していません。以下の内容を選択して Ctrl+C（Mac は ⌘C）を押すか、スマートフォンでは長押ししてコピーしてください。"
   }
 };
+
+Object.assign(window.siteTranslations, {
+  "第二个公开测试版现已上线，欢迎体验并反馈问题。目前尚无稳定版。": {
+    "zh-CN": "第二个公开测试版现已上线，欢迎体验并反馈问题。目前尚无稳定版。",
+    "zh-TW": "第二個公開測試版現已上線，歡迎體驗並回報問題。目前尚無穩定版。",
+    "en": "The second public test release is available. Try it and share feedback. No stable release is available yet.",
+    "ja": "第2回公開テスト版を公開しました。ぜひお試しいただき、ご意見をお寄せください。安定版はまだありません。"
+  },
+  "新增舰载机、深渊装备与方案管理；部分机制仍在完善。": {
+    "zh-CN": "新增舰载机、深渊装备与方案管理；部分机制仍在完善。",
+    "zh-TW": "新增艦載機、深淵裝備與方案管理；部分機制仍在完善。",
+    "en": "Adds fighters, abyssal modules and plan management; some mechanics remain incomplete.",
+    "ja": "艦載戦闘機、アビサルモジュール、プラン管理を追加。一部のメカニクスは開発中です。"
+  },
+  "独立 N 号引擎接入，更新装配分析、属性详情与性能曲线。": {
+    "zh-CN": "独立 N 号引擎接入，更新装配分析、属性详情与性能曲线。",
+    "zh-TW": "獨立 N 號引擎接入，更新裝配分析、屬性詳情與效能曲線。",
+    "en": "Integrated the independent N engine for fitting analysis, attribute details and performance curves.",
+    "ja": "独立した N エンジンを統合し、装備分析、属性詳細、性能曲線を更新。"
+  },
+  "舰载机、深渊装备，以及脑插与增效剂方案管理。": {
+    "zh-CN": "舰载机、深渊装备，以及脑插与增效剂方案管理。",
+    "zh-TW": "艦載機、深淵裝備，以及植入體與增效劑方案管理。",
+    "en": "Fighters, abyssal modules, and implant and booster plan management.",
+    "ja": "艦載戦闘機、アビサルモジュール、インプラントとブースターのプラン管理。"
+  },
+  "装配库、保存与撤销/重做、装配及方案分享更新。": {
+    "zh-CN": "装配库、保存与撤销/重做、装配及方案分享更新。",
+    "zh-TW": "裝配庫、儲存與復原/重做、裝配及方案分享更新。",
+    "en": "Updated the fitting library, saving, undo/redo, and fitting and plan sharing.",
+    "ja": "装備ライブラリ、保存、元に戻す・やり直し、装備とプランの共有を更新。"
+  },
+  "尚未完成干净系统安装卸载与本轮真实 SSO 验证；部分机制为部分支持或不可用，不包含完整战斗时序模拟。": {
+    "zh-CN": "尚未完成干净系统安装卸载与本轮真实 SSO 验证；部分机制为部分支持或不可用，不包含完整战斗时序模拟。",
+    "zh-TW": "尚未完成乾淨系統安裝解除安裝與本輪真實 SSO 驗證；部分機制為部分支援或不可用，不包含完整戰鬥時序模擬。",
+    "en": "Clean-system installation/uninstallation and live SSO have not been revalidated. Some mechanics are partial or unsupported; full combat timeline simulation is not included.",
+    "ja": "クリーン環境でのインストール・アンインストールと実アカウントの SSO は未再検証です。一部のメカニクスは部分対応または未対応で、完全な戦闘時系列シミュレーションは含まれません。"
+  },
+  "重要装配请先备份；本版不自动迁移历史原生会话。": {
+    "zh-CN": "重要装配请先备份；本版不自动迁移历史原生会话。",
+    "zh-TW": "重要裝配請先備份；本版不自動遷移歷史原生工作階段。",
+    "en": "Back up important fits; this version does not automatically migrate previous native sessions.",
+    "ja": "重要な装備はバックアップしてください。以前のネイティブセッションは自動移行されません。"
+  },
+  "第一个公开测试版 · 2026-09-14": {
+    "zh-CN": "第一个公开测试版 · 2026-09-14",
+    "zh-TW": "第一個公開測試版 · 2026-09-14",
+    "en": "First public beta · 2026-09-14",
+    "ja": "第1回公開テスト版 · 2026-09-14"
+  },
+  "下载历史测试版": {
+    "zh-CN": "下载历史测试版",
+    "zh-TW": "下載歷史測試版",
+    "en": "Download previous beta",
+    "ja": "以前のテスト版をダウンロード"
+  }
+});
