@@ -1,50 +1,52 @@
 import {panelTrace,panelReading,panelTip} from './native-panel-detail.js';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=(n,u='')=>Number.isFinite(n)?n.toLocaleString('zh-CN',{maximumFractionDigits:2})+(u?' '+u:''):'—';
+const duration=n=>n<60?fmt(n)+'秒':Math.floor(n/60)+'分'+(n%60?fmt(n%60)+'秒':'');
 const row=(title,value,detail)=>'<div class="stat-row" '+(detail?panelTip(detail):'')+'><span>'+esc(title)+'</span><b>'+esc(value)+'</b></div>';
-export function capacitorHtml(report,catalog=[]){
- const data=report.capacitorScenario,r=data?.result,average=r?.average;
- const native=report.native||{},local=native.capacitor,scenario=report.curveRequest?.scenario||{};
- const external=['targetFitId','supportFitId','hostileFitId'].some(k=>scenario[k]);
- // Average equilibrium is independent of the plotted time horizon. A failed
- // discrete payment is a separate detail, never a replacement for this verdict.
+export function capacitorPresentation(report,catalog=[]){
+ const data=report.capacitorScenario,r=data?.result,average=r?.average,native=report.native||{},local=native.capacitor;
+ const external=['targetFitId','supportFitId','hostileFitId'].some(k=>report.curveRequest?.scenario?.[k]);
  const model=average?(average.complete?average:null):!external&&!native.capacitorUnavailableReason?local:null;
- const stable=model?.stableFromFullInAverageModel;
- const fraction=model?.stableFraction;
- const summary=stable===true?'稳定'+(Number.isFinite(fraction)?' · '+fmt(fraction*100,'%'):''):stable===false?'不稳定':'暂无法确定';
+ const stable=model?.stableFromFullInAverageModel,fraction=model?.stableFraction;
  const missing=(native.capacitorContributions||[]).filter(c=>c.state!=='available');
  const name=id=>catalog.find(t=>t.id===report.snapshot?.modules?.find(m=>m.workspaceSlotKey===id)?.dogmaTypeId)?.name||id;
  const reason=missing.length?'缺少 '+missing.map(c=>name(c.instanceId)).join('、')+' 的完整耗电数据':average?.exclusions?.length?'部分耗电或供能条件尚未确定':data?.reason||native.capacitorUnavailableReason||'电容计算条件尚未完整';
+ const failed=r?.firstFailedPaymentSeconds,zero=r?.firstZeroSeconds,supply=r?.firstSupplyStoppedSeconds;
+ // A periodic failure is not a depletion time for the average model. Name it
+ // exactly, as the legacy inspector did, while retaining both verdicts.
+ const summary=stable===true?'稳定'+(Number.isFinite(fraction)?' · '+fmt(fraction*100,'%'):''):stable===false?(Number.isFinite(failed)?duration(failed)+' · 供电不足':'不稳定 · 续航待确定'):'暂无法确定';
  const recharge=r?.recharge||native.capacitorRecharge||local?.recharge;
  const capTrace=panelTrace(native.attributes?.['ship/482'],'电容容量','GJ',report,catalog),timeTrace=panelTrace(native.attributes?.['ship/55'],'回充时间','s',report,catalog,1000);
- const capTerms=[['电容容量',fmt(recharge?.capacity,'GJ'),null,capTrace],['回充时间',timeTrace.result,null,timeTrace]];
- const summaryDetail={title:'电容稳定性',result:summary,terms:capTerms,conditions:[['口径','平均负载模型 · 满电起始 · 与曲线时长无关'],['限制','稳定不保证每次启用都能支付电量'],...(stable==null?[['不可用原因',reason]]:[])]};
- let html='<div class="panel-title"><span>电容</span><div class="section-summary"><b '+panelTip(summaryDetail)+' style="color:'+(stable===false?'#f18080':stable===true?'#79d6ab':'var(--muted)')+'">'+summary+'</b></div></div><div class="stat-block">';
- if(recharge)html+=row('容量',fmt(recharge.capacity,'GJ'),capTrace)+row('峰值回充',fmt(recharge.peakRecharge??average?.peakRechargeGjPerSecond,'GJ/s'),panelReading('峰值回充',recharge.peakRecharge??average?.peakRechargeGjPerSecond,'GJ/s',capTerms));
+ const terms=[['电容容量',fmt(recharge?.capacity,'GJ'),null,capTrace],['回充时间',timeTrace.result,null,timeTrace]];
+ const conditions=[['稳定性',stable===true?'平均负载稳定':stable===false?'平均负载不稳定':'未知'],['初始电量',fmt((r?.query?.initialFraction??report.curveRequest?.scenario?.ownCapacitorFraction??1)*100,'%')]];
+ if(r){
+  conditions.push(['周期查询范围',duration(r.query.horizonSeconds)],['启动供电',Number.isFinite(failed)?duration(failed)+' 后首次不足':'查询范围内均可支付'],['电容归零',Number.isFinite(zero)?duration(zero):'查询范围内未归零']);
+  if(Number.isFinite(supply))conditions.push(['注电补给',duration(supply)+' 后首次停止']);
+  conditions.push(['边界','使用实际注电弹仓与货舱；付款失败后停用该消费者。未模拟其他装备弹药、热量及完整战斗。']);
+  if((data.sources||[]).length)conditions.push(['外部来源','固定对方电量与周期，只计算本舰']);
+ }else conditions.push(['曲线不可用',data?.reason||reason]);
+ if(stable==null)conditions.push(['不可用原因',reason]);
+ if(data?.extensionUnavailableReason)conditions.push(['续航查询未完成',data.extensionUnavailableReason]);
+ for(const c of missing)conditions.push(['未计入',name(c.instanceId)+' · '+c.reason]);
+ for(const c of average?.exclusions||[])conditions.push(['未计入',c.id+' · '+c.reason]);
  const drain=average?.knownNetDrainGjPerSecond??local?.averageActiveDrain;
- if(Number.isFinite(drain))html+=row(average&&!average.complete?'已知净消耗':'平均净消耗',fmt(drain,'GJ/s'),panelReading('平均净消耗',drain,'GJ/s',[],[['口径','引擎平均负载模型'],['完整性',average&&!average.complete?'部分结果':'完整'],...(average?.exclusions||[]).map(e=>['未计入',e.id+' · '+e.reason])]));
- if(stable==null)html+='<p class="profile-note">'+esc(reason)+'</p>';
- if(stable===false)html+='<p class="profile-note">持续启用时无法维持电量；引擎尚未提供此口径的预计续航。</p>';
- html+='<details class="native-cap-curve"><summary>电容详情</summary><p class="profile-note">稳定性按平均负载判断，与下方曲线时长无关；不保证每次启用都能支付电量。</p>';
- if(!r)return html+'<p class="profile-note">电量曲线暂不可用 · '+esc(data?.reason||reason)+'</p>'+missing.map(c=>'<p class="profile-note">未计入：'+esc(name(c.instanceId))+' · '+esc(c.reason)+'</p>').join('')+'</details></div>';
- html+='<label class="native-cap-window">曲线时长 <select aria-label="电容观察窗口" data-cap-horizon>'+[60,300,900,3600].map(n=>'<option value="'+n+'" '+(n===(r.query.horizonSeconds||report.curveRequest?.capacitorHorizon||300)?'selected':'')+'>'+n/60+' 分钟</option>').join('')+'</select></label>';
- const failed=r.firstFailedPaymentSeconds!=null;
- if(average.complete&&stable===true)html+=row('平均稳定电量',fmt(average.stableFraction*100,'%'));
- html+=row('窗口内最低',fmt(r.minimumAmountGj,'GJ'))+row('窗口结束电量',fmt(r.finalAmountGj,'GJ'));
- html+=row('逐次付款',failed?'首次失败 '+fmt(r.firstFailedPaymentSeconds,'s'):r.sources.some(s=>s.origin==='fitted_activation_cost')?'窗口内均可支付':'无本舰付款项');
- if(r.firstSupplyStoppedSeconds!==null)html+=row('供应首次停止',fmt(r.firstSupplyStoppedSeconds,'s'));
- if(r.firstZeroSeconds!==null)html+=row('首次归零',fmt(r.firstZeroSeconds,'s'));
- html+='<svg viewBox="0 0 240 115" role="img" aria-label="电容随时间变化">';
- const samples=r.samples,high=r.recharge.capacity||1,end=r.query.horizonSeconds||1;
- const path=samples.map((s,i)=>(i?'L':'M')+(10+220*s.timeSeconds/end).toFixed(2)+' '+(90-75*s.amountGj/high).toFixed(2)).join(' ');
- html+='<path d="M10 10V90H230" fill="none" stroke="currentColor" opacity=".3"/><path d="'+path+'" fill="none" stroke="#79c8d3" stroke-width="1.5"/><text x="10" y="110">0 s</text><text x="230" y="110" text-anchor="end">'+fmt(r.query.horizonSeconds,'s')+'</text>';
- for(const sample of samples)html+='<circle cx="'+(10+220*sample.timeSeconds/end)+'" cy="'+(90-75*sample.amountGj/high)+'" r="2" fill="#79c8d3"><title>'+fmt(sample.timeSeconds,'s')+' · '+fmt(sample.amountGj,'GJ')+'</title></circle>';
- html+='</svg><p class="profile-note">初始电量 '+fmt(r.query.initialFraction*100,'%')+' · 使用已声明弹仓与共享货舱 · 付款失败后停止该消费者。平均稳定不保证每次付款；窗口结束不等于无限续航。</p>';
- for(const s of data.sources)html+=row(s.operation==='nos_target'?'吸电目标':s.operation==='transmit'?'传电来源':'毁电/吸电来源',s.name+' · '+fmt(s.distanceMeters/1000,'km')+(s.amountGj!=null?' · 固定 '+fmt(s.amountGj,'GJ'):''));
- if(data.sources.length)html+='<p class="profile-note">仅计算本舰。对方电量为固定边界，外部模块按固定周期作用；不联算对方付款或资源变化。</p>';
- for(const e of average.exclusions)html+='<p class="profile-note">平均模型未计入：'+esc(e.id)+' · '+esc(e.reason==='RESOURCE_AND_CONDITION_DEPENDENT_NOS'?'吸电收益依赖双方电量':e.reason)+'</p>';
- for(const supply of r.supplies)html+=row('注电器 '+supply.id,'弹仓 '+supply.loaded+(supply.cargoKey?' · 使用共享货舱':' · 私有储备 '+supply.reserve)+(supply.reserved?' · 已预约 '+supply.reserved:''));
- for(const [key,amount] of Object.entries(r.sharedCargo))html+=row('共享备弹 '+key,String(amount));
- html+='<p class="profile-note">同刻按来源 ID 顺序结算；不模拟非注电器弹药、动态热量及其他模块效果。</p></details></div>';
+ const moduleDrain=local?.averageActiveDrain;
+ const moduleTerms=(native.capacitorContributions||[]).map(c=>[name(c.instanceId),c.state==='available'?fmt(c.consumer?.averageDrain,'GJ/s'):'不可用',null,panelReading(name(c.instanceId),c.consumer?.averageDrain,'GJ/s',[['每次耗电',fmt(c.consumer?.capacitorPerCycle,'GJ')],['周期',fmt(c.consumer?.cycleSeconds,'s')]],c.reason?[['原因',c.reason]]:[])]);
+ const peak=recharge?.peakRecharge??average?.peakRechargeGjPerSecond;
+ let samples=r?.samples||[],horizon=r?.query?.horizonSeconds;
+ if(stable===false&&Number.isFinite(failed)){
+  const event=r.events?.find(e=>e.timeUs/1e6===failed&&e.payment?.energyReserved===false);
+  if(event){samples=[...samples.filter(s=>s.timeSeconds<failed),{timeSeconds:failed,amountGj:event.before}];horizon=failed;}
+ }
+ const detail={title:'电容续航',result:summary,terms,conditions,nativeCapacitor:{summary,stable,capacity:recharge?.capacity,samples,horizon,failed,zero,peak,drain}};
+ return {summary,stable,reason,recharge,capTrace,timeTrace,terms,detail,drain,moduleDrain,moduleTerms,peak,average};
+}
+export function capacitorHtml(report,catalog=[]){
+ const p=capacitorPresentation(report,catalog);
+ let html='<div class="panel-title"><span>电容</span><div class="section-summary" '+panelTip(p.detail)+'><b class="'+(p.stable===true?'cap-stable':p.stable===false?'cap-depletes':'cap-undetermined')+'">'+esc(p.summary)+'</b></div></div><div class="stat-block">';
+ if(p.recharge)html+=row('容量',fmt(p.recharge.capacity,'GJ'),p.capTrace)+row('回充时间',p.timeTrace.result,p.timeTrace)+row('峰值回充',fmt(p.peak,'GJ/s'),panelReading('峰值回充',p.peak,'GJ/s',p.terms));
+ if(Number.isFinite(p.moduleDrain))html+=row('模块耗电',fmt(p.moduleDrain,'GJ/s'),panelReading('模块耗电',p.moduleDrain,'GJ/s',p.moduleTerms,[['口径','已启用本舰模块 · 周期平均耗电']]));
+ if(Number.isFinite(p.drain))html+=row(p.average&&!p.average.complete?'已知净耗电':'净耗电',fmt(p.drain,'GJ/s'),panelReading('平均净耗电',p.drain,'GJ/s',[],p.detail.conditions));
+ html+='<p class="profile-note">'+(p.stable==null?esc(p.reason):'悬停续航查看电量曲线')+'</p></div>';
  return html;
 }

@@ -56,8 +56,21 @@ def attach_capacitor(fit,report,fits):
                 'fitHash':source_report['native']['fitHash'],'operation':operation,'distanceMeters':distance,'operations':sorted({e['operation'] for e in matching}),
                 'amountGj':scenario.get('hostileCapacitorGj') if any(e['operation']=='nosferatu' for e in matching) else None})
         result=bridge().call('capacitor_scenario',{'fit':report['nativeFit'],'query':query})['result']
+        # A normal fitting view needs no manual observation-window control.
+        # Extend only incomplete endurance observations, once, with a bounded
+        # public query. Keep its exact input for MCP/CLI replay; no UI formula.
+        average=result.get('average',{});extension_reason=None
+        if (average.get('complete') and average.get('stableFromFullInAverageModel') is False
+                and result.get('firstFailedPaymentSeconds') is None and horizon<3600):
+            extended={**query,'horizonSeconds':3600,'sampleTimesSeconds':[60*i for i in range(61)]}
+            try:
+                extended_result=bridge().call('capacitor_scenario',{'fit':report['nativeFit'],'query':extended})['result']
+                result,query=extended_result,extended
+            except ValueError as error:
+                # The shorter native observation is still valid, not a duration.
+                extension_reason=str(error)
         report['capacitorScenario']={'state':'available','result':result,'sources':sources,
-            'request':{'fit':report['nativeFit'],'query':query}}
+            'request':{'fit':report['nativeFit'],'query':query},'extensionUnavailableReason':extension_reason}
     except ValueError as error:
         reason=str(error);diagnostic=None
         try:

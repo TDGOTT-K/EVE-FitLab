@@ -1,4 +1,5 @@
 import {mountCapacitorChart} from './capacitor-chart.js';
+import {mountNativeCapacitorChart} from './native-capacitor-chart.js';
 import {mountDpsChart} from './dps-chart.js';
 import {getLocale} from './i18n.js';
 // One explanation branch; each locked panel can own a deeper explanation.
@@ -31,7 +32,14 @@ export function installExplanations(){
    for(const selector of ['.explain-terms','.explain-conditions','.explain-result'])panel.querySelector(selector).remove();
    const host=document.createElement('div');host.className='cap-chart';panel.append(host);mountCapacitorChart(host,detail);
   }
-  const lockable=!!panel.querySelector('[data-explain]'),interactive=!lockable&&!!(detail.chart||detail.capacitor);
+  if(detail.nativeCapacitor){
+   panel.classList.add('has-cap-chart');
+   panel.querySelector('.explain-result').remove();
+   const host=document.createElement('div');host.className='cap-chart';panel.querySelector('.explain-lock').after(host);mountNativeCapacitorChart(host,detail.nativeCapacitor);
+   const more=document.createElement('details');more.className='dps-chart-breakdown';more.innerHTML='<summary>计算条件与来源</summary>';
+   more.append(panel.querySelector('.explain-terms'),panel.querySelector('.explain-conditions'));panel.append(more);
+  }
+  const lockable=!!panel.querySelector('[data-explain]'),interactive=!lockable&&!!(detail.chart||detail.capacitor||detail.nativeCapacitor);
   if(!lockable){
    panel.querySelector('.explain-lock').remove();
    if(interactive){panel.inert=false;panel.classList.add('interactive');bridge.classList.add('interactive');}

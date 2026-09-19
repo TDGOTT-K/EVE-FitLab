@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {scaleReading,analysisStatusText} from './analysis-status.js';
 import {mountNativeStats,nativeResources} from './nengine-view.js';
-import {capacitorHtml} from './native-capacitor-view.js';
+import {capacitorHtml,capacitorPresentation} from './native-capacitor-view.js';
 assert.equal(scaleReading(null,1000),null);
 assert.equal(scaleReading(undefined,1000),null);
 assert.equal(scaleReading(0,1000),0);
@@ -17,7 +17,7 @@ report.native.motion={maximumSpeedMetersPerSecond:0,fromRestTo75PercentSeconds:n
 mountNativeStats(host,report);assert(host.innerHTML.includes('不适用 · 当前最大速度为 0'));assert(!host.innerHTML.includes('>0 s<'));
 report.native.capacitorRecharge={capacity:312.5,peakRecharge:8.33};
 report.native.capacitorContributions=[{instanceId:'high-0',state:'unavailable',reason:'EVE_CAPACITOR_EFFECT'}];
-const partialCap=capacitorHtml(report);assert(partialCap.includes('312.5 GJ'));assert(partialCap.includes('未计入：high-0'));assert(!partialCap.includes('平均稳定电量'));
+const partialCap=capacitorHtml(report);assert(partialCap.includes('312.5 GJ'));assert(capacitorPresentation(report).detail.conditions.some(([k,v])=>k==='未计入'&&v.includes('high-0')));assert(!partialCap.includes('平均稳定电量'));
 report.native.resources=[{id:'cpu',remaining:null,capacity:null,withinCapacity:null}];
 nativeResources(host,report);assert(!host.innerHTML.includes('<progress'));
 console.log('Status presentation: null remains unknown; real zero preserved; unknown resources have no numeric bar');
