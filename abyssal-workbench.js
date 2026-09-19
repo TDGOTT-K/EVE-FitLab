@@ -20,7 +20,7 @@ export function openAbyssalWorkbench({type,record,copy=false,onSave,api,options}
   $('[data-adopt]').disabled=busy||running||!candidate;$('[data-save]').disabled=busy||running||!rule?.nativeInstanceSupported;picker.disabled=busy||running;$('[data-close]').disabled=busy;$('[data-stop]').hidden=!running;$('[data-stop]').disabled=stop||!running;$('[data-trial]').textContent=stream?'继续试验':'Roll 至合格';
  }
  function resetTrial(){stream=null;lastRequest=null;$('[data-progress]').textContent='';$('[data-chance]').textContent='';}
- function invalidate(){receipt=null;edit=null;dialog.querySelectorAll('[data-change]').forEach(e=>e.textContent='');resetTrial();$('.mutation-summary').textContent='数值已修改，保存时将由引擎校验';controls();}
+ function invalidate(){receipt=null;edit=null;dialog.querySelectorAll('[data-change]').forEach(e=>e.textContent='');$('.mutation-summary').textContent='数值已修改，保存时将由引擎校验';controls();}
  function paint(){
   $('.mutation-attributes').innerHTML=(rule?.attributes||[]).map(a=>{
    const id=a.attributeId,meta=metadata[id]||{},u=unit(a.unitId,meta.unit),fmt=x=>number(display(x,a.unitId))+(u?' '+u:''),label=meta.label||a.name;
