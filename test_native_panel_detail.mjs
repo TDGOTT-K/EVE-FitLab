@@ -21,4 +21,9 @@ const html=outputHtml(report,[{id:1,name:'智能炸弹'},{id:2,name:'舰载机'}
 assert(html.includes('智能炸弹'));assert(html.includes('含换弹 DPS'));assert(html.includes('齐射伤害 · DPH'));assert(!html.includes('舰载机已选武器'));
 assert(!html.includes('data-native-attack'));
 assert(!html.includes('<details'));assert(!html.includes('native-output-metric'));
+report.native.inspector={reloadDps:{value:7.25,reason:null},damagePerSecond:{em:{value:0},thermal:{value:12}},damageFractions:{em:{value:0},thermal:{value:1}}};
+const connected=outputHtml(report,[]);
+assert(connected.includes('7.3'));assert(connected.includes('100%'));assert(connected.includes('0%'));
+report.native.inspector.reloadDps={value:null,reason:'INSTALLED_CRYSTAL_NOT_CONSUMABLE_MAGAZINE'};
+assert(outputHtml(report,[]).includes('当前晶体不是消耗式弹仓'));
 console.log('Panel explanations: scaled source traces, null/zero, output groups and partial states passed');

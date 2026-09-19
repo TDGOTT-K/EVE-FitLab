@@ -92,15 +92,15 @@ def analyze(f,target=None,native_query=None):
     output=a['outputContributions']
     selected=[item for item in output['items'] if item['id'] in contribution_ids]
     breakdown={kind:grouped_reading([item for item in selected if (
-        item['kind'].startswith('fighter_') if kind=='fighters' else item['kind']=='drone' if kind=='drones' else item['kind'].startswith('ship_'))],metric)
+        item['kind'].startswith('fighter_') if kind=='fighters' else item['kind']=='drone' if kind=='drones' else (item['kind'].startswith('ship_') or item['kind']=='smartbomb'))],metric)
         for kind in ('weapons','drones','fighters')}
     baseline_selected=[item for item in baseline_items if item['id'] in contribution_ids]
     baseline_breakdown={kind:grouped_reading([item for item in baseline_selected if (
-        item['kind'].startswith('fighter_') if kind=='fighters' else item['kind']=='drone' if kind=='drones' else item['kind'].startswith('ship_'))],baseline['metric'])
+        item['kind'].startswith('fighter_') if kind=='fighters' else item['kind']=='drone' if kind=='drones' else (item['kind'].startswith('ship_') or item['kind']=='smartbomb'))],baseline['metric'])
         for kind in ('weapons','drones','fighters')}
     volley_metric=('effectiveVolley' if effective else 'appliedVolley') if target is not None else 'volleyDamage'
     legacy_output={'volleyMetric':volley_metric,'volley':grouped_reading(
-        [item for item in selected if item['kind'].startswith('ship_')],volley_metric)}
+        [item for item in selected if (item['kind'].startswith('ship_') or item['kind']=='smartbomb')],volley_metric)}
     attrs=a['attributes']
     def value(key):return attrs.get(key,{}).get('value')
     resources={r['id']:r for r in a['resources']}

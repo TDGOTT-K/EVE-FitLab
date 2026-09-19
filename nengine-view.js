@@ -47,12 +47,12 @@ export function mountNativeStats(root,report,{mode='hp',onMode,onDamageEdit,cata
    html+='<div class="damage-bars">'+['em','thermal','kinetic','explosive'].map((k,i)=>`<div class="damage-cell" ${panelTip(detail(['电磁','热能','动能','爆炸'][i]+'抗性',layer.resistancesPercent[k],'%',[['伤害共振',fmt(layer.resonances[k]),null,panelTrace(attrs['ship/'+resonanceIds[layer.layer][k]],'伤害共振','',report,catalog)]]))}><span class="damage-label">${['电磁','热能','动能','爆炸'][i]}</span><div class="mini-bar damage-${i}"><i style="width:${layer.resistancesPercent[k]}%"></i><b>${Number.isFinite(layer.resistancesPercent[k])?layer.resistancesPercent[k].toFixed(0):'—'}%</b></div></div>`).join('')+'</div></div>';
   }
   html+=row('总 '+(mode==='hp'?'HP':'EHP'),fmt(mode==='hp'?defense.rawHitpoints:defense.effectiveHitpoints),detail('总 '+(mode==='hp'?'HP':'EHP'),mode==='hp'?defense.rawHitpoints:defense.effectiveHitpoints,'',defense.layers.map(l=>[({shield:'护盾',armor:'装甲',hull:'结构'})[l.layer],fmt(mode==='hp'?l.hitpoints:l.effectiveHitpoints)])));
-  for(const [label,layer] of [['主动回盾','shield'],['装甲维修','armor'],['结构维修','hull']]){
+  for(const [label,layer] of [['主动回盾','shield'],['装甲维修','armor'],['结构维修','hull'],['被动回盾 · 峰值','passiveShield']]){
+   const metric=a.inspector?.repairs?.[layer]?.[mode==='hp'?'hpPerSecond':'ehpPerSecond'];
+   const units=mode==='hp'?'HP/s':'EHP/s';
    const repairs=Object.values(a.repairs||{}).filter(r=>!r.remoteRange&&r.payload?.layer===layer);
-   const rate=mode==='hp'&&repairs.length===1?repairs[0].activeHpPerSecond:null;
-   html+=row(label,Number.isFinite(rate)?fmt(rate,'HP/s'):'—',detail(label,rate,mode==='hp'?'HP/s':'EHP/s',repairs.map(r=>[catalog.find(t=>t.id===r.typeId)?.name||r.instanceId,fmt(r.activeHpPerSecond,'HP/s')]),Number.isFinite(rate)?[['口径','已启用本舰维修 · 名义周期']]:[['不可用原因',mode==='hp'?'尚未接入该类维修完整合计':'尚未接入按当前来伤折算的维修合计']]));
+   html+=row(label,fmt(metric?.value,units),detail(label,metric?.value,units,repairs.map(r=>[catalog.find(t=>t.id===r.typeId)?.name||r.instanceId,fmt(r.activeHpPerSecond,'HP/s')]),[['口径','本舰周期维修；不含电容可持续性与过量维修'],...(metric?.reason?[['不可用原因',metric.reason]]:[])]));
   }
-  if(a.shieldRecharge)html+=row('被动回盾 · 峰值',mode==='hp'?fmt(a.shieldRecharge.peakRecharge,'HP/s'):'—',detail('被动回盾 · 峰值',mode==='hp'?a.shieldRecharge.peakRecharge:null,mode==='hp'?'HP/s':'EHP/s',[['护盾容量',fmt(a.shieldRecharge.capacity,'HP')],['回充时间',fmt(a.shieldRecharge.nominalRechargeSeconds,'s')]],mode==='hp'?[]:[['不可用原因','尚未接入按当前来伤折算的回充合计']]));
  }else html+=row('防御','不可计算');
  html+='</div>'+head('机动',`<b ${panelTip(panelTrace(attrs['ship/37'],'最大速度','m/s',report,catalog))}>${fmt(a.motion?.maximumSpeedMetersPerSecond,'m/s')}</b>`);
  const motionReason=a.motion?.fromRestTo75PercentUnavailableReason;

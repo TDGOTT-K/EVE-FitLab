@@ -26,6 +26,12 @@ class OutputIntegration(unittest.TestCase):
             (p/'context.json').write_text(json.dumps(context),encoding='utf-8')
             subprocess.run([str(b.root/'.tools/dotnet/dotnet.exe'),str(b.root/'src/NEngine.Cli/bin/Debug/net10.0/NEngine.Cli.dll'),'sde-fit','--data',str(b.root/b.baseline['dataDirectory']),'--fit',str(p/'fit.json'),'--metrics',str(p/'context.json'),'--out',str(p/'result.json')],check=True,capture_output=True)
             self.assertEqual(public,json.loads((p/'result.json').read_text(encoding='utf-8-sig')))
+            # Replay the exact UI DPS selection as well: all inspector sums,
+            # fractions, reload and repair readings must match public outputs.
+            current={'output':report['outputContext']}
+            (p/'context.json').write_text(json.dumps(current),encoding='utf-8')
+            subprocess.run([str(b.root/'.tools/dotnet/dotnet.exe'),str(b.root/'src/NEngine.Cli/bin/Debug/net10.0/NEngine.Cli.dll'),'sde-fit','--data',str(b.root/b.baseline['dataDirectory']),'--fit',str(p/'fit.json'),'--metrics',str(p/'context.json'),'--out',str(p/'current.json')],check=True,capture_output=True)
+            self.assertEqual(report['native']['inspector'],json.loads((p/'current.json').read_text(encoding='utf-8-sig'))['inspector'])
 
     def fighter_fit(self):
         native=json.loads((bridge().root/'examples/output-contributions/primary-fit.json').read_text())
