@@ -104,11 +104,23 @@ export function mountFighters(root,{ship,fit,report,mutate,browse,say,validate,o
   menu(e,el,t,[[available?(state.tubes[index]?'替换第 ':'装入第 ')+(index+1)+' 发射管':'装入发射管',()=>install('tubes',index),{disabled:host._busy||!available,title:available?'':'没有空发射管，请先选择替换位置'}],['加入备用机库',()=>install('reserve',state.reserve.length),{disabled:host._busy}],['详细信息',()=>onInfo(t)]]);
  };
 }
-export function drawFighterBrowser(root,q){
- const host=document.querySelector('#fighter-config');if(!host)return;
- document.querySelector('#count').textContent=types.length+' 型';
- root.innerHTML=['light','heavy','support'].map(k=>{const list=types.filter(t=>t.class===k&&(!q||(t.name+' '+t.en+' '+t.id).toLowerCase().includes(q.toLowerCase())));return list.length?`<details open><summary>${({light:'轻型',heavy:'重型',support:'支援'})[k]}舰载机</summary>${list.map(t=>`<div class="item fighter-catalog" draggable="true" role="button" tabindex="0" data-fighter-type="${t.id}"><img src="https://images.evetech.net/types/${t.id}/icon?size=64" alt=""><span>${t.name}<small>完整中队 ${t.max} 架</small></span></div>`).join('')}</details>`:''}).join('');
- root.querySelectorAll('[data-fighter-type]').forEach(el=>{const t=type(el.dataset.fighterType);el.ondblclick=()=>document.querySelector('#fighter-config')._install?.(t);el.onkeydown=e=>{if(e.key==='Enter')document.querySelector('#fighter-config')._install?.(t)};bindMenu(el,e=>document.querySelector('#fighter-config')._catalogMenu?.(e,el,t));el.ondragstart=e=>{drag={type:t.id};e.dataTransfer.setData('application/x-fitlab-fighter','1');e.dataTransfer.effectAllowed='copy'};el.ondragend=()=>drag=null});
+export function fighterBrowserItems(catalog){
+ const metaNames=new Map(catalog.filter(t=>t.metaGroupId&&t.meta).map(t=>[t.metaGroupId,t.meta]));
+ return [...types].sort((a,b)=>['light','support','heavy'].indexOf(a.class)-['light','support','heavy'].indexOf(b.class)||(a.meta??99)-(b.meta??99)||a.name.localeCompare(b.name,'zh-CN')).map(t=>({...t,kind:'fighter',attrs:{},effects:[],metaGroupId:t.meta,
+  meta:metaNames.get(t.meta)||({1:'一级科技',2:'二级科技',4:'势力'})[t.meta]||'未标注科技分类',
+  path:['铁骑舰载机',t.kind+'舰载机']}));
+}
+export function bindFighterBrowserItem(el,item,onInfo){
+ const t=type(item.id);
+ el.ondblclick=()=>document.querySelector('#fighter-config')?._install?.(t);
+ el.onkeydown=e=>{if(e.key==='Enter')el.ondblclick()};
+ bindMenu(el,e=>{
+  const host=document.querySelector('#fighter-config');
+  if(host?._catalogMenu)host._catalogMenu(e,el,t);
+  else menu(e,el,t,[['装入发射管',()=>{},{disabled:true,title:'当前舰船没有舰载机发射管'}],['详细信息',()=>onInfo(item)]]);
+ });
+ el.ondragstart=e=>{if(!document.querySelector('#fighter-config')?._install){e.preventDefault();return;}drag={type:t.id};e.dataTransfer.setData('application/x-fitlab-fighter','1');e.dataTransfer.effectAllowed='copy'};
+ el.ondragend=()=>drag=null;
 }
 document.addEventListener('dragover',e=>{if(drag?.list&&e.target.closest('.browser')){e.preventDefault();e.dataTransfer.dropEffect='move'}},true);
 document.addEventListener('drop',e=>{if(drag?.list&&e.target.closest('.browser')){e.preventDefault();e.stopImmediatePropagation();document.querySelector('.browser').onfighterremove?.()}},true);
