@@ -1,102 +1,72 @@
-<p align="center"><img src="docs/images/banner.svg" alt="EVE FitLab — Fit, simulate, share" width="100%"></p>
-<p align="center"><strong>为新伊甸的每一次出航，准备一套更好的装配。</strong></p>
-<p align="center">
-<a href="https://imfishman.com/">🌐 官网与下载</a> · <a href="#-支持开发">💛 支持开发</a> · <a href="https://github.com/TDGOTT-K/EVE-FitLab/issues">💬 反馈与建议</a> · <a href="docs/README.en.md">English</a>
-</p>
-<p align="center"><img alt="Windows" src="https://img.shields.io/badge/Windows-10%20%2F%2011-0078D4?logo=windows"><img alt="License MIT" src="https://img.shields.io/badge/License-MIT-79c9d9"><img alt="Languages" src="https://img.shields.io/badge/UI-简中%20%7C%20繁中%20%7C%20EN%20%7C%20日本語-c79a75"><img alt="Development status" src="https://img.shields.io/badge/status-active%20development-e8aa72"></p>
+# EVE FitLab
 
-**EVE FitLab** 是一款为 EVE Online 玩家打造的 Windows 舰船装配工作台。把装配构思、角色技能、性能计算和图片分享放在一起，让每一个槽位都有理由。
+EVE Online 舰船装配工作台：浏览器界面、Python 本地服务、Electron Windows 桌面壳，以及通过公开 MCP 调用的独立 **NEngine**。
 
-> **下载请认准 [imfishman.com](https://imfishman.com/)。** 第五个公开测试版 **0.1.2-rc.4** 已发布：[选择版本并下载](https://imfishman.com/download) · [GitHub Release](https://github.com/TDGOTT-K/EVE-FitLab/releases/tag/v0.1.2-rc.4)。这是测试版，尚未代码签名，可能存在问题；重要装配请保留备份。
+这是当前开发源码，不是官网旧测试安装包的发布说明。`package.json` 保留原有 `0.1.2-rc.2` 标识，不能据此判断当前引擎版本，也不表示本次整理已发布安装包。
 
-## 💛 支持开发
+## 当前架构与能力
 
-<p align="center"><img src="docs/images/please-feed-me.svg" width="160" alt="二次元小人跪拜求投喂"></p>
-<p align="center"><strong>Token 太贵了，救救孩子吧！🥺</strong></p>
+- 当前接入基线：**NEngine 0.211.0-ui.workbench1 / 公共契约 r59 / 38 工具**，SDE **3503375**，静态规则 **eve-static-dogma-v59**。
+- `nengine_bridge.py` 校验独立副本的 `UI-LOCAL-BASELINE.json`（优先）或 `UI-BASELINE.json`；不得跳过绑定校验或自动升级引擎。
+- UI 包含装配库、角色技能、植入体/增效剂、深渊装备、无人机/舰载机库存、属性与电容视图、估价和装配图片分享。具体可用范围与诊断以引擎公开回执为准。
+- 语言资源包含简中、繁中、英语、日语、德语、法语、俄语；资源齐全不代表所有翻译已经人工审校。
+- 旧 `engine/` Dogma 源码和 `desktop/engine/` .NET 9 宿主已移除，不再提供 `FITLAB_CALCULATOR=legacy`。游戏数值由 NEngine 提供，不在计算失败时回退到旧引擎。
 
-我是 **深海的鱼**，游戏 ID **ImFishMan**。这个项目在持续迭代，AI 开发和反复验证都需要真金白银的 Token。如果 FitLab 帮你配出了一艘好船，欢迎投喂一点开发燃料，让下一个功能更早到来。
+## 本地启动
 
-- **赞助方式：USDT · TRON（TRC20）**
-- **地址：`TYDiRLFWukWdHpiZKQdGLoX7ivH2PFtPBS`**
-- **[查看赞助二维码与说明 →](SPONSOR.md)**
+推荐 Windows、Python 3.11+、Node.js 22+。引擎构建使用固定 .NET SDK **10.0.401**。把两个源码仓库放在同一父目录：
 
-Star、分享给军团朋友、认真提一个 Issue，同样是非常有用的支持。赞助完全自愿，不影响开源代码的使用，也不代表付费服务或功能交付承诺。
-
-## 一眼看看工作台
-
-<img src="docs/images/fitting.webp" alt="帕拉丁级装配：装备浏览器、舰船配置与计算结果" width="100%">
-
-## 能做什么
-
-| 功能 | 你可以做的事 |
-| --- | --- |
-| 🛠 装配工作台 | 高中低槽、改装件、T3 子系统、无人机与货舱统一管理；拖放预览、Shift 多选、整组操作、撤销与重做 |
-| 📊 性能计算 | CPU / 能量栅格余量、DPS、抗性、HP / EHP、机动、电容稳定性，以及吸电与注电收益 |
-| 🎯 可视化靶标 | 用其他装配作为靶标，调整位置和速度矢量，观察距离与角速度；配置外部支援 |
-| 👤 角色技能 | EVE SSO 技能导入、自定义技能等级和文件夹管理；内置全技能 V / 无技能对照 |
-| 🗂 装配库 | 舰船选择树、标签筛选、备注、参考估价、复制与粘贴 |
-| 🖼 图片分享 | 导出详细装配长图；通过图中的装配二维码重新导入配置 |
-| 🌏 本地化 | 简体中文、繁体中文、英语、日语；官网也提供四种语言 |
-| 🖥 Windows 桌面 | 自定义窗口、原生文件夹选择、本地数据目录管理 |
-
-### 好装配，值得分享
-
-<p align="center"><img src="docs/images/share.webp" width="440" alt="装配分享长图节选"></p>
-
-长图包含舰船、装备、计算参数与装配码；导入时读取装配码，还原成一份新的配置。图片识别在本地进行。压缩、二次截图后能否还原，取决于二维码是否仍然清晰完整；不是对任意图片做 OCR，也不保证严重损坏的图片能恢复。
-
-## 本地开发
-
-需要 **Python 3.9+、Node.js / npm、.NET 9 SDK**。计算引擎源码已放在 `engine/`，无需另找旧项目。
-
-1. 克隆仓库并安装前端/桌面构建依赖：
-
-   ```powershell
-   git clone https://github.com/TDGOTT-K/EVE-FitLab.git
-   cd EVE-FitLab
-   npm ci
-   ```
-
-2. 从 [CCP 官方静态数据说明](https://developers.eveonline.com/docs/services/static-data/) 获取并解压 **JSONL SDE**。当前随仓库生成的数据对应 **3248221**；使用其他版本需重新生成应用数据并核对计算结果。SDE 是大型游戏数据，不包含在 Git 源码仓库内。
-
-3. 启动本地网页开发服务：
-
-   ```powershell
-   $env:FITLAB_SDE_ROOT = 'D:\EVE-SDE\eve-online-static-data-3248221-jsonl'
-   python run.py
-   ```
-
-   打开 `http://127.0.0.1:5207/`。开发服务使用 5207 / 5210，请先关闭占用这些端口的旧服务。
-
-构建 Windows 安装包见 [桌面构建说明](desktop/README.md)。官网源文件与四语言设计稿位于 `website-design/`，本地预览：`python -m http.server 5217 --directory website-design`。
-
-## 验证与贡献
-
-```powershell
-python -m unittest test_server test_characters test_storage_location test_capacitor test_scenario test_linked_scenario test_calculation_graph -q
-npm run test:share-code
-npm run check:locales
-dotnet build desktop/engine/FitLab.Engine.csproj
+```text
+workspace/
+  EVE-FitLab/
+  NEngine/
 ```
 
-欢迎提交问题、翻译改进和 PR。先读 [贡献指南](CONTRIBUTING.md)；安全问题请按 [安全说明](SECURITY.md) 私下报告。装配计算问题最好附上舰船、装备、技能条件、预期值与实际值。
+先按照 NEngine 的 README 准备 SDK、固定 SDE 索引并构建 MCP/CLI；仓库源码不包含这些大型运行产物。本次整理的本地副本已附带被 Git 忽略的独立运行时和数据，未复制任何用户会话。
 
-## 当前边界
+```powershell
+cd EVE-FitLab
+npm ci
+powershell -NoProfile -File scripts/start.ps1
+```
 
-**尚未支持铁骑舰载机（航母配置）与深渊装备系统。**
+打开 **http://127.0.0.1:5208/**。直接运行 `python run.py` 也可以；`start.ps1` 额外把 UI 数据、引擎状态和目录配置固定隔离在本仓库 `state/` 中。
 
-项目仍在快速开发。未完整模拟战斗时序、无人机追击与碰撞、导弹加速/拦截；外部传电尚未联算来源舰船缺电后的停机。EVE SSO 已接入 PKCE，但仍需真实账号端到端验证。桌面代码签名与自动更新尚未配置。计算与市场估价供装配规划参考。
+自定义位置与端口：
 
-## 作者与联系
+```powershell
+powershell -NoProfile -File scripts/start.ps1 -EngineRoot 'D:\work\NEngine' -Port 5208
+```
 
-- **作者：深海的鱼 · EVE ID：ImFishMan**
-- **邮箱：[wzx2377951590@gmail.com](mailto:wzx2377951590@gmail.com)**
-- **QQ：2377951590**
-- **开发工具：GPT-6-Astra**
-- **官网：[imfishman.com](https://imfishman.com/)**
+SSO 回调仍使用 `127.0.0.1:5207`。端口占用会明确报告；账号授权链路不能用普通单元测试代替真实账号验收。
 
-欢迎建议，也欢迎来聊聊你的装配想法。
+## 开发与验证
 
-## 许可与致谢
+```powershell
+npm run check:ui
+npm run check:locales
+npm run test:i18n
+npm run test:share-code
+python -m pip install -r requirements-dev.txt
+python scripts/check-phase1.py
+```
 
-本项目原创代码采用 [MIT License](LICENSE)。EVE Online、游戏图标与静态数据的权利归 CCP Games 所有，不因本项目的 MIT 许可而改变。第三方依赖各自保留原许可证，详见 [第三方声明](THIRD_PARTY_NOTICES.md)。这是独立玩家项目，与 CCP Games 无隶属、背书或赞助关系。
+前四项不需要运行引擎。阶段门禁需要完整独立引擎和固定 SDE，会使用临时状态并将日志写入 `output/`。它不是全机制正确性或安装包发布认证。
+
+- [文档索引与目录职责](docs/README.md)
+- [Windows 打包](desktop/README.md)
+- [整理范围和删除清单](docs/workspace-cleanup.md)
+- [现有能力与验收边界](docs/engine-v2/phase1-release.md)
+- [贡献指南](CONTRIBUTING.md) · [安全说明](SECURITY.md) · [English](docs/README.en.md)
+
+官网唯一源码位于 `website/`，预览：`python -m http.server 5217 --directory website`。官网保留历史已发布安装包信息，不应把它当作本分支的发布记录。
+
+## 边界
+
+这是测试阶段的软件。沙盒预览与 `experiments/` 属于研究材料；静态装配结果不等于完整战斗模拟。缺失、不适用、部分合计和来源信息须保留，不把未知数值填零。详细历史验收文档记载的是当时版本，不能累计成当前全量通过声明。
+
+## 作者与许可
+
+深海的鱼 · EVE ID **ImFishMan** · [官网](https://imfishman.com/) · [支持开发](SPONSOR.md)
+
+原创代码采用 [MIT](LICENSE)；CCP 游戏数据与图像、第三方组件分别遵循其权利和许可，见 [第三方声明](THIRD_PARTY_NOTICES.md)。本项目与 CCP Games 无隶属或背书关系。

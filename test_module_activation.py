@@ -22,18 +22,21 @@ class ModuleActivation(unittest.TestCase):
   self.assertEqual(len(repaired),971)
   for ident in [10190,519,520,377,380,393,394,1195,1185,1236,1244,1242,1246,1248,1254,1256]:self.assertIn(ident,repaired)
   self.assertTrue(activation_capabilities(438)['canActivate']);self.assertTrue(activation_capabilities(438)['canOverload'])
- def test_legacy_and_state_boundaries(self):
-  for state in ['Active','Online','Offline',None]:
+ def test_explicit_and_default_state_boundaries(self):
+  for state in ['Online','Offline',None]:
    f=self.fit(state=state);original=copy.deepcopy(f);fixed=server.validate_fit(f)
    expected='Offline' if state=='Offline' else 'Online'
    self.assertEqual(fixed['slots'][1]['state'],expected);self.assertEqual(f,original)
    self.assertEqual(effective_module_state(f['slots'][1]),expected)
   for state in ['Active','Online','Offline','Overload']:
    self.assertEqual(effective_module_state({'item':438,'state':state}),state)
+  # Explicit invalid activation must be rejected, never silently downgraded.
+  self.assertEqual(effective_module_state(self.fit()['slots'][1]), 'Active')
+  with self.assertRaises(ValueError):server.validate_fit(self.fit(state='Active'))
   with self.assertRaises(ValueError):server.validate_fit(self.fit(state='Overload'))
   with self.assertRaises(ValueError):server.validate_fit(self.fit(state='invalid'))
  def test_passive_bonus_and_public_parity(self):
-  online=analyze(self.fit());offline=analyze(self.fit(state='Offline'))
+  online=analyze(self.fit(state='Online'));offline=analyze(self.fit(state='Offline'))
   self.assertFalse(online['nativeFit']['items'][1]['active'])
   self.assertTrue(online['nativeFit']['items'][1]['online'])
   self.assertEqual(online['snapshot']['modules'][1]['state'],'Online')

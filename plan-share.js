@@ -1,9 +1,10 @@
+import {getLocale,translateFor,gameName} from './i18n.js';
 import {qrCanvas,scanFitImage} from './fit-image-code.js';
 import {planShareText,parsePlanText,encodePlanCodes,decodePlanCodes,parsePlanCode} from './plan-share-code.js';
 const filename=name=>(name||'脑插方案').replace(/[<>:"/\\|?*\x00-\x1f]/g,'_').slice(0,80);
 function dialog(title,body){const d=document.createElement('dialog');d.className='share-dialog plan-share-dialog';d.innerHTML='<div class="flow-head"><b></b><button type="button" aria-label="关闭分享窗口">×</button></div>'+body;d.querySelector('b').textContent=title;d.querySelector('button').onclick=()=>d.close();d.addEventListener('close',()=>d.remove(),{once:true});document.body.append(d);d.showModal();return d}
 function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000)}
-const number=x=>(x>0?'+':'')+x.toLocaleString('zh-CN',{maximumFractionDigits:3});
+const number=x=>(x>0?'+':'')+x.toLocaleString(getLocale(),{maximumFractionDigits:3});
 const affixValue=r=>r.state!=='available'?'—':[r.percent?number(r.percent)+'%':'',r.additive?number(r.additive)+(r.unit?' '+r.unit:''):''].filter(Boolean).join(' · ')||'0';
 function icon(id){return new Promise(resolve=>{const im=new Image();im.crossOrigin='anonymous';let done=false;const end=value=>{if(done)return;done=true;clearTimeout(timer);resolve(value)};const timer=setTimeout(()=>end(null),5000);im.onload=()=>end(im);im.onerror=()=>end(null);im.src='https://images.evetech.net/types/'+id+'/icon?size=64'})}
 export async function renderPlanShareImage(data,find){
@@ -11,16 +12,16 @@ export async function renderPlanShareImage(data,find){
  const entries=[...plan.implants.map(i=>({...i,kind:'implants'})),...plan.boosters.map(i=>({...i,kind:'boosters'}))];
  const pictures=await Promise.all(entries.map(i=>icon(i.typeId)));
  const canvas=document.createElement('canvas');canvas.width=Math.max(1000,...qrs.map(q=>q.width+84));const ctx=canvas.getContext('2d'),commands=[];let y=34;
- function text(value,x,top,size=23,color='#dcebf1',max=900){commands.push(()=>{ctx.font=size+'px "Microsoft YaHei",sans-serif';ctx.fillStyle=color;let s=String(value);while(s.length&&ctx.measureText(s).width>max)s=s.slice(0,-1);if(s!==String(value))s=s.slice(0,-1)+'…';ctx.fillText(s,x,top)})}
+ function text(value,x,top,size=23,color='#dcebf1',max=900,raw=false){value=raw?String(value):translateFor(getLocale(),String(value));commands.push(()=>{ctx.font=size+'px "Microsoft YaHei",sans-serif';ctx.fillStyle=color;let s=String(value);while(s.length&&ctx.measureText(s).width>max)s=s.slice(0,-1);if(s!==String(value))s=s.slice(0,-1)+'…';ctx.fillText(s,x,top)})}
  function section(name){y+=22;text(name,42,y,25,'#91d7db');y+=44}
- text('EVE FITLAB · 脑插与增效剂方案',42,y,26,'#91d7db');y+=55;text(plan.name,42,y,34);y+=54;
+ text('EVE FITLAB · 脑插与增效剂方案',42,y,26,'#91d7db');y+=55;text(plan.name,42,y,34,'#dcebf1',900,true);y+=54;
  text('技能快照 '+(plan.pilot?.skills.length||0)+' 项 · SDE '+data.document.source.buildNumber,42,y,19,'#99aeb9');y+=36;
  text('保留当前副作用选择 · 分享码可还原完整方案',42,y,19,'#99aeb9');y+=25;
  for(const kind of ['implants','boosters']){
   section(kind==='implants'?'脑插':'增效剂');
   const rows=entries.map((e,i)=>({e,i})).filter(x=>x.e.kind===kind);
   if(!rows.length){text('未安装',42,y,22,'#778e9b');y+=38}
-  for(const {e,i} of rows){const top=y,t=find(kind,e.typeId);commands.push(()=>{ctx.fillStyle='#172a35';ctx.fillRect(36,top-8,928,90);if(pictures[i])ctx.drawImage(pictures[i],48,top+4,56,56)});text(String(e.slot).padStart(2,'0')+'  '+(t?.name||'物品 '+e.typeId),120,y+3,24,'#dcebf1',818);text('Type ID '+e.typeId,120,y+40,17,'#7d9aa9',240);
+  for(const {e,i} of rows){const top=y,t=find(kind,e.typeId);commands.push(()=>{ctx.fillStyle='#172a35';ctx.fillRect(36,top-8,928,90);if(pictures[i])ctx.drawImage(pictures[i],48,top+4,56,56)});text(String(e.slot).padStart(2,'0')+'  '+gameName(t||e.typeId),120,y+3,24,'#dcebf1',818);text('Type ID '+e.typeId,120,y+40,17,'#7d9aa9',240);
    if(kind==='boosters'){const names=(e.enabledSideEffects||[]).map(id=>t?.sideEffects?.find(s=>s.id===id)?.name||String(id));text(names.length?'副作用：'+names.join('、'):'无副作用生效',350,y+40,17,names.length?'#e0a188':'#8db6b8',580)}y+=100}
  }
  section('方案加成');

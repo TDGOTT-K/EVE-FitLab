@@ -1,4 +1,4 @@
-"""FitLab v1 -> pinned NEngine r33. Mapping only; no duplicate fitting formulas."""
+"""FitLab -> pinned NEngine public contract. Mapping only; no duplicate fitting formulas."""
 from functools import lru_cache
 import json
 from nengine_bridge import NEngineBridge
@@ -185,5 +185,5 @@ def fighter_catalog():
         if kind is None or not a.get(2215):continue
         names=item['name']
         result.append({'id':ident,'typeId':ident,'name':names.get('zh',names.get('en',str(ident))),
-            'en':names.get('en',''),'class':kind,'max':int(a[2215]),'meta':item.get('metaGroupID')})
+            'en':names.get('en',''),'names':names,'class':kind,'max':int(a[2215]),'meta':item.get('metaGroupID')})
     return {'source':data['source'],'items':result}

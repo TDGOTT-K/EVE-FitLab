@@ -1,7 +1,9 @@
+import {gameNameMarkup,matchesName,localizeData,registerGameTypes} from './i18n.js';
 import {buildImplantSets,implantSetChanges,implantSetPreview} from './implant-sets.js';
 import {escapeHtml as esc} from './scenario-display.js';
 
 export function installPlanBrowser(host,{catalogs,onInstall,onInstallSet,getImplants,onDrag,onDragEnd,onUnload,isInstalled}){
+ registerGameTypes([...catalogs.implants,...catalogs.boosters]);
  const {sets,byItem}=buildImplantSets(catalogs.implants);
  let kind='implants',slot=null,expanded=new Set();const views=new Map();
  host.innerHTML='<div class="plan-browser-title"><b>物品浏览器</b><small class="plan-browser-count"></small></div><div class="plan-browser-tabs"><button data-kind="implants" aria-pressed="true">脑插</button><button data-kind="boosters" aria-pressed="false">增效剂</button></div><input class="plan-item-search" aria-label="搜索脑插或增效剂" placeholder="搜索名称、分类、型号"><div class="plan-browser-filter"></div><div class="plan-item-tree"></div><small class="plan-browser-hint">点击或拖入安装 · 拖回此处卸下</small>';
@@ -21,11 +23,11 @@ export function installPlanBrowser(host,{catalogs,onInstall,onInstallSet,getImpl
   $('.plan-browser-filter').innerHTML=slot?'<button aria-label="清除槽位筛选">槽位 '+slot+' ×</button>':'';
   $('.plan-browser-filter button')?.addEventListener('click',()=>switchView(kind,null));
   const needle=aliases[q]||q;
-  const matches=t=>(t.name+' '+t.en+' '+(t.benefitPaths||[]).flat().join(' ')+' '+(t.benefitLabels||[]).join(' ')).toLowerCase().includes(needle);
+  const matches=t=>matchesName(t,needle)||(t.name+' '+t.en+' '+(t.benefitPaths||[]).flat().join(' ')+' '+(t.benefitLabels||[]).join(' ')).toLowerCase().includes(needle);
   const items=catalogs[kind].filter(t=>(!slot||slot===t.slot)&&(!q||matches(t)));
   $('.plan-browser-count').textContent=items.length+' 件';
   const groups=new Map();for(const t of items)for(const [parent,leaf] of t.benefitPaths||[['其他特殊效果','其他特殊效果']]){const benefit=leaf,category=parent==='训练与其他'?benefit:parent;if(!groups.has(category))groups.set(category,new Map());const leaves=groups.get(category);if(!leaves.has(benefit))leaves.set(benefit,[]);leaves.get(benefit).push(t);}
-  const row=(t,benefit)=>{const labels=t.benefitLabels||[],summary=benefit&&benefit!=='白板'?benefit:labels.join(' · ');return '<button class="plan-browser-item" draggable="true" data-id="'+t.id+'" title="'+esc(t.benefitTooltip||labels.join(' · '))+'" aria-label="安装 '+esc(t.name)+'"><img loading="lazy" draggable="false" src="https://images.evetech.net/types/'+t.id+'/icon?size=64" alt=""><span>'+esc(t.name)+'<em class="plan-benefit">'+esc(summary)+'</em></span><small>'+ (isInstalled(kind,t.id)?'已装':'槽 '+t.slot)+'</small></button>';};
+  const row=(t,benefit)=>{const labels=t.benefitLabels||[],summary=benefit&&benefit!=='白板'?benefit:labels.join(' · ');return '<button class="plan-browser-item" draggable="true" data-id="'+t.id+'" data-description-type="'+t.id+'" title="'+esc(t.descriptionNames?new DOMParser().parseFromString(localizeData(t.descriptionNames),'text/html').body.textContent:t.benefitTooltip||labels.join(' · '))+'" aria-label="安装 '+esc(t.name)+'"><img loading="lazy" draggable="false" src="https://images.evetech.net/types/'+t.id+'/icon?size=64" alt=""><span>'+esc(t.name)+'<em class="plan-benefit">'+esc(summary)+'</em></span><small>'+ (isInstalled(kind,t.id)?'已装':'槽 '+t.slot)+'</small></button>';};
   const renderRows=(rows,benefit,prefix)=>{
    if(kind==='boosters')return [false,true].map(hasEffects=>{
     const entries=rows.filter(t=>Boolean(t.sideEffects?.length)===hasEffects);if(!entries.length)return '';

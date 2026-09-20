@@ -5,7 +5,7 @@ import {implantCatalog,boosterCatalog} from './loadout-catalog.js';
 import {effectiveModuleState} from './module-state.js';
 import {OFFICIAL_SITE_HOST} from './site-config.js';
 import {valuationSummary,valuationReason} from './valuation-view.js';
-import {translateFor,getLocale} from './i18n.js';
+import {translateFor,getLocale,gameName,withPresentationLocale} from './i18n.js';
 
 const labels={high:'高槽',mid:'中槽',low:'低槽',rig:'改装件',subsystem:'子系统'};
 const states={Online:'在线',Offline:'离线',Active:'启用',Overload:'超载'};
@@ -35,7 +35,7 @@ export async function renderNativeShareImage(fit,report,catalog,options,valuatio
  for(const entity of Object.values(report.native.fighterEntities||{})){
   const m=entity.abilityMetadata;if(m?.typeId&&!types.has(m.typeId))types.set(m.typeId,{id:m.typeId,name:m.name?.zh||m.name?.en});
  }
- const name=id=>types.get(id)?.name||'物品 #'+id;
+ const name=id=>gameName(types.get(id)||id,language);
  const config=[];
  const add=(section,title,detail='',id=null)=>config.push({section,title,detail,id});
  if(fit.tacticalModeTypeId)add('舰体模式',name(fit.tacticalModeTypeId),'类型 #'+fit.tacticalModeTypeId,fit.tacticalModeTypeId);
@@ -91,7 +91,7 @@ export async function renderNativeShareImage(fit,report,catalog,options,valuatio
   line(row.title,{x:134,width:880,size:24,raw:true});if(row.detail)line(row.detail,{x:134,width:880,size:18,color:'#9eb7c4'});y=Math.max(y+12,top+78);const height=y-top;
   commands.splice(index,0,()=>{ctx.fillStyle='#142530';ctx.beginPath();ctx.roundRect(48,top,984,height,8);ctx.fill()});y+=12;
  }
- for(const row of nativeShareStats(report,catalog,{details:options.details,mode:fit.defenseMode||'hp'})){
+ for(const row of withPresentationLocale(language,()=>nativeShareStats(report,catalog,{details:options.details,mode:fit.defenseMode||'hp'}))){
   if(row.heading)heading(row.heading,row.summary);else if(row.note)line(row.note,{size:18,color:'#9eb7c4'});else pair(row.label,row.value);
  }
  heading('装配资源');for(const r of report.native.resources){const resource={cpu:['CPU','tf'],powergrid:['能量栅格','MW'],droneBay:['无人机机库','m³'],droneBandwidth:['无人机带宽','Mbit/s'],calibration:['校准','']}[r.id]||[r.id,''];pair(resource[0],'已用 '+fmt(r.used)+' / '+fmt(r.capacity)+' '+resource[1]+' · 剩余 '+fmt(r.remaining));}

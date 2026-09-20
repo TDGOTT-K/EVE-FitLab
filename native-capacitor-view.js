@@ -1,8 +1,9 @@
+import {getLocale,formatMetric,metricAttributes} from './i18n.js';
 import {panelTrace,panelReading,panelTip} from './native-panel-detail.js';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fmt=(n,u='')=>Number.isFinite(n)?n.toLocaleString('zh-CN',{maximumFractionDigits:2})+(u?' '+u:''):'—';
+const fmt=(n,u='')=>formatMetric(n,u,{maximumFractionDigits:2});
 const duration=n=>n<60?fmt(n)+'秒':Math.floor(n/60)+'分'+(n%60?fmt(n%60)+'秒':'');
-const row=(title,value,detail)=>'<div class="stat-row" '+(detail?panelTip(detail):'')+'><span>'+esc(title)+'</span><b>'+esc(value)+'</b></div>';
+const row=(title,value,detail)=>'<div class="stat-row" '+(detail?panelTip(detail):'')+'><span>'+esc(title)+'</span><b '+metricAttributes(value)+'>'+esc(value)+'</b></div>';
 export function capacitorPresentation(report,catalog=[]){
  const data=report.capacitorScenario,r=data?.result,average=r?.average,native=report.native||{},local=native.capacitor;
  const external=['targetFitId','supportFitId','hostileFitId'].some(k=>report.curveRequest?.scenario?.[k]);

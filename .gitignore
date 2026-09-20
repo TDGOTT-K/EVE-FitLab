@@ -32,3 +32,7 @@ venv/
 # Private development notes and temporary deployment probes
 docs/2026-09-14-*.md
 website/downloads/*test*
+
+# Removed legacy engine trees must never return to the source checkout.
+/engine/
+/desktop/engine/

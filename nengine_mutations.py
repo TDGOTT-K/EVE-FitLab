@@ -16,7 +16,7 @@ def options(types):
                 if types.get(base, {}).get('kind') not in ('high', 'mid', 'low'): continue
                 if mapping['resultingType'] not in types: continue
                 result.setdefault(str(base), []).append({
-                    'id': plasmid, 'name': name.get('zh', name.get('en', str(plasmid))),
+                    'id': plasmid, 'name': name.get('zh', name.get('en', str(plasmid))), 'names': name,
                     'resultTypeId': mapping['resultingType']})
     return result
 
@@ -43,6 +43,8 @@ def generate(body, types, roll=False):
         metadata[str(attr['attributeId'])] = {
             'label': label.get('zh', label.get('en', attr['name'])) if isinstance(label, dict) else label,
             'unit': unit.get('zh', unit.get('en', '')) if isinstance(unit, dict) else unit,
+            'labelNames': label if isinstance(label, dict) else {},
+            'unitNames': unit if isinstance(unit, dict) else {},
             'highIsGood': info.get('highIsGood')}
     return {'data': result, 'metadata': metadata}
 

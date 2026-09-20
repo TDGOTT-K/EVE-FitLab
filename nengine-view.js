@@ -1,4 +1,5 @@
 import {patchHtml} from './dom-patch.js';
+import {getLocale,formatMetric,metricAttributes} from './i18n.js';
 import {panelTrace,panelReading,panelTip,panelAttributeTerm} from './native-panel-detail.js';
 import {scaleReading} from './analysis-status.js';
 import {capacitorHtml} from './native-capacitor-view.js';
@@ -6,7 +7,7 @@ import {numberAttributes,deltaClass} from './scenario-display.js';
 import {outputHtml,outputReading,displayOutputSelection} from './nengine-output-view.js';
 // Native report presenter: formatting and layout only; values belong to NEngine.
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fmt=(n,u='')=>Number.isFinite(n)?n.toLocaleString('zh-CN',{maximumFractionDigits:2})+(u?' '+u:''):'—';
+const fmt=(n,u='')=>formatMetric(n,u,{maximumFractionDigits:2});
 export function nativeDetail(trace,title,unit='',report){
  if(report?.nativeDetailMode?.startsWith('values_only'))return panelTrace(trace,title,unit,report);
  if(!trace)return null;
@@ -14,7 +15,7 @@ export function nativeDetail(trace,title,unit='',report){
  return {title,result:fmt(trace.value,unit),terms:[['基础值',fmt(trace.baseValue,unit)],...(trace.steps||[]).filter(s=>s.before!==s.after).map(s=>[source(s.sourceId),fmt(s.before)+' → '+fmt(s.after),null,{title:source(s.sourceId),result:fmt(s.after,unit),terms:[['来源修正值',fmt(s.sourceValue)],['叠加系数',fmt(s.penalty)]],conditions:[['效果',String(s.effectId)]]}])],conditions:[['来源','N 号引擎 · '+trace.key]]};
 }
 const tip=detail=>detail?`tabindex="0" data-explain="${esc(JSON.stringify(detail))}"`:'';
-const row=(label,value,detail)=>`<div class="stat-row" ${tip(detail)}><span>${esc(label)}</span><b>${esc(value)}</b></div>`;
+const row=(label,value,detail)=>`<div class="stat-row" ${tip(detail)}><span>${esc(label)}</span><b ${metricAttributes(value)}>${esc(value)}</b></div>`;
 const head=(label,summary='')=>`<div class="panel-title"><span>${label}</span>${summary?`<div class="section-summary" aria-label="${label}摘要">${summary}</div>`:'<small>N</small>'}</div>`;
 export function nativeSlotMetrics(report,slot,group){
  const a=report.native.attributes,w=report.native.weapons[slot.key];
@@ -33,7 +34,7 @@ export function nativeResources(host,report){
 }
 export function mountNativeStats(root,report,{mode='hp',onMode,onDamageEdit,catalog=[]}={}){
  const a=report.native,attrs=a.attributes;
- const attr=(label,id,unit='',scale=1)=>{const t=attrs['ship/'+id];return row(label,(id===70&&Number.isFinite(t?.value)?t.value.toFixed(5):fmt(scaleReading(t?.value,scale),unit)),panelTrace(t,label,unit,report,catalog,scale))};
+ const attr=(label,id,unit='',scale=1)=>{const t=attrs['ship/'+id];return row(label,(id===70&&Number.isFinite(t?.value)?formatMetric(t.value,'',{minimumFractionDigits:5,maximumFractionDigits:5}):fmt(scaleReading(t?.value,scale),unit)),panelTrace(t,label,unit,report,catalog,scale))};
  const detail=(title,value,unit,terms=[],conditions=[])=>panelReading(title,value,unit,terms,conditions);
  let html='<div id="native-capacitor">'+capacitorHtml(report,catalog)+'</div>';
  const unit=report.attackMode==='edps'?'EDPS':'DPS';

@@ -14,6 +14,14 @@ class PersistenceTests(unittest.TestCase):
   req=urllib.request.Request(self.url+'/api/'+path,data=json.dumps(body).encode() if body is not None else None,headers={'Content-Type':'application/json','Origin':self.url})
   with urllib.request.urlopen(req) as r:return json.load(r)
  def sample(self):return {'shipId':587,'name':'持久化验证','skills':[{'skillTypeId':3300,'level':4}],'slots':[{'key':'high-0','kind':'high','item':484,'ammo':185,'online':True}],'tags':['验证'],'notes':'使用说明\n第二行'}
+ def test_locale_resources_are_served(self):
+  for name in ['source','en','zh-TW','ja','de','ru','fr','legacy-aliases']:
+   with urllib.request.urlopen(self.url+'/locales/'+name+'.json') as response:
+    self.assertEqual(response.status,200)
+    self.assertIsInstance(json.load(response),dict)
+  with self.assertRaises(urllib.error.HTTPError) as error:
+   urllib.request.urlopen(self.url+'/locales/private.json')
+  self.assertEqual(error.exception.code,404)
  def test_roundtrip_and_conflict(self):
   saved=self.call('save',self.sample());self.assertEqual(self.call('library')[0],saved)
   revised=self.call('save',saved);self.assertEqual(revised['revision'],2)
@@ -55,6 +63,6 @@ class PersistenceTests(unittest.TestCase):
   saved=self.call('save',draft)
   self.assertTrue(saved['id']);self.assertEqual(saved['revision'],1)
   self.assertEqual(saved['scenario']['distance'],12000)
-  self.assertEqual(saved['slots'],draft['slots'])
+  self.assertEqual(saved['slots'],[{**slot, 'state':'Active'} for slot in draft['slots']]);self.assertNotIn('state',draft['slots'][0])
   self.assertEqual(self.call('library'),[saved])
 if __name__=='__main__':unittest.main()

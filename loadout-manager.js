@@ -1,3 +1,4 @@
+import {getLocale,gameNameMarkup,gameLabelMarkup,t} from './i18n.js';
 import {showPlanShare,showPlanImport} from './plan-share.js';
 import {installAffixFloat} from './plan-affix-float.js';
 import {renderPlanAffixes} from './plan-affixes.js';
@@ -32,14 +33,14 @@ export function installLoadoutManager(host,{api}){
 
  function installItem(kind,t){
   if(busy)return;
-  if(!draft){draft={name:'新方案',folder:'',implants:[],boosters:[]};dirty=true;draw();}
+  if(!draft){draft={name:t('ui.newPlan'),folder:'',implants:[],boosters:[]};dirty=true;draw();}
   if(draft[kind].some(x=>x.typeId===t.id))return;
   draft[kind]=draft[kind].filter(x=>x.slot!==t.slot).concat({typeId:t.id,slot:t.slot,...(kind==='boosters'?{enabledSideEffects:[]}:{})});changed();drawSlots();
  }
  function installSet(set,fillOnly){
   if(busy)return;const current=draft?.implants||[],changes=implantSetChanges(current,set.items,fillOnly);
   if(!changes.length){message(fillOnly?'没有需要补齐的空槽':'此套装已完整安装');return;}
-  if(!draft){draft={name:'新方案',folder:activeFolder||'',implants:[],boosters:[]};dirty=true;draw();}
+  if(!draft){draft={name:t('ui.newPlan'),folder:activeFolder||'',implants:[],boosters:[]};dirty=true;draw();}
   draft.implants=applyImplantSet(draft.implants,set.items,fillOnly);changed();drawSlots();message((fillOnly?'已补齐 ':'已安装 ')+set.name+' · '+changes.length+' 件');
  }
  function unload(event){if(!drag||drag.source!=='installed'||!draft||busy)return false;if(event){draft[drag.kind]=draft[drag.kind].filter(x=>x.typeId!==drag.id);drag=null;changed();drawSlots();}return true;}
@@ -64,7 +65,7 @@ export function installLoadoutManager(host,{api}){
    const nested=layout.folders.filter(f=>parentFolder(f)===folder),direct=plans.filter(p=>(p.folder||'')===folder),rows=ordered([...nested.map(f=>'f:'+f),...direct.filter(matches).map(p=>'p:'+p.id)]);
    const content=rows.map(k=>k.startsWith('f:')?folderRow(k.slice(2)):planRow(direct.find(p=>p.id===k.slice(2)))).join('');
    if(q&&!content&&!folder.toLowerCase().includes(q))return '';
-   return '<details class="plan-tree-group" '+(q||folderOpen.has(folder)?'open':'')+'><summary draggable="'+Boolean(folder)+'" data-library-key="f:'+esc(folder)+'" data-folder-path="'+esc(folder)+'" '+(activeFolder===folder?'class="active-folder"':'')+'><span>'+esc(folderName(folder)||'未分组')+'</span><small>'+plans.filter(p=>p.folder===folder||folder&&p.folder?.startsWith(folder+'/')).length+'</small></summary><div class="plan-tree-children">'+(content||'<span class="plan-tree-empty">空分组</span>')+'</div></details>';
+   return '<details class="plan-tree-group" '+(q||folderOpen.has(folder)?'open':'')+'><summary draggable="'+Boolean(folder)+'" data-library-key="f:'+esc(folder)+'" data-folder-path="'+esc(folder)+'" '+(activeFolder===folder?'class="active-folder"':'')+'><span>'+'<span translate="no">'+esc(folderName(folder)||'未分组')+'</span>'+'</span><small>'+plans.filter(p=>p.folder===folder||folder&&p.folder?.startsWith(folder+'/')).length+'</small></summary><div class="plan-tree-children">'+(content||'<span class="plan-tree-empty">空分组</span>')+'</div></details>';
   }
   // The ungrouped bucket contains only root plans; root folders remain its siblings.
   const roots=ordered(layout.folders.filter(f=>!parentFolder(f)).map(f=>'f:'+f));
@@ -142,8 +143,8 @@ export function installLoadoutManager(host,{api}){
   affixFloat.setVisible(Boolean(draft));
   cache();drawList();browser.refresh();
   if(!draft){$('.plan-toolbar').innerHTML=returnToFit?'<button data-back>返回装配</button>':'';$('.plan-content').innerHTML='<button type="button" class="plan-create-slot"><span class="plan-create-plus" aria-hidden="true">＋</span><span>创建新方案</span></button>';$('.plan-create-slot').onclick=()=>newPlan('');host.querySelector('[data-back]')?.addEventListener('click',()=>location.hash='fitting');return;}
-  $('.plan-toolbar').innerHTML='<div class="plan-name-row fit-name-row"><h2>'+esc(draft.name)+'</h2><button class="edit-name-icon" data-rename aria-label="编辑方案名称" title="编辑名称"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15Z"/></svg></button></div><span class="plan-dirty">'+(dirty?'未保存':'已保存')+'</span><button data-save>保存方案</button><button data-more aria-haspopup="menu" aria-label="更多方案操作">更多 ···</button>'+(returnToFit?'<button data-use>应用到装配</button><button data-back>返回装配</button>':'');
-  $('.plan-content').innerHTML='<div class="plan-meta"><label>计算角色 <select data-plan-pilot aria-label="方案计算角色"><option value="snapshot">'+esc(draft.pilot?.name||'无技能 · 基础对照')+'</option><option value="untrained">无技能 · 基础对照</option>'+pilots.map((p,i)=>'<option value="'+i+'">'+esc(p.name)+'</option>').join('')+'</select></label><small data-plan-analysis>查询引擎…</small></div><div class="plan-section-head"><b>脑插</b><span>'+draft.implants.length+' / 10</span></div><div class="plan-slots"></div><div class="plan-section-head"><b>增效剂</b><button data-roll-boosters title="每种副作用独立抽取；概率由引擎按当前角色和脑插计算">⚄ 随机服用一次</button></div><div class="plan-boosters"></div><p class="plan-scope">概率与时长由 N 引擎计算 · 非实际服用</p>';
+  $('.plan-toolbar').innerHTML='<div class="plan-name-row fit-name-row"><h2 translate="no">'+esc(draft.name)+'</h2><button class="edit-name-icon" data-rename aria-label="编辑方案名称" title="编辑名称"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15Z"/></svg></button></div><span class="plan-dirty">'+(dirty?'未保存':'已保存')+'</span><button data-save>保存方案</button><button data-more aria-haspopup="menu" aria-label="更多方案操作">更多 ···</button>'+(returnToFit?'<button data-use>应用到装配</button><button data-back>返回装配</button>':'');
+  $('.plan-content').innerHTML='<div class="plan-meta"><label>计算角色 <select data-plan-pilot aria-label="方案计算角色"><option value="snapshot" '+(draft.pilot?.name?'translate="no"':'')+'>'+esc(draft.pilot?.name||'无技能 · 基础对照')+'</option><option value="untrained">无技能 · 基础对照</option>'+pilots.map((p,i)=>'<option value="'+i+'" translate="no">'+esc(p.name)+'</option>').join('')+'</select></label><small data-plan-analysis>查询引擎…</small></div><div class="plan-section-head"><b>脑插</b><span>'+draft.implants.length+' / 10</span></div><div class="plan-slots"></div><div class="plan-section-head"><b>增效剂</b><button data-roll-boosters title="每种副作用独立抽取；概率由引擎按当前角色和脑插计算">⚄ 随机服用一次</button></div><div class="plan-boosters"></div><p class="plan-scope">概率与时长由 N 引擎计算 · 非实际服用</p>';
    $('[data-rename]').onclick=rename;$('.plan-name-row h2').onclick=rename;
   $('[data-save]').onclick=save;$('[data-more]').onclick=openPlanActions;
   $('[data-use]')?.addEventListener('click',()=>{document.dispatchEvent(new CustomEvent('fitlab-use-loadout',{detail:{...structuredClone(draft),customized:dirty}}));location.hash='fitting';});
@@ -177,8 +178,8 @@ export function installLoadoutManager(host,{api}){
     status.title=a.issues.map(i=>i.code+' · '+i.message).join('；');
     host.querySelectorAll('[data-effect]').forEach(button=>{const row=a.boosters.find(b=>b.typeId===Number(button.dataset.booster)),effect=row?.sideEffects.find(e=>e.effectId===Number(button.dataset.effect));
      const probability=a.projectionComplete?effect?.probability:null;
-     button.querySelector('small').textContent=Number.isFinite(probability)?(probability*100).toLocaleString('zh-CN',{maximumFractionDigits:3})+'%':'—';
-     button.title='引擎副作用概率 · '+(Number.isFinite(probability)?(probability*100).toLocaleString('zh-CN',{maximumFractionDigits:3})+'%':'不可用')+(a.projectionComplete&&Number.isFinite(row?.durationSeconds)?' · 持续 '+row.durationSeconds.toLocaleString('zh-CN')+' 秒':'');
+     button.querySelector('small').textContent=Number.isFinite(probability)?(probability*100).toLocaleString(getLocale(),{maximumFractionDigits:3})+'%':'—';
+     button.title='引擎副作用概率 · '+(Number.isFinite(probability)?(probability*100).toLocaleString(getLocale(),{maximumFractionDigits:3})+'%':'不可用')+(a.projectionComplete&&Number.isFinite(row?.durationSeconds)?' · 持续 '+row.durationSeconds.toLocaleString(getLocale())+' 秒':'');
     });
     const receipt=draft.rollReceipt;
     let matches=false;
@@ -193,12 +194,12 @@ export function installLoadoutManager(host,{api}){
  function drawSlots(){
   browser.refresh();
   $('.plan-section-head span').textContent=draft.implants.length+' / 10';
-  const card=(kind,slot)=>{const entry=draft[kind].find(x=>x.slot===slot),t=entry&&find(kind,entry.typeId);return '<div class="plan-slot" data-kind="'+kind+'" data-slot="'+slot+'"><button class="plan-slot-main" '+(entry?'draggable="true"':'')+' aria-label="'+(kind==='implants'?'脑插':'增效剂')+'槽位 '+slot+'"><small>'+String(slot).padStart(2,'0')+'</small>'+icon(t)+'<span>'+esc(t?.name||(entry?'未知物品 #'+entry.typeId:'选择'+(kind==='implants'?'脑插':'增效剂')))+'</span></button>'+(entry?'<button class="plan-remove" aria-label="卸下'+(kind==='implants'?'脑插':'增效剂')+' '+slot+'">×</button>':'')+'</div>';};
+  const card=(kind,slot)=>{const entry=draft[kind].find(x=>x.slot===slot),t=entry&&find(kind,entry.typeId);return '<div class="plan-slot" data-kind="'+kind+'" data-slot="'+slot+'"><button class="plan-slot-main" '+(entry?'draggable="true"':'')+' aria-label="'+(kind==='implants'?'脑插':'增效剂')+'槽位 '+slot+'"><small>'+String(slot).padStart(2,'0')+'</small>'+icon(t)+'<span>'+(t?gameNameMarkup(t):esc(entry?'未知物品 #'+entry.typeId:'选择'+(kind==='implants'?'脑插':'增效剂')))+'</span></button>'+(entry?'<button class="plan-remove" aria-label="卸下'+(kind==='implants'?'脑插':'增效剂')+' '+slot+'">×</button>':'')+'</div>';};
   $('.plan-slots').innerHTML=Array.from({length:10},(_,i)=>card('implants',i+1)).join('');
   $('.plan-boosters').innerHTML=[...new Set([1,2,3,...draft.boosters.map(b=>b.slot)])].sort((a,b)=>a-b).map(slot=>{
    const entry=draft.boosters.find(b=>b.slot===slot),t=entry&&find('boosters',entry.typeId);
    const active=entry?.enabledSideEffects?.filter(id=>t?.sideEffects.some(e=>e.id===id)).length||0;
-   return '<div>'+card('boosters',slot)+(entry?'<div class="plan-side-effects"><span class="booster-effect-state '+(active?'has-effects':'')+'">'+(t?.sideEffects.length?(active?'副作用 '+active+'/'+t.sideEffects.length:'无副作用生效'):'无副作用')+'</span>'+(t?.sideEffects||[]).map(e=>'<button type="button" data-booster="'+entry.typeId+'" data-effect="'+e.id+'" aria-pressed="'+Boolean(entry.enabledSideEffects?.includes(e.id))+'" title="'+esc(e.name)+' · 等待引擎概率 · 点击或右键切换">'+esc(e.name)+' <small>'+'…'+'</small></button>').join('')+'</div>':'')+'</div>';
+   return '<div>'+card('boosters',slot)+(entry?'<div class="plan-side-effects"><span class="booster-effect-state '+(active?'has-effects':'')+'">'+(t?.sideEffects.length?(active?'副作用 '+active+'/'+t.sideEffects.length:'无副作用生效'):'无副作用')+'</span>'+(t?.sideEffects||[]).map(e=>'<button type="button" data-booster="'+entry.typeId+'" data-effect="'+e.id+'" aria-pressed="'+Boolean(entry.enabledSideEffects?.includes(e.id))+'" title="'+esc(e.name)+' · 等待引擎概率 · 点击或右键切换">'+gameLabelMarkup('dogmaEffects',e.id,e.name)+' <small>'+'…'+'</small></button>').join('')+'</div>':'')+'</div>';
 
   }).join('');
   host.querySelectorAll('.plan-slot').forEach(el=>{const kind=el.dataset.kind,slot=Number(el.dataset.slot),main=el.querySelector('.plan-slot-main');main.onclick=()=>browser.select(kind,slot);const context=e=>{const entry=draft[kind].find(x=>x.slot===slot),t=entry&&find(kind,entry.typeId);if(!t)return;e.preventDefault();e.stopPropagation();document.dispatchEvent(new CustomEvent('fitlab-loadout-menu',{detail:{event:e,item:t,origin:main,planContext:{plan:structuredClone(draft),kind,slot},entries:[...(kind==='boosters'&&t.sideEffects.length?[['随机服用此药',()=>rollBoosters(entry.typeId)]]:[]),['卸下',()=>{draft[kind]=draft[kind].filter(x=>x.slot!==slot);changed();drawSlots();}]]}}));};main.oncontextmenu=context;main.onkeydown=e=>{if(e.key==='ContextMenu'||e.shiftKey&&e.key==='F10')context(e)};el.ondragover=e=>{const t=drag&&find(drag.kind,drag.id);if(drag?.source==='browser'&&drag.kind===kind&&t?.slot===slot){e.preventDefault();e.dataTransfer.dropEffect='copy';}};el.ondrop=e=>{e.stopPropagation();const t=drag&&find(drag.kind,drag.id);if(drag?.source==='browser'&&drag.kind===kind&&t?.slot===slot){e.preventDefault();installItem(kind,t);}clearDrag();};el.querySelector('.plan-remove')?.addEventListener('click',()=>{draft[kind]=draft[kind].filter(x=>x.slot!==slot);changed();drawSlots();});main.ondragstart=e=>{const entry=draft[kind].find(x=>x.slot===slot);if(!entry){e.preventDefault();return;}drag={kind,id:entry.typeId,source:'installed'};e.dataTransfer.setData('text/plain',String(entry.typeId));e.dataTransfer.effectAllowed='move';};main.ondragend=clearDrag;});
@@ -210,7 +211,7 @@ export function installLoadoutManager(host,{api}){
  async function run(fn){if(busy)return;busy=true;$('.plan-workspace').inert=true;try{await fn()}catch(e){message(e.message)}finally{busy=false;$('.plan-workspace').inert=false;}}
  async function save(){if(!draft.name.trim()){message('请填写方案名称');return;}await run(async()=>{const saved=await api('loadout-plan',draft);plans=plans.filter(p=>p.id!==saved.id).concat(saved);draft=structuredClone(saved);dirty=false;draw();message('方案已保存 · 已有装配快照不变');notify();});}
  function duplicate(){if(!draft)return;const names=new Set(plans.map(p=>p.name));let n=1,name;do{name=draft.name.slice(0,65)+' · 副本'+(n>1?' '+n:'');n++;}while(names.has(name));draft={...structuredClone(draft),id:undefined,revision:undefined,name,folder:draft.folder||''};dirty=true;draw();message('副本尚未保存');}
- async function newPlan(folder){if(busy||!await guard())return;activeFolder=folder;folderOpen.add(folder);draft={name:'新方案',folder,implants:[],boosters:[]};dirty=true;draw();rename();}
+ async function newPlan(folder){if(busy||!await guard())return;activeFolder=folder;folderOpen.add(folder);draft={name:t('ui.newPlan'),folder,implants:[],boosters:[]};dirty=true;draw();rename();}
  $('.plan-search').oninput=drawList;
  const scope=e=>!host.hidden&&!host.closest('[hidden]')&&!document.querySelector('dialog[open]')&&e.target.closest('.plan-library')&&!e.target.closest('input,textarea,[contenteditable]');
  document.addEventListener('copy',e=>{if(!scope(e)||!draft||!e.clipboardData)return;e.clipboardData.setData('text/plain',JSON.stringify({format:'fitlab-loadout',plan:draft}));e.preventDefault();message('方案已复制');});

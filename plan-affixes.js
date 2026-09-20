@@ -1,4 +1,5 @@
-const signed=value=>(value>0?'+':'')+value.toLocaleString('zh-CN',{maximumFractionDigits:3});
+import {getLocale} from './i18n.js';
+const signed=value=>(value>0?'+':'')+value.toLocaleString(getLocale(),{maximumFractionDigits:3});
 export function renderPlanAffixes(root,summary,{find}){
  if(!root)return;root.replaceChildren();root.title='';
  if(!summary){root.textContent='加成暂不可用';return;}

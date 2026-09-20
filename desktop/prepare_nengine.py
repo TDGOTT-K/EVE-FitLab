@@ -1,5 +1,6 @@
 """Stage an immutable engine COPY for Windows packaging; never build/edit its source."""
 import argparse
+import os
 import json
 from pathlib import Path
 import shutil
@@ -8,7 +9,7 @@ from datetime import datetime,timezone
 
 ROOT=Path(__file__).resolve().parent.parent
 parser=argparse.ArgumentParser()
-parser.add_argument('--engine',default=str(ROOT.parent/'N号引擎-UI接入-0.190-r33'))
+parser.add_argument('--engine',default=os.environ.get('FITLAB_NENGINE_ROOT', str(ROOT.parent/'NEngine')))
 args=parser.parse_args()
 source=Path(args.engine).resolve()
 manifest=source/('UI-LOCAL-BASELINE.json' if (source/'UI-LOCAL-BASELINE.json').is_file() else 'UI-BASELINE.json')

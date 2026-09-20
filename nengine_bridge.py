@@ -11,7 +11,7 @@ import subprocess
 import threading
 from collections import OrderedDict
 
-DEFAULT_ROOT = Path(__file__).resolve().parent.parent / 'N号引擎-UI接入-0.190-r33'
+DEFAULT_ROOT = Path(__file__).resolve().parent.parent / 'NEngine'
 
 class NEngineError(ValueError):
     """Keep the engine diagnostic intact for transaction conflict handling."""
@@ -32,7 +32,7 @@ class NEngineBridge:
         self.baseline = json.loads(manifest.read_text(encoding='utf-8-sig'))
         if not self.baseline.get('independentClone'):
             raise ValueError('拒绝连接非独立引擎副本')
-        self.state = Path(state or os.environ.get('FITLAB_NENGINE_STATE',Path(__file__).resolve().parent / 'state/nengine-ui-local-r40')).resolve()
+        self.state = Path(state or os.environ.get('FITLAB_NENGINE_STATE',Path(__file__).resolve().parent / 'state/native')).resolve()
         self.lock = threading.RLock()
         self.process = None
         self.sequence = 0

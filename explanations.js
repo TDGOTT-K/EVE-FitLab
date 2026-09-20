@@ -4,19 +4,19 @@ import {implantCatalog,boosterCatalog} from './loadout-catalog.js';
 import {mountCapacitorChart} from './capacitor-chart.js';
 import {mountNativeCapacitorChart} from './native-capacitor-chart.js';
 import {mountDpsChart} from './dps-chart.js';
-import {getLocale} from './i18n.js';
+import {getLocale,gameNameMarkup} from './i18n.js';
 // One explanation branch; each locked panel can own a deeper explanation.
 export function installExplanations(){
  const curveCache=new Map(),planCache=new Map();
- const chain=[],delay=800;let leaveTimer,lastPointer=null,chartMode='distance';
+ const chain=[],delay=800;let leaveTimer,lastPointer=null,chartMode='distance',localeReflow=false;
  const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- function closeFrom(depth){for(const node of chain.splice(depth)){cancelAnimationFrame(node.frame);node.resize?.disconnect();node.anchor.removeAttribute('aria-describedby');node.panel.remove();node.bridge.remove();node.aura?.remove()}}
+ function closeFrom(depth){if(depth===0)localeReflow=false;for(const node of chain.splice(depth)){cancelAnimationFrame(node.frame);node.resize?.disconnect();node.anchor.removeAttribute('aria-describedby');node.panel.remove();node.bridge.remove();node.aura?.remove()}}
  function lock(node){if(!node.lockable||!node.panel.isConnected)return;node.locked=true;node.panel.inert=false;node.panel.classList.add('locked');node.bridge.classList.add('locked');node.aura.classList.add('complete');node.panel.querySelector('.explain-lock').textContent='已锁定 · 可继续查看明细';}
  function place(node){const r=(node.anchor.closest('.loadout-quick')||node.anchor).getBoundingClientRect(),p=node.panel,w=p.offsetWidth,h=p.offsetHeight;let x=r.left-w-10;if(x<8)x=r.right+10;if(x+w>innerWidth-8)x=Math.max(8,innerWidth-w-8);const y=Math.max(8,Math.min(r.top,innerHeight-h-8));p.style.left=x+'px';p.style.top=y+'px';const b=node.bridge,left=x+w<=r.left?x+w:r.right,right=x+w<=r.left?r.left:x;Object.assign(b.style,{left:left+'px',top:Math.max(y,r.top)+'px',width:Math.max(0,right-left)+'px',height:Math.max(0,Math.min(y+h,r.bottom)-Math.max(y,r.top))+'px'});}
  function show(anchor){const owner=anchor.closest('.stat-explanation'),depth=owner?Number(owner.dataset.depth)+1:0;if(owner&&!chain[depth-1]?.locked)return;if(chain[depth]?.anchor===anchor)return;clearTimeout(leaveTimer);closeFrom(depth);let detail;try{detail=JSON.parse(anchor.dataset.explain)}catch{return}
-  const panel=document.createElement('section'),bridge=document.createElement('div');panel.className='stat-explanation';panel.inert=true;panel.id=depth?'stat-explanation-'+depth:'stat-explanation';panel.dataset.depth=depth;panel.role='tooltip';panel.setAttribute('aria-label',detail.title);panel.style.zIndex=150+depth*2;bridge.className='explain-bridge';bridge.style.zIndex=149+depth*2;
-  const lines=rows=>(rows||[]).map(([label,value,kind,child])=>`<div class="explain-line ${kind==='source'?'explain-source':''} ${child?'has-detail':''}" ${child?`tabindex="0" data-explain="${esc(JSON.stringify(child))}"`:''}><span>${esc(label)}</span><b>${esc(value)}${child?' <span class="detail-arrow">›</span>':''}</b></div>`).join('');
-  panel.innerHTML=`<div class="explain-heading"><span>${esc(detail.title)}</span></div><div class="explain-lock">停留以锁定</div><div class="explain-terms">${lines(detail.terms)}</div><div class="explain-result"><span>结果</span><b class="${['scenario-increased','scenario-decreased'].includes(detail.resultClass)?detail.resultClass:''}">${esc(detail.result)}</b></div><div class="explain-conditions">${lines(detail.conditions)}</div>`;
+  const panel=document.createElement('section'),bridge=document.createElement('div');panel.className='stat-explanation';panel.inert=true;panel.id=depth?'stat-explanation-'+depth:'stat-explanation';panel.dataset.depth=depth;panel.role='tooltip';panel.setAttribute('aria-label',detail.title);if(detail.titleTypeId)panel.dataset.gameTypeLabel=detail.titleTypeId;panel.style.zIndex=150+depth*2;bridge.className='explain-bridge';bridge.style.zIndex=149+depth*2;
+  const lines=rows=>(rows||[]).map(([label,value,kind,child,identity])=>`<div class="explain-line ${kind==='source'?'explain-source':''} ${child?'has-detail':''}" ${child?`tabindex="0" data-explain="${esc(JSON.stringify(child))}"`:''}><span>${identity?.typeId?gameNameMarkup(identity.typeId)+(identity.skillLevel!==undefined?' '+esc(identity.skillLevel)+' 级':''):esc(label)}</span><b ${kind==='user'?'translate="no"':''}>${esc(value)}${child?' <span class="detail-arrow">›</span>':''}</b></div>`).join('');
+  panel.innerHTML=`<div class="explain-heading"><span>${detail.titleTypeId?gameNameMarkup(detail.titleTypeId)+esc(detail.titleSuffix||''):esc(detail.title)}</span></div><div class="explain-lock">停留以锁定</div><div class="explain-terms">${lines(detail.terms)}</div><div class="explain-result"><span>结果</span><b class="${['scenario-increased','scenario-decreased'].includes(detail.resultClass)?detail.resultClass:''}">${esc(detail.result)}</b></div><div class="explain-conditions">${lines(detail.conditions)}</div>`;
   for(const selector of ['.explain-terms','.explain-conditions']){const section=panel.querySelector(selector);section.hidden=!section.children.length;}
   if(detail.chart){
    panel.classList.add('has-dps-chart');
@@ -114,8 +114,11 @@ export function installExplanations(){
   if(keep<chain.length)leaveTimer=setTimeout(()=>closeFrom(keep),120);
  }
  document.addEventListener('fitlab-calculation-invalidated',()=>closeFrom(0));
- document.addEventListener('pointerover',e=>{track(e.target);const anchor=e.target.closest('[data-explain]');if(anchor)show(anchor)});
- document.addEventListener('pointerout',e=>track(e.relatedTarget));
+ document.addEventListener('pointerover',e=>{if(localeReflow)return;track(e.target);const anchor=e.target.closest('[data-explain]');if(anchor)show(anchor)});
+ document.addEventListener('pointerout',e=>{if(!localeReflow)track(e.relatedTarget)});
+ document.addEventListener('pointermove',e=>{if(localeReflow&&(e.movementX||e.movementY)){localeReflow=false;track(e.target)}});
+ document.addEventListener('wheel',()=>{localeReflow=false},{passive:true});
+ window.addEventListener('fitlab-language-change',()=>{localeReflow=chain.some(n=>n.locked);clearTimeout(leaveTimer);requestAnimationFrame(()=>{for(const node of chain){place(node);if(node.aura){cancelAnimationFrame(node.frame);node.aura.remove();animateLock(node);if(node.locked){cancelAnimationFrame(node.frame);lock(node)}}}})});
  document.addEventListener('focusin',e=>{const anchor=e.target.closest('[data-explain]');if(anchor){show(anchor);const node=chain.find(n=>n.anchor===anchor);if(node){cancelAnimationFrame(node.frame);lock(node)}}});
  document.addEventListener('pointerdown',e=>{if(!inChain(e.target))closeFrom(0)},true);
  document.addEventListener('keydown',e=>{
@@ -125,7 +128,7 @@ export function installExplanations(){
  },true);
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&chain.length){e.preventDefault();e.stopImmediatePropagation();closeFrom(chain.length-1)}},true);
  window.addEventListener('resize',()=>closeFrom(0));
- document.addEventListener('scroll',e=>{if(e.target instanceof Element&&e.target.closest('.stat-explanation'))return;closeFrom(0)},true);
+ document.addEventListener('scroll',e=>{if(localeReflow)return;if(e.target instanceof Element&&e.target.closest('.stat-explanation'))return;closeFrom(0)},true);
  const observer=new MutationObserver(()=>{const i=chain.findIndex(n=>!n.anchor.isConnected||n.anchor.closest('[hidden]'));if(i>=0)closeFrom(i)});observer.observe(document.body,{childList:true});for(const root of document.querySelectorAll('.inspector,#info-window'))observer.observe(root,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});
 }
 

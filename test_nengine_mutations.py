@@ -72,6 +72,17 @@ class Mutations(unittest.TestCase):
         forged=copy.deepcopy(current);forged['rolls'][0]['comparison']['difference']+=1
         with self.assertRaises(ValueError):verify_receipt(forged,526,TYPES)
 
+    def test_display_languages_preserve_official_ids_and_receipt(self):
+        from nengine_catalog import index_metadata
+        metadata=index_metadata()
+        material=next(row for row in options(TYPES)['526'] if row['id']==47699)
+        self.assertEqual(material['names'],metadata['types'][47699]['name'])
+        result=generate(dict(baseTypeId=526,mutaplasmidTypeId=47699),TYPES)
+        for row in result['data']['attributes']:
+            label=result['metadata'][str(row['attributeId'])]
+            self.assertEqual(label['labelNames'],metadata['dogmaAttributes'][row['attributeId']].get('displayName',{}))
+            self.assertNotIn('labelNames',row) # Display metadata must never enter the engine rule/receipt.
+
     def test_wrong_mapping_rejected(self):
         self.assertTrue(options(TYPES)['526'])
         with self.assertRaises(ValueError):

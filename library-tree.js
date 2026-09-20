@@ -1,3 +1,4 @@
+import {gameNameMarkup,navigationMarkup} from './i18n.js';
 
 export function createLibraryTree(root,catalog,onChange,onHullMenu,{picker:pickerMode=false,initialPath=[]}={}){
  // Navigation labels mapped to SDE faction identities, not fitting rules.
@@ -33,7 +34,7 @@ export function createLibraryTree(root,catalog,onChange,onHullMenu,{picker:picke
   picker.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();closeTagPicker(true)}if(e.target.matches('button')&&['ArrowDown','ArrowUp'].includes(e.key)){e.preventDefault();const buttons=[...list.querySelectorAll('button')],i=buttons.indexOf(e.target);buttons[(i+(e.key==='ArrowDown'?1:-1)+buttons.length)%buttons.length]?.focus()}};
  }
 
- const button=(key,label,count,icon='')=>'<button type="button" data-library-filter="'+esc(key)+'" class="'+(key===filter?'active':'')+'">'+icon+'<span>'+esc(label)+'</span>'+(pickerMode?'':'<small>'+count+'</small>')+'</button>';
+ const button=(key,label,count,icon='')=>'<button type="button" data-library-filter="'+esc(key)+'" class="'+(key===filter?'active':'')+'">'+icon+'<span>'+(key.startsWith('h:')?gameNameMarkup(Number(key.slice(2))):key.startsWith('g:')?navigationMarkup('/'+JSON.parse(key.slice(2)).join('/'),label):esc(label))+'</span>'+(pickerMode?'':'<small>'+count+'</small>')+'</button>';
  function branch(n){
   return [...n.children.values()].sort((a,b)=>(a.name==='未列入市场')-(b.name==='未列入市场')||a.name.localeCompare(b.name,'zh')).map(child=>{
    const key=JSON.stringify(child.path);return '<details data-branch="'+esc(key)+'" '+(expanded.has(child.path.join(' › '))?'open':'')+'><summary>'+button('g:'+key,child.name,fits.filter(f=>inPath(f,child.path)).length,factionIcon(child.name))+'</summary><div class="library-tree-children">'+branch(child)+'</div></details>';
