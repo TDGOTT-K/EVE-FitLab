@@ -304,7 +304,10 @@ class Handler(SimpleHTTPRequestHandler):
     return self.reply(inspect_attributes(body['fit'],body['itemId'],body['attributeIds']))
    if self.path=='/api/native-dps-curves':
     from nengine_curves import build_curves
-    return self.reply(build_curves(analyze(body)))
+    from nengine_workbench import read
+    from nengine_background import background_bridge
+    with LOCK:fits=read_library()['fits']
+    return self.reply(build_curves(read(validate_fit(body),fits,client=background_bridge())))
    if self.path=='/api/mutation-workbench':return self.reply(nengine_mutations.workbench(body,TYPES))
    if self.path=='/api/mutation-review':return self.reply(nengine_mutations.review_receipt(body,TYPES))
    if self.path in ('/api/mutation-rule','/api/mutation-roll'):
@@ -355,9 +358,24 @@ class Handler(SimpleHTTPRequestHandler):
      if self.path.endswith('/export'):return self.reply(export_package(body['fit'],read_library()['fits'],analyze,validate_fit))
      return self.reply(import_package(body['document'],analyze,validate_fit))
    if self.path=='/api/analyze-static':
-    with LOCK:return self.reply(analyze(body,include_capacitor=False))
+    from nengine_workbench import read
+    with LOCK:return self.reply(read(validate_fit(body),read_library()['fits']))
+   if self.path=='/api/workbench-edit':
+    from nengine_workbench import edit
+    from nengine_bridge import NEngineError
+    validate_fit(body['after'])
+    if body.get('before') is not None:validate_fit(body['before'])
+    try:
+     with LOCK:return self.reply(edit(body,read_library()['fits']))
+    except NEngineError as error:
+     return self.reply(error.payload,409 if error.error.get('code') in ('STALE_REVISION','REQUEST_CONFLICT','WORKBENCH_INITIAL') else 400)
    if self.path=='/api/analyze-capacitor':
-    with LOCK:return self.reply(analyze(body)['capacitorScenario'])
+    from nengine_workbench import read
+    from nengine_capacitor import attach_capacitor
+    from nengine_background import background_bridge
+    with LOCK:fits=read_library()['fits']
+    report=read(validate_fit(body),fits,client=background_bridge());attach_capacitor(body,report,fits)
+    return self.reply(report['capacitorScenario'])
    if self.path=='/api/analyze':
     with LOCK:return self.reply(analyze(body))
    if self.path=='/api/preview':

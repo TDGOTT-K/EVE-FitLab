@@ -1,3 +1,4 @@
+import {patchHtml} from './dom-patch.js';
 import {panelTrace,panelReading,panelTip,panelAttributeTerm} from './native-panel-detail.js';
 import {scaleReading} from './analysis-status.js';
 import {capacitorHtml} from './native-capacitor-view.js';
@@ -6,7 +7,8 @@ import {outputHtml,outputReading,displayOutputSelection} from './nengine-output-
 // Native report presenter: formatting and layout only; values belong to NEngine.
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=(n,u='')=>Number.isFinite(n)?n.toLocaleString('zh-CN',{maximumFractionDigits:2})+(u?' '+u:''):'—';
-export function nativeDetail(trace,title,unit=''){
+export function nativeDetail(trace,title,unit='',report){
+ if(report?.nativeDetailMode?.startsWith('values_only'))return panelTrace(trace,title,unit,report);
  if(!trace)return null;
  const source=id=>id==='mode'?'舰体模式':id?.startsWith('skill.')?'技能 '+id.slice(6):id?.startsWith('module.')?'装备 '+id.slice(7):id||'修正';
  return {title,result:fmt(trace.value,unit),terms:[['基础值',fmt(trace.baseValue,unit)],...(trace.steps||[]).filter(s=>s.before!==s.after).map(s=>[source(s.sourceId),fmt(s.before)+' → '+fmt(s.after),null,{title:source(s.sourceId),result:fmt(s.after,unit),terms:[['来源修正值',fmt(s.sourceValue)],['叠加系数',fmt(s.penalty)]],conditions:[['效果',String(s.effectId)]]}])],conditions:[['来源','N 号引擎 · '+trace.key]]};
@@ -22,9 +24,9 @@ export function nativeSlotMetrics(report,slot,group){
  const missileMetric=(label,value,unit,detail)=>`<span class="slot-metric" ${tip(detail)}><span class="slot-metric-label">${label}</span><b>${fmt(value)}</b><span class="slot-metric-unit">${unit}</span></span>`;
  const missileFields=group!=='resources'&&flight?
   missileMetric('射程',scaleReading(flight.nominalPathMeters,1000),'km',{title:'导弹射程',result:fmt(scaleReading(flight.nominalPathMeters,1000),'km'),terms:[['飞行速度',fmt(flight.speedMetersPerSecond,'m/s')],['飞行时间',fmt(flight.lifetimeSeconds,'s')]],conditions:[['口径','直线飞行估算，不计加速和目标移动']]})+
-  missileMetric('弹速',flight.speedMetersPerSecond,'m/s',nativeDetail(a['charge.'+slot.key+'/37'],'导弹飞行速度','m/s')):'';
+  missileMetric('弹速',flight.speedMetersPerSecond,'m/s',nativeDetail(a['charge.'+slot.key+'/37'],'导弹飞行速度','m/s',report)):'';
  const fields=group==='resources'?[['CPU',50,'tf'],['PG',30,'MW']]:flight?[]:[['周期',73,'ms'],['最佳',54,'m'],['失准',158,'m']];
- return missileFields+fields.map(([label,id,unit])=>{const t=a['module.'+slot.key+'/'+id];return t?`<span class="slot-metric" ${tip(nativeDetail(t,label,unit))}><span class="slot-metric-label">${label}</span><b>${fmt(t.value)}</b><span class="slot-metric-unit">${unit}</span></span>`:''}).join('')+(group!=='resources'&&w?`<span class="slot-metric">${report.attackMode==='edps'?'EDPS':'DPS'} <b ${numberAttributes(dps,report.scenarioTarget?base:undefined)}>${fmt(dps)}</b></span><span class="slot-metric">周期 <b>${fmt(w.cycleSeconds,'s')}</b></span>`:'');
+ return missileFields+fields.map(([label,id,unit])=>{const t=a['module.'+slot.key+'/'+id];return t?`<span class="slot-metric" ${tip(nativeDetail(t,label,unit,report))}><span class="slot-metric-label">${label}</span><b>${fmt(t.value)}</b><span class="slot-metric-unit">${unit}</span></span>`:''}).join('')+(group!=='resources'&&w?`<span class="slot-metric">${report.attackMode==='edps'?'EDPS':'DPS'} <b ${numberAttributes(dps,report.scenarioTarget?base:undefined)}>${fmt(dps)}</b></span><span class="slot-metric">周期 <b>${fmt(w.cycleSeconds,'s')}</b></span>`:'');
 }
 export function nativeResources(host,report){
  if(!report.native.resources.length){host.innerHTML='<p class="profile-note">当前输入包含未支持效果，资源数值不可用</p>';return;}host.innerHTML=report.native.resources.filter(r=>['cpu','powergrid'].includes(r.id)).map(r=>`<div class="meter ${r.withinCapacity===false?'over':''}"><label>${r.id==='cpu'?'CPU':'能量栅格'} 剩余<span>${fmt(r.remaining)} / ${fmt(r.capacity,r.id==='cpu'?'tf':'MW')}</span></label>${Number.isFinite(r.remaining)&&Number.isFinite(r.capacity)&&r.capacity>0?`<progress value="${Math.max(0,r.remaining)}" max="${r.capacity}"></progress>`:''}</div>`).join('');
@@ -90,7 +92,7 @@ export function mountNativeStats(root,report,{mode='hp',onMode,onDamageEdit,cata
  const all=[...new Set([...report.integrationNotices,...report.issues.map(e=>e.code+' · '+e.message),...a.warnings.map(e=>e.code+' · '+e.message),...a.coverage.filter(c=>c.status==='unsupported_static').map(c=>c.name+' · '+c.reason)])];
  const notice=root.closest?.('.inspector')?.querySelector('.notice');
  if(notice){notice.tabIndex=0;notice.dataset.explain=JSON.stringify({title:'装配校验',result:notice.textContent,terms:all.map(s=>['说明',s]),conditions:[['来源','N '+report.engineVersion]]});}
- root.innerHTML=html;
+ patchHtml(root,html);
  root.querySelectorAll('[data-native-defense]').forEach(b=>b.onclick=()=>onMode?.(b.dataset.nativeDefense));
  root.querySelectorAll('[data-native-attack]').forEach(b=>b.onclick=()=>document.dispatchEvent(new CustomEvent('fitlab-attack-mode',{detail:b.dataset.nativeAttack})));
  const damageButton=root.querySelector('[data-native-damage]');if(damageButton)damageButton.onclick=()=>onDamageEdit?.();

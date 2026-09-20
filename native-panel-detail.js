@@ -1,3 +1,4 @@
+import {deferDetail} from './deferred-details.js';
 // Explain existing engine traces without re-evaluating Dogma formulas.
 const fmt=(v,u='')=>Number.isFinite(v)?v.toLocaleString('zh-CN',{maximumFractionDigits:3})+(u?' '+u:''):'—';
 export function sourceName(id,report,catalog=[]){
@@ -10,6 +11,17 @@ export function sourceName(id,report,catalog=[]){
 export function panelTrace(trace,title,unit,report,catalog=[],scale=1,depth=0){
  if(!trace)return {title,result:'—',terms:[],conditions:[['状态','当前未提供可用属性记录']]};
  const value=n=>fmt(Number.isFinite(n)?n/scale:null,unit);
+ if(report.nativeDetailMode?.startsWith('values_only')){
+  const key=JSON.stringify([report.native.fitHash,trace.key,title,unit,scale,report.curveRequest?.characterName,globalThis.document?.documentElement?.lang||'zh-CN']);
+  const deferred=deferDetail(key,async()=>{
+   const slash=trace.key.lastIndexOf('/');
+   const response=await fetch('/api/native-attributes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fit:report.curveRequest,itemId:trace.key.slice(0,slash),attributeIds:[Number(trace.key.slice(slash+1))]})});
+   const data=await response.json();if(!response.ok)throw Error(data.error?.message||data.error||'属性读取失败');
+   const inspection=data.inspection;if(inspection.fitHash!==report.native.fitHash)throw Error('装配快照已变化，请重新打开详情');
+   return panelTrace(inspection.traces[trace.key],title,unit,{...report,nativeDetailMode:'full',native:{...report.native,attributes:inspection.traces}},catalog,scale,depth);
+  });
+  return {title,result:value(trace.value),terms:[],conditions:[['计算过程','正在读取完整计算过程…']],deferred};
+ }
  const operations={'-1':'前置赋值',0:'前置乘法',1:'前置除法',2:'加法',3:'减法',4:'后置乘法',5:'后置除法',6:'百分比',7:'后置赋值'};
  return {title,result:value(trace.value),terms:[['基础值',value(trace.baseValue)],...(trace.steps||[]).filter(s=>s.before!==s.after).map(s=>{
   const name=sourceName(s.sourceId,report,catalog);

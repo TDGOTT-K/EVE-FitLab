@@ -21,7 +21,8 @@ class NEngineError(ValueError):
         super().__init__(json.dumps(payload,ensure_ascii=False))
 
 class NEngineBridge:
-    def __init__(self, root=None, state=None):
+    def __init__(self, root=None, state=None,read_only=False):
+        self.read_only=read_only
         self.root = Path(root or os.environ.get('FITLAB_NENGINE_ROOT', DEFAULT_ROOT)).resolve()
         if not (self.root / 'UI-BASELINE.json').is_file():
             raise ValueError('N 号引擎路径必须是带 UI-BASELINE.json 的独立副本')
@@ -114,12 +115,14 @@ class NEngineBridge:
             _,(_,removed)=self.read_cache.popitem(last=False);self.read_cache_bytes-=removed
 
     def call(self, name, arguments=None):
-        if name not in {'mutation_workbench','booster_plan_summary','character_skill_snapshot','skill_points','fit_create','fit_inspect','fit_preview','fit_preview_input','fit_execute','fit_export','fit_import','engine_status','catalog_search','catalog_item','catalog_type_details','catalog_variants','fit_analyze','fit_valuation','fit_output_curves','fit_attributes','mutation_rule','mutation_roll','booster_plan_analyze','booster_plan_roll','booster_plan_verify','capacitor_scenario'}:
+        if self.read_only and (name not in {'engine_status','fit_analyze','fit_attributes','fit_output_curves','capacitor_scenario','fit_workbench'} or name=='fit_workbench' and (arguments or {}).get('request',{}).get('operation','analyze')!='analyze'):
+            raise ValueError('后台只读通道拒绝事务操作')
+        if name not in {'fit_workbench','mutation_workbench','booster_plan_summary','character_skill_snapshot','skill_points','fit_create','fit_inspect','fit_preview','fit_preview_input','fit_execute','fit_export','fit_import','engine_status','catalog_search','catalog_item','catalog_type_details','catalog_variants','fit_analyze','fit_valuation','fit_output_curves','fit_attributes','mutation_rule','mutation_roll','booster_plan_analyze','booster_plan_roll','booster_plan_verify','capacitor_scenario'}:
             raise ValueError('此适配层只开放静态装配和目录查询')
         with self.lock:
             self._start()
             # Only immutable snapshot queries; never cache session-dependent reads.
-            cacheable=name in {'fit_analyze','fit_preview_input','fit_attributes','capacitor_scenario'} and isinstance((arguments or {}).get('fit'),dict)
+            cacheable=(name in {'fit_analyze','fit_preview_input','fit_attributes','capacitor_scenario'} and isinstance((arguments or {}).get('fit'),dict)) or (name=='fit_workbench' and (arguments or {}).get('request',{}).get('operation','analyze')=='analyze')
             cache_key=self._read_key(name,arguments) if cacheable else None
             if cache_key in self.read_cache:
                 cached,size=self.read_cache.pop(cache_key);self.read_cache[cache_key]=(cached,size)

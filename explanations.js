@@ -1,3 +1,4 @@
+import {loadDeferredDetail} from './deferred-details.js';
 import {renderPlanAffixes} from './plan-affixes.js';
 import {implantCatalog,boosterCatalog} from './loadout-catalog.js';
 import {mountCapacitorChart} from './capacitor-chart.js';
@@ -54,7 +55,7 @@ export function installExplanations(){
     if(!panel.isConnected)return;renderPlanAffixes(host,data.summary,{find:(kind,id)=>(kind==='implants'?implantCatalog:boosterCatalog).find(t=>t.id===id)});
    }).catch(e=>{if(panel.isConnected)host.textContent='加成暂不可用：'+e.message;});
   }
-  const lockable=!!detail.lockable||!!detail.planAffixes||!!panel.querySelector('[data-explain]'),interactive=!lockable&&!!(detail.chart||detail.capacitor||detail.nativeCapacitor);
+  const lockable=!!detail.deferred||!!detail.lockable||!!detail.planAffixes||!!panel.querySelector('[data-explain]'),interactive=!lockable&&!!(detail.chart||detail.capacitor||detail.nativeCapacitor);
   if(!lockable){
    panel.querySelector('.explain-lock').remove();
    if(interactive){panel.inert=false;panel.classList.add('interactive');bridge.classList.add('interactive');}
@@ -78,7 +79,12 @@ export function installExplanations(){
    }
    curveCache.get(key).then(data=>{if(!panel.isConnected)return;panel.querySelector('.dps-chart').replaceChildren();node.chart=mountDpsChart(panel.querySelector('.dps-chart'),data,{mode:node.chart?.mode()||chartMode,onMode:mode=>{chartMode=mode}});place(node)});
   }
-  if(detail.chart)node.chart=mountDpsChart(panel.querySelector('.dps-chart'),detail.chart,{mode:chartMode,onMode:mode=>{chartMode=mode}});chain.push(node);(anchor.closest('.loadout-quick')||document.body).append(bridge,panel);if(detail.chart||detail.planAffixes){node.resize=new ResizeObserver(()=>{if(panel.isConnected){place(node);if(node.aura){cancelAnimationFrame(node.frame);node.aura.remove();animateLock(node);if(node.locked){cancelAnimationFrame(node.frame);lock(node)}}}});node.resize.observe(panel)}anchor.setAttribute('aria-describedby',panel.id);place(node);if(lockable)animateLock(node);panel.querySelector('.dps-chart-breakdown')?.addEventListener('toggle',()=>{place(node);if(!node.lockable)return;cancelAnimationFrame(node.frame);node.aura?.remove();if(node.locked){animateLock(node);cancelAnimationFrame(node.frame);lock(node)}else animateLock(node)});
+  if(detail.deferred)loadDeferredDetail(detail.deferred).then(resolved=>{
+   if(!panel.isConnected)return;
+   for(const [selector,values] of [['.explain-terms',resolved.terms],['.explain-conditions',resolved.conditions]]){const section=panel.querySelector(selector);section.innerHTML=lines(values);section.hidden=!section.children.length;}
+   place(node);
+  }).catch(error=>{if(panel.isConnected){const section=panel.querySelector('.explain-conditions');section.hidden=false;section.textContent='计算过程暂不可用：'+error.message;place(node);}});
+  if(detail.chart)node.chart=mountDpsChart(panel.querySelector('.dps-chart'),detail.chart,{mode:chartMode,onMode:mode=>{chartMode=mode}});chain.push(node);(anchor.closest('.loadout-quick')||document.body).append(bridge,panel);if(detail.chart||detail.planAffixes||detail.deferred){node.resize=new ResizeObserver(()=>{if(panel.isConnected){place(node);if(node.aura){cancelAnimationFrame(node.frame);node.aura.remove();animateLock(node);if(node.locked){cancelAnimationFrame(node.frame);lock(node)}}}});node.resize.observe(panel)}anchor.setAttribute('aria-describedby',panel.id);place(node);if(lockable)animateLock(node);panel.querySelector('.dps-chart-breakdown')?.addEventListener('toggle',()=>{place(node);if(!node.lockable)return;cancelAnimationFrame(node.frame);node.aura?.remove();if(node.locked){animateLock(node);cancelAnimationFrame(node.frame);lock(node)}else animateLock(node)});
  }
  function inChain(target){return target instanceof Node&&chain.some(n=>n.anchor.contains(target)||n.panel.contains(target)||n.bridge.contains(target))}
  function animateLock(node){

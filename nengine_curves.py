@@ -1,7 +1,7 @@
 """Present the public engine curve query. No reference, grid or peak computation here."""
 import json
 from functools import lru_cache
-from nengine_adapter import bridge
+from nengine_background import background_bridge as bridge
 
 
 def build_curves(report):

@@ -4,6 +4,15 @@ from unittest.mock import patch
 from nengine_bridge import NEngineBridge,NEngineError
 
 class ReadCache(unittest.TestCase):
+ def test_background_lane_rejects_writes_before_transport(self):
+  with tempfile.TemporaryDirectory() as directory:
+   c=NEngineBridge(state=Path(directory),read_only=True)
+   try:
+    with patch.object(c,'_start'),patch.object(c,'_rpc') as rpc:
+     for name,args in [('fit_execute',{}),('fit_create',{}),('fit_workbench',{'request':{'operation':'apply'}})]:
+      with self.assertRaises(ValueError):c.call(name,args)
+     rpc.assert_not_called()
+   finally:c.close()
  def test_exact_input_isolation_and_no_transaction_cache(self):
   with tempfile.TemporaryDirectory() as directory:
    client=NEngineBridge(state=Path(directory));count=0

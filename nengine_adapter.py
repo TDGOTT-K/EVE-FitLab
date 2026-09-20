@@ -66,31 +66,37 @@ def validate_source_binding(f,client):
     if binding is not None and binding!=source_binding(client):
         raise ValueError('装配绑定的引擎、接口或数据版本与当前版本不同；未自动重算或改写来源。请保留原分享文件。')
 
-def analyze(f,target=None,native_query=None):
+def analyze(f,target=None,native_query=None,workbench_result=None):
     client=bridge(); status=client.discover()
     validate_source_binding(f,client)
     build=status['source']['source']['buildNumber']
-    native=native_fit(f,build)
+    native=workbench_result["fit"] if workbench_result else native_fit(f,build)
     def query(context):
         return native_query(context) if native_query else client.call('fit_analyze',{'fit':native,'context':context})['result']
     context={}
     profile=f.get('damageProfile')
     if f.get('defenseMode')=='targeted' and isinstance(profile,list) and len(profile)==4:
         context['incomingDamage']=dict(zip(('em','thermal','kinetic','explosive'),profile))
-    a=query(context)
-    metric=f.get('outputMetric','nominalCycleDps')
-    if metric not in METRICS: raise ValueError('输出口径无效')
-    if 'outputContributions' not in a: raise ValueError('当前适配器需要 r24 分项输出接口，请检查独立副本路径')
-    contribution_ids=selected_ids(f,a['outputContributions'])
-    context['output']={'selection':{'metric':metric,'contributionIds':contribution_ids}}
-    a=query(context)
-    baseline=a['outputContributions']['selection']
-    baseline_items=a['outputContributions']['items']
-    effective=f.get('attackMode')=='edps' and target is not None
-    if target is not None:
-        metric=('effectiveLoadedCycleDps' if metric=='loadedCycleDps' else 'effectiveCycleDps') if effective else ('appliedLoadedCycleDps' if metric=='loadedCycleDps' else 'appliedCycleDps')
-        context['output']={'selection':{'metric':metric,'contributionIds':contribution_ids},'target':target}
+    if workbench_result:
+        a=workbench_result['analysis'];context=a['metricContext'];context={'output':context['output']}
+        contribution_ids=context['output']['selection']['contributionIds']
+        metric=context['output']['selection']['metric'];baseline=workbench_result['baselineSelection'];baseline_items=a['outputContributions']['items']
+        effective=f.get('attackMode')=='edps' and target is not None
+    else:
         a=query(context)
+        metric=f.get('outputMetric','nominalCycleDps')
+        if metric not in METRICS: raise ValueError('输出口径无效')
+        if 'outputContributions' not in a: raise ValueError('当前适配器需要 r24 分项输出接口，请检查独立副本路径')
+        contribution_ids=selected_ids(f,a['outputContributions'])
+        context['output']={'selection':{'metric':metric,'contributionIds':contribution_ids}}
+        a=query(context)
+        baseline=a['outputContributions']['selection']
+        baseline_items=a['outputContributions']['items']
+        effective=f.get('attackMode')=='edps' and target is not None
+        if target is not None:
+            metric=('effectiveLoadedCycleDps' if metric=='loadedCycleDps' else 'effectiveCycleDps') if effective else ('appliedLoadedCycleDps' if metric=='loadedCycleDps' else 'appliedCycleDps')
+            context['output']={'selection':{'metric':metric,'contributionIds':contribution_ids},'target':target}
+            a=query(context)
     output=a['outputContributions']
     selected=[item for item in output['items'] if item['id'] in contribution_ids]
     breakdown={kind:grouped_reading([item for item in selected if (
@@ -140,7 +146,7 @@ def analyze(f,target=None,native_query=None):
         'fighterDamageSelection':selection,'outputSelection':output['selection'],'outputBreakdown':breakdown,'baselineOutputBreakdown':baseline_breakdown,
         'outputContext':context['output'],'baselineOutputSelection':baseline,'baselineOutputItems':baseline_items,'legacyInspectorOutput':legacy_output,
         'scenarioTarget':target,'attackMode':'edps' if effective else 'dps','curveRequest':f,
-        'native':a,'nativeFit':native,'attributes':projection,'snapshot':{'modules':modules},
+        'nativeDetailMode':workbench_result['attributeDetail'] if workbench_result else 'full','native':a,'nativeFit':native,'attributes':projection,'snapshot':{'modules':modules},
         'skillCount':len(native['skills']),'isValid':not issues,
         'issues':issues,'integrationNotices':notices,'source':{'buildNumber':build,'revision':client.baseline['revision']}}
     from analysis_status import classify_report
