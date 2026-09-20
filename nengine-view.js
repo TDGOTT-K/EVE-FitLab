@@ -18,8 +18,13 @@ export function nativeSlotMetrics(report,slot,group){
  const a=report.native.attributes,w=report.native.weapons[slot.key];
  const contribution=report.native.outputContributions?.items.find(i=>i.source.instanceId===slot.key&&i.kind==='ship_weapon'),basis=report.baselineOutputSelection?.metric;
  const read=contribution?.metrics[report.outputSelection?.metric],dps=read?.state==='available'?read.value:null,base=contribution?.metrics[basis]?.value;
- const fields=group==='resources'?[['CPU',50,'tf'],['PG',30,'MW']]:[['周期',73,'ms'],['最佳',54,'m'],['失准',158,'m']];
- return fields.map(([label,id,unit])=>{const t=a['module.'+slot.key+'/'+id];return t?`<span class="slot-metric" ${tip(nativeDetail(t,label,unit))}><span class="slot-metric-label">${label}</span><b>${fmt(t.value)}</b><span class="slot-metric-unit">${unit}</span></span>`:''}).join('')+(group!=='resources'&&w?`<span class="slot-metric">${report.attackMode==='edps'?'EDPS':'DPS'} <b ${numberAttributes(dps,report.scenarioTarget?base:undefined)}>${fmt(dps)}</b></span><span class="slot-metric">周期 <b>${fmt(w.cycleSeconds,'s')}</b></span>`:'');
+ const flight=w?.missileFlight;
+ const missileMetric=(label,value,unit,detail)=>`<span class="slot-metric" ${tip(detail)}><span class="slot-metric-label">${label}</span><b>${fmt(value)}</b><span class="slot-metric-unit">${unit}</span></span>`;
+ const missileFields=group!=='resources'&&flight?
+  missileMetric('射程',scaleReading(flight.nominalPathMeters,1000),'km',{title:'导弹射程',result:fmt(scaleReading(flight.nominalPathMeters,1000),'km'),terms:[['飞行速度',fmt(flight.speedMetersPerSecond,'m/s')],['飞行时间',fmt(flight.lifetimeSeconds,'s')]],conditions:[['口径','直线飞行估算，不计加速和目标移动']]})+
+  missileMetric('弹速',flight.speedMetersPerSecond,'m/s',nativeDetail(a['charge.'+slot.key+'/37'],'导弹飞行速度','m/s')):'';
+ const fields=group==='resources'?[['CPU',50,'tf'],['PG',30,'MW']]:flight?[]:[['周期',73,'ms'],['最佳',54,'m'],['失准',158,'m']];
+ return missileFields+fields.map(([label,id,unit])=>{const t=a['module.'+slot.key+'/'+id];return t?`<span class="slot-metric" ${tip(nativeDetail(t,label,unit))}><span class="slot-metric-label">${label}</span><b>${fmt(t.value)}</b><span class="slot-metric-unit">${unit}</span></span>`:''}).join('')+(group!=='resources'&&w?`<span class="slot-metric">${report.attackMode==='edps'?'EDPS':'DPS'} <b ${numberAttributes(dps,report.scenarioTarget?base:undefined)}>${fmt(dps)}</b></span><span class="slot-metric">周期 <b>${fmt(w.cycleSeconds,'s')}</b></span>`:'');
 }
 export function nativeResources(host,report){
  if(!report.native.resources.length){host.innerHTML='<p class="profile-note">当前输入包含未支持效果，资源数值不可用</p>';return;}host.innerHTML=report.native.resources.filter(r=>['cpu','powergrid'].includes(r.id)).map(r=>`<div class="meter ${r.withinCapacity===false?'over':''}"><label>${r.id==='cpu'?'CPU':'能量栅格'} 剩余<span>${fmt(r.remaining)} / ${fmt(r.capacity,r.id==='cpu'?'tf':'MW')}</span></label>${Number.isFinite(r.remaining)&&Number.isFinite(r.capacity)&&r.capacity>0?`<progress value="${Math.max(0,r.remaining)}" max="${r.capacity}"></progress>`:''}</div>`).join('');
