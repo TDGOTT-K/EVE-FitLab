@@ -1,6 +1,7 @@
 """Bind UI sources to existing native periodic energy queries; no energy formula."""
 import math,json
-from nengine_adapter import bridge,analyze
+from nengine_adapter import analyze
+from nengine_background import background_bridge as bridge
 from scenario_snapshots import context_fits
 
 

@@ -1,13 +1,11 @@
-# 参与贡献 / Contributing
+# 参与贡献
 
-欢迎 Bug 报告、计算验证、翻译与 PR。较大的功能先开 Issue 讨论，避免重复开发。
+1. 按根 README 准备相邻的独立 NEngine 仓库；以基线 JSON 校验当前版本。不要自动升级引擎或改写冻结契约。
+2. 游戏数值与规则通过引擎公开 MCP/CLI 实现。UI 只负责契约允许的展示、单位换算、过滤与聚合，并保留 null/state/reason、来源和完整性。
+3. 按变更运行 UI、翻译、专项测试或阶段门禁。计算变更需可复现输入及 MCP/CLI 对照证据；不要引用旧版测试数作为本次验证。
+4. 翻译资源包含七种语言；键以 `locales/source.json` 为准，`legacy-aliases.json` 仍被当前翻译流程使用。检查窄窗口和交互。
+5. 官网只修改 `website/`。研究材料放 `experiments/`，临时日志/截图/扫描结果放被忽略的输出目录。不要提交用户数据、密钥、SDK 或编译产物。
 
-1. Fork 后建立分支，保持修改范围清晰。
-2. 参考 README 配置 Python、Node、.NET 与官方 SDE。
-3. 修改计算时给出可复现装配、技能条件与预期值；增加有意义的回归测试。
-4. UI 改动检查四种语言和窄窗口；提供截图。翻译键保持与 `locales/source.json` 一致。
-5. 提交前运行 README 中与改动有关的检查，不上传 state、账户数据、令牌或构建输出。
+引擎和 UI 保持独立提交。现有历史验收文档用于追溯；当前启动和打包方式见根 README 与 `desktop/README.md`。
 
-官网设计位于 `website-design/`；`website/` 是部署链路目录，变更前确认用途。
-
-Submitting a contribution means you have the right to contribute it under this project’s MIT license. Third-party assets must retain their own notices. Please include reproduction steps and relevant validation in issues and pull requests. Never attach account tokens or private character exports.
+贡献原创代码需有权按本项目 MIT 许可授权；第三方资源保留原许可和来源。问题反馈请附复现步骤、装配条件和验证证据，勿附账号令牌。

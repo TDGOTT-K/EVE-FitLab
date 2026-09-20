@@ -1,6 +1,6 @@
 # Third-party notices
 
-The root MIT license applies to original FitLab code, including the author’s bundled EdenOS application/contract sources. It does not relicense third-party software or CCP intellectual property.
+The root MIT license applies to original FitLab code, excluding separately maintained NEngine sources. It does not relicense third-party software or CCP intellectual property.
 
 - **EVE Online / CCP Games**: ship/item artwork, corner icons, generated catalogs, localized game names, and static game data belong to CCP Games. Review CCP’s developer and content policies before redistribution. This is an independent fan project without CCP endorsement.
 - **jsQR / node-qrcode / OpenCC**: vendored bundles retain license files in `assets/vendor/` (including OpenCC third-party notices).

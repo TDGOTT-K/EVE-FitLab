@@ -9,14 +9,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.11'
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0.x'
-      - run: python -m unittest test_server test_characters test_storage_location test_capacitor test_scenario test_linked_scenario test_calculation_graph -q
-      - run: npm run test:share-code
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run check:ui
       - run: npm run check:locales
-      - run: dotnet build desktop/engine/FitLab.Engine.csproj --nologo
+      - run: npm run test:i18n
+      - run: npm run test:share-code
+      - run: python -m compileall -q -x "node_modules|.git|output|state" .
+# Native integration requires the separately pinned NEngine and fixed SDE.
+# Run python scripts/check-phase1.py in the prepared two-repository workspace.

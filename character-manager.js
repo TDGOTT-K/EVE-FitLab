@@ -1,6 +1,6 @@
 import {installLoadoutManager} from './loadout-manager.js';
 import {createSkillPointDisplay,skillPointNote as pointNote} from './skill-points.js';
-import {matchesName,getLocale} from './i18n.js';
+import {matchesName,getLocale,gameNameMarkup} from './i18n.js';
 import {readPilotFolders,writePilotFolders,onPilotFoldersChanged} from './pilot-folders.js';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const portrait='<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><circle cx="16" cy="11" r="6"/><path d="M5 30v-4c0-8 22-8 22 0v4"/></svg>';
@@ -83,7 +83,7 @@ export function installCharacterManager({api,catalog,onReturn}){
   const levels=new Map(c.skills.map(s=>[s.skillTypeId,s.level]));
   const rows=skills.filter(t=>(!q||matchesName(t,q))&&(!learned||q||(levels.get(t.id)||0)>0));
   updateSkillSummary();
-  const skillRow=t=>{const level=levels.get(t.id)||0;return '<div class="character-skill"><span>'+esc(t.name)+'<small>'+esc(group(t))+'</small></span><div class="skill-level-boxes" role="group" aria-label="'+esc(t.name)+'等级" data-skill="'+t.id+'" data-level="'+level+'">'+[1,2,3,4,5].map(n=>'<button type="button" class="skill-level-box '+(n<=level?'lit':'')+'" data-level="'+n+'" aria-label="'+esc(t.name)+' '+n+' 级" aria-pressed="'+(n<=level)+'" title="'+n+' 级 · 再次点击当前等级可清零" '+(!draft?'disabled':'')+'></button>').join('')+'</div></div>'};
+  const skillRow=t=>{const level=levels.get(t.id)||0;return '<div class="character-skill"><span>'+gameNameMarkup(t)+'<small>'+esc(group(t))+'</small></span><div class="skill-level-boxes" role="group" aria-label="'+esc(t.name)+'等级" data-skill="'+t.id+'" data-level="'+level+'">'+[1,2,3,4,5].map(n=>'<button type="button" class="skill-level-box '+(n<=level?'lit':'')+'" data-level="'+n+'" aria-label="'+esc(t.name)+' '+n+' 级" aria-pressed="'+(n<=level)+'" title="'+n+' 级 · 再次点击当前等级可清零" '+(!draft?'disabled':'')+'></button>').join('')+'</div></div>'};
   $('#character-skills').innerHTML=[...new Set(rows.map(group))].map(g=>{const entries=rows.filter(t=>group(t)===g);return '<details class="character-skill-group" data-group="'+esc(g)+'" '+((q||skillOpen.has(g))?'open':'')+'><summary><span>'+esc(g)+'</span><small>'+entries.length+' 项</small></summary>'+entries.map(skillRow).join('')+'</details>'}).join('')||'<p class="pilot-empty">暂无已学技能。取消“仅已学习”或搜索技能以添加。</p>';
   $('#character-skills').querySelectorAll('details').forEach(el=>el.ontoggle=()=>{if(!el.isConnected||q )return;if(el.open)skillOpen.add(el.dataset.group);else skillOpen.delete(el.dataset.group)});
   $('#character-skills').querySelectorAll('[data-skill]').forEach(el=>el.querySelectorAll('button').forEach(button=>button.onclick=()=>{

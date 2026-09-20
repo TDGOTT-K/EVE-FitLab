@@ -1,3 +1,4 @@
+import {getLocale} from './i18n.js';
 export const skillPointNote='按当前技能等级计算的最低累计 SP；不包含训练中的进度或未分配 SP。由 N 号引擎计算';
 export function createSkillPointDisplay(api,onReady=()=>{}){
  const cache=new Map();
@@ -10,8 +11,8 @@ export function createSkillPointDisplay(api,onReady=()=>{}){
    api(character.skillSnapshot?'character-skills':'skill-points',character.skillSnapshot?{snapshot:character.skillSnapshot}:{skills}).then(result=>{cache.set(key,result);onReady()}).catch(error=>{cache.set(key,{complete:false,total:null,reason:error.message});onReady()});
   }
   const result=cache.get(key);
-  if(character.skillSnapshot)return result.totalSp?.state==='available'&&Number.isFinite(result.totalSp.value)?result.totalSp.value.toLocaleString('zh-CN'):'—';
-  return result.complete&&Number.isFinite(result.total)?result.total.toLocaleString('zh-CN'):'—';
+  if(character.skillSnapshot)return result.totalSp?.state==='available'&&Number.isFinite(result.totalSp.value)?result.totalSp.value.toLocaleString(getLocale()):'—';
+  return result.complete&&Number.isFinite(result.total)?result.total.toLocaleString(getLocale()):'—';
  };
  display.note=character=>{
   const result=Array.isArray(character?.skills)?cache.get(keyOf(character)):null;

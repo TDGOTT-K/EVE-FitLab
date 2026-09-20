@@ -1,5 +1,6 @@
 """Bounded public attribute queries; no fitted-attribute evaluation in the host."""
-from nengine_adapter import bridge,native_fit,validate_source_binding
+from nengine_adapter import native_fit,validate_source_binding
+from nengine_background import background_bridge as bridge
 
 
 def inspect_attributes(fit,item_id,attribute_ids):

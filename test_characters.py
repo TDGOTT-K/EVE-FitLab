@@ -34,15 +34,21 @@ class CharacterTests(PersistenceTests):
 
  def test_fixed_callback_returns_to_initiator(self):
   import http.client,server,json
-  server.ensure_sso_callback(self.http)
+  # Exercise the callback handler without sharing port 5207 with a running app.
+  http_server=server.ThreadingHTTPServer
+  def isolated_callback(address,handler):
+   self.assertEqual(address,('127.0.0.1',5207))
+   return http_server(('127.0.0.1',0),handler)
+  with patch('server.ThreadingHTTPServer',side_effect=isolated_callback):
+   server.ensure_sso_callback(self.http)
   try:
    login=http.client.HTTPConnection('127.0.0.1',self.http.server_port)
    login.request('POST','/api/eve/login','{}',{'Origin':self.url,'Content-Type':'application/json'})
    r=login.getresponse();cookie=r.getheader('Set-Cookie').split(';')[0];url=json.loads(r.read())['url'];state=urllib.parse.parse_qs(urllib.parse.urlsplit(url).query)['state'][0]
-   callback=http.client.HTTPConnection('127.0.0.1',5207)
+   callback=http.client.HTTPConnection('127.0.0.1',server._callback_server.server_port)
    with patch('eve_sso.request_json',side_effect=[{'access_token':'test'}, {'CharacterID':123,'CharacterName':'测试官网角色','Scopes':eve_sso.SCOPE}]),patch('eve_sso.request_skills',return_value=skill_response()):
     callback.request('GET','/api/eve/callback?state='+state+'&code=test',headers={'Cookie':cookie})
-    r=callback.getresponse();self.assertEqual(r.status,303);self.assertTrue(r.getheader('Location').startswith(self.url+'/#characters?imported='));r.read()
+    r=callback.getresponse();self.assertEqual(r.status,303);self.assertTrue(r.getheader('Location').startswith(self.url+'/#characters?imported='), urllib.parse.unquote(r.getheader('Location')));r.read()
    callback.request('GET','/api/eve/callback?state='+state+'&code=test',headers={'Cookie':cookie})
    r=callback.getresponse();self.assertIn('authError=',r.getheader('Location'));r.read()
    self.assertEqual(server.read_library()['characters'][0]['revision'],1)

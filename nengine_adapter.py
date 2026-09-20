@@ -1,4 +1,4 @@
-"""FitLab v1 -> pinned NEngine r33. Mapping only; no duplicate fitting formulas."""
+"""FitLab -> pinned NEngine public contract. Mapping only; no duplicate fitting formulas."""
 from functools import lru_cache
 import json
 from nengine_bridge import NEngineBridge
@@ -45,7 +45,7 @@ def native_fit(f, build):
     if len(fighters)>200: raise ValueError('本适配层一次最多分析 200 个舰载机中队')
     result={'id':f.get('nativeFitId') or f.get('id') or 'fitlab-draft','name':f.get('name'),'tags':f.get('tags',[]),'buildNumber':build,
         'shipTypeId':f['shipId'],'omittedSkills':'untrained',
-        'skills':{str(s['skillTypeId']):s['level'] for s in f.get('skills',[])},
+        'skills':dict(sorted({str(s['skillTypeId']):s['level'] for s in f.get('skills',[])}.items(),key=lambda pair:int(pair[0]))),
         'tacticalModeTypeId':f.get('tacticalModeTypeId'),'items':items,'subsystems':subsystems,
         'drones':drones,'fighters':fighters,
         'implants':[{'id':f'implant-{i}','typeId':x['typeId']} for i,x in enumerate(implants)],
@@ -66,31 +66,37 @@ def validate_source_binding(f,client):
     if binding is not None and binding!=source_binding(client):
         raise ValueError('装配绑定的引擎、接口或数据版本与当前版本不同；未自动重算或改写来源。请保留原分享文件。')
 
-def analyze(f,target=None,native_query=None):
+def analyze(f,target=None,native_query=None,workbench_result=None):
     client=bridge(); status=client.discover()
     validate_source_binding(f,client)
     build=status['source']['source']['buildNumber']
-    native=native_fit(f,build)
+    native=workbench_result["fit"] if workbench_result else native_fit(f,build)
     def query(context):
         return native_query(context) if native_query else client.call('fit_analyze',{'fit':native,'context':context})['result']
     context={}
     profile=f.get('damageProfile')
     if f.get('defenseMode')=='targeted' and isinstance(profile,list) and len(profile)==4:
         context['incomingDamage']=dict(zip(('em','thermal','kinetic','explosive'),profile))
-    a=query(context)
-    metric=f.get('outputMetric','nominalCycleDps')
-    if metric not in METRICS: raise ValueError('输出口径无效')
-    if 'outputContributions' not in a: raise ValueError('当前适配器需要 r24 分项输出接口，请检查独立副本路径')
-    contribution_ids=selected_ids(f,a['outputContributions'])
-    context['output']={'selection':{'metric':metric,'contributionIds':contribution_ids}}
-    a=query(context)
-    baseline=a['outputContributions']['selection']
-    baseline_items=a['outputContributions']['items']
-    effective=f.get('attackMode')=='edps' and target is not None
-    if target is not None:
-        metric=('effectiveLoadedCycleDps' if metric=='loadedCycleDps' else 'effectiveCycleDps') if effective else ('appliedLoadedCycleDps' if metric=='loadedCycleDps' else 'appliedCycleDps')
-        context['output']={'selection':{'metric':metric,'contributionIds':contribution_ids},'target':target}
+    if workbench_result:
+        a=workbench_result['analysis'];context=a['metricContext'];context={'output':context['output']}
+        contribution_ids=context['output']['selection']['contributionIds']
+        metric=context['output']['selection']['metric'];baseline=workbench_result['baselineSelection'];baseline_items=a['outputContributions']['items']
+        effective=f.get('attackMode')=='edps' and target is not None
+    else:
         a=query(context)
+        metric=f.get('outputMetric','nominalCycleDps')
+        if metric not in METRICS: raise ValueError('输出口径无效')
+        if 'outputContributions' not in a: raise ValueError('当前适配器需要 r24 分项输出接口，请检查独立副本路径')
+        contribution_ids=selected_ids(f,a['outputContributions'])
+        context['output']={'selection':{'metric':metric,'contributionIds':contribution_ids}}
+        a=query(context)
+        baseline=a['outputContributions']['selection']
+        baseline_items=a['outputContributions']['items']
+        effective=f.get('attackMode')=='edps' and target is not None
+        if target is not None:
+            metric=('effectiveLoadedCycleDps' if metric=='loadedCycleDps' else 'effectiveCycleDps') if effective else ('appliedLoadedCycleDps' if metric=='loadedCycleDps' else 'appliedCycleDps')
+            context['output']={'selection':{'metric':metric,'contributionIds':contribution_ids},'target':target}
+            a=query(context)
     output=a['outputContributions']
     selected=[item for item in output['items'] if item['id'] in contribution_ids]
     breakdown={kind:grouped_reading([item for item in selected if (
@@ -140,7 +146,7 @@ def analyze(f,target=None,native_query=None):
         'fighterDamageSelection':selection,'outputSelection':output['selection'],'outputBreakdown':breakdown,'baselineOutputBreakdown':baseline_breakdown,
         'outputContext':context['output'],'baselineOutputSelection':baseline,'baselineOutputItems':baseline_items,'legacyInspectorOutput':legacy_output,
         'scenarioTarget':target,'attackMode':'edps' if effective else 'dps','curveRequest':f,
-        'native':a,'nativeFit':native,'attributes':projection,'snapshot':{'modules':modules},
+        'nativeDetailMode':workbench_result['attributeDetail'] if workbench_result else 'full','native':a,'nativeFit':native,'attributes':projection,'snapshot':{'modules':modules},
         'skillCount':len(native['skills']),'isValid':not issues,
         'issues':issues,'integrationNotices':notices,'source':{'buildNumber':build,'revision':client.baseline['revision']}}
     from analysis_status import classify_report
@@ -179,5 +185,5 @@ def fighter_catalog():
         if kind is None or not a.get(2215):continue
         names=item['name']
         result.append({'id':ident,'typeId':ident,'name':names.get('zh',names.get('en',str(ident))),
-            'en':names.get('en',''),'class':kind,'max':int(a[2215]),'meta':item.get('metaGroupID')})
+            'en':names.get('en',''),'names':names,'class':kind,'max':int(a[2215]),'meta':item.get('metaGroupID')})
     return {'source':data['source'],'items':result}

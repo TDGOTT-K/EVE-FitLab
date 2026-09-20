@@ -989,3 +989,81 @@ Object.assign(window.siteTranslations, {
     "ja": "招待リンクをコピー"
   }
 });
+
+Object.assign(window.siteTranslations, {
+  "第四个公开测试版现已上线，欢迎体验并反馈问题。": {
+    "zh-CN": "第四个公开测试版现已上线，欢迎体验并反馈问题。",
+    "zh-TW": "第四個公開測試版現已上線，歡迎體驗並回報問題。",
+    "en": "The fourth public test release is available. Try it and share feedback.",
+    "ja": "第4回公開テスト版を公開しました。ぜひお試しいただき、ご意見をお寄せください。"
+  },
+  "装配交互与深渊编辑更新，新增战斗概念演示。": {
+    "zh-CN": "装配交互与深渊编辑更新，新增战斗概念演示。",
+    "zh-TW": "裝配互動與深淵編輯更新，新增戰鬥概念演示。",
+    "en": "Updated fitting interactions and abyssal editing, with a new combat concept demo.",
+    "ja": "装備操作とアビサル編集を更新し、戦闘コンセプトデモを追加。"
+  },
+  "装配交互修复、深渊装备编辑与脑插方案汇总。": {
+    "zh-CN": "装配交互修复、深渊装备编辑与脑插方案汇总。",
+    "zh-TW": "裝配互動修復、深淵裝備編輯與植入體方案彙總。",
+    "en": "Fitting interaction fixes, abyssal module editing and implant plan summaries.",
+    "ja": "装備操作の修正、アビサルモジュール編集、インプラントプランの集計。"
+  },
+  "独立船舱分区，更新物品管理体验。": {
+    "zh-CN": "独立船舱分区，更新物品管理体验。",
+    "zh-TW": "獨立船艙分區，更新物品管理體驗。",
+    "en": "Separate cargo sections improve item management.",
+    "ja": "独立したカーゴ区画でアイテム管理を改善。"
+  },
+  "新增六舰、100 秒战斗概念演示，不代表完整战斗模拟。": {
+    "zh-CN": "新增六舰、100 秒战斗概念演示，不代表完整战斗模拟。",
+    "zh-TW": "新增六艦、100 秒戰鬥概念演示，不代表完整戰鬥模擬。",
+    "en": "Adds a six-ship, 100-second combat concept demo, not a full combat simulation.",
+    "ja": "6隻・100秒の戦闘コンセプトデモを追加。完全な戦闘シミュレーションではありません。"
+  },
+  "第三个公开测试版 · 2026-09-20": {
+    "zh-CN": "第三个公开测试版 · 2026-09-20",
+    "zh-TW": "第三個公開測試版 · 2026-09-20",
+    "en": "Third public test release · 2026-09-20",
+    "ja": "第3回公開テスト版 · 2026-09-20"
+  }
+});
+
+Object.assign(window.siteTranslations, {
+  "第五个公开测试版现已上线，欢迎体验并反馈问题。": {
+    "zh-CN": "第五个公开测试版现已上线，欢迎体验并反馈问题。",
+    "zh-TW": "第五個公開測試版現已上線，歡迎體驗並回報問題。",
+    "en": "The fifth public test release is available. Try it and share feedback.",
+    "ja": "第5回公開テスト版を公開しました。ぜひお試しいただき、ご意見をお寄せください。"
+  },
+  "优化装配编辑响应，完善槽位预览与导弹射程显示。": {
+    "zh-CN": "优化装配编辑响应，完善槽位预览与导弹射程显示。",
+    "zh-TW": "最佳化裝配編輯回應，完善槽位預覽與飛彈射程顯示。",
+    "en": "Faster fitting edits with improved slot previews and missile range displays.",
+    "ja": "装備編集の応答性を改善し、スロットプレビューとミサイル射程表示を更新。"
+  },
+  "减少重复分析与界面重绘，属性详情按需加载，电容结果独立更新。": {
+    "zh-CN": "减少重复分析与界面重绘，属性详情按需加载，电容结果独立更新。",
+    "zh-TW": "減少重複分析與介面重繪，屬性詳情按需載入，電容結果獨立更新。",
+    "en": "Less redundant analysis and rendering, on-demand attribute details and independent capacitor updates.",
+    "ja": "重複分析と再描画を削減し、属性詳細を必要時に読み込み、キャパシタ結果を個別に更新。"
+  },
+  "完善槽位预览、自动放置与制导脚本处理，更新导弹射程和速度显示。": {
+    "zh-CN": "完善槽位预览、自动放置与制导脚本处理，更新导弹射程和速度显示。",
+    "zh-TW": "完善槽位預覽、自動放置與導引腳本處理，更新飛彈射程和速度顯示。",
+    "en": "Improved slot previews, automatic placement, guidance scripts and missile range and speed displays.",
+    "ja": "スロットプレビュー、自動配置、誘導スクリプト処理、ミサイル射程と速度表示を改善。"
+  },
+  "改善估价悬浮面板、参考价格与子系统技能特性展示。": {
+    "zh-CN": "改善估价悬浮面板、参考价格与子系统技能特性展示。",
+    "zh-TW": "改善估價浮動面板、參考價格與子系統技能特性展示。",
+    "en": "Improved valuation panels, reference prices and subsystem skill trait displays.",
+    "ja": "価格評価パネル、参考価格、サブシステムのスキル特性表示を改善。"
+  },
+  "第四个公开测试版 · 2026-09-20": {
+    "zh-CN": "第四个公开测试版 · 2026-09-20",
+    "zh-TW": "第四個公開測試版 · 2026-09-20",
+    "en": "Fourth public test release · 2026-09-20",
+    "ja": "第4回公開テスト版 · 2026-09-20"
+  }
+});

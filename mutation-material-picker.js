@@ -1,3 +1,4 @@
+import {getLocale,gameNameMarkup,registerGameTypes,localizeData} from './i18n.js';
 import {escapeHtml as esc} from './scenario-display.js';
 const descriptions=new Map();
 let priceRequest,priceRequestedAt=0;
@@ -8,6 +9,7 @@ function plainDescription(value){
  return doc.body.textContent.trim();
 }
 export function mountMutationMaterialPicker(host,{options,value,api,onChange}){
+ registerGameTypes(options);
  let selected=options.find(o=>o.id===Number(value))||options[0],hovered=null,revision=0;
  const uid='mutation-material-'+crypto.randomUUID();
  host.innerHTML='<button type="button" class="mutation-material-trigger" aria-haspopup="listbox" aria-expanded="false" aria-controls="'+uid+'" aria-label="选择突变质体"></button>';
@@ -17,8 +19,8 @@ export function mountMutationMaterialPicker(host,{options,value,api,onChange}){
  host.append(popup);
  const list=popup.firstElementChild,detail=popup.lastElementChild;
  function paint(){
-  trigger.innerHTML=selected?'<img class="mutation-plasmid-icon" src="'+icon(selected.id)+'" alt="" draggable="false"><span><small>突变质体</small><b>'+esc(selected.name)+'</b></span><span class="mutation-material-chevron">⌄</span>':'暂无适用材料';
-  list.innerHTML=options.map(o=>'<button type="button" role="option" aria-selected="'+(o.id===selected?.id)+'" tabindex="-1" data-material="'+o.id+'"><img src="'+icon(o.id)+'" alt="" draggable="false"><span>'+esc(o.name)+'</span><i>'+(o.id===selected?.id?'✓':'')+'</i></button>').join('');
+  trigger.innerHTML=selected?'<img class="mutation-plasmid-icon" src="'+icon(selected.id)+'" alt="" draggable="false"><span><small>突变质体</small><b>'+gameNameMarkup(selected)+'</b></span><span class="mutation-material-chevron">⌄</span>':'暂无适用材料';
+  list.innerHTML=options.map(o=>'<button type="button" role="option" aria-selected="'+(o.id===selected?.id)+'" tabindex="-1" data-material="'+o.id+'"><img src="'+icon(o.id)+'" alt="" draggable="false"><span>'+gameNameMarkup(o)+'</span><i>'+(o.id===selected?.id?'✓':'')+'</i></button>').join('');
   list.querySelectorAll('button').forEach((button,index)=>{
    const item=options[index];
    button.onpointerenter=()=>showDetails(item,button);
@@ -30,13 +32,13 @@ export function mountMutationMaterialPicker(host,{options,value,api,onChange}){
  async function showDetails(item,button){
   hovered=item.id;const token=++revision;
   list.querySelectorAll('button').forEach(b=>{b.classList.toggle('previewing',b===button);b.removeAttribute('aria-describedby')});button.setAttribute('aria-describedby',detail.id);
-  detail.innerHTML='<div class="mutation-material-detail-head"><img src="'+icon(item.id)+'" alt=""><b>'+esc(item.name)+'</b></div><p class="material-description-text">正在读取介绍…</p><div class="material-price"><small>参考价格</small><b>读取中…</b><small class="material-price-source">ESI 市场均价</small></div>';
+  detail.innerHTML='<div class="mutation-material-detail-head"><img src="'+icon(item.id)+'" alt=""><b>'+gameNameMarkup(item)+'</b></div><p class="material-description-text">正在读取介绍…</p><div class="material-price"><small>参考价格</small><b>读取中…</b><small class="material-price-source">ESI 市场均价</small></div>';
   if(!descriptions.has(item.id))descriptions.set(item.id,api('items/'+item.id).catch(e=>{descriptions.delete(item.id);throw e}));
   if(Date.now()-priceRequestedAt>3600000){priceRequest=null;priceRequestedAt=Date.now()}
   priceRequest??=api('prices').catch(e=>{priceRequest=null;throw e});
   const current=()=>token===revision&&hovered===item.id&&popup.isConnected;
-  descriptions.get(item.id).then(data=>{if(!current())return;const raw=data.description;detail.querySelector('.material-description-text').textContent=plainDescription(typeof raw==='string'?raw:raw?.zh||raw?.en)||'暂无物品介绍';}).catch(()=>{if(current())detail.querySelector('.material-description-text').textContent='介绍暂时不可用，重新悬停可重试';});
-  priceRequest.then(data=>{if(['stale','unavailable'].includes(data.source?.cacheState))priceRequest=null;if(!current())return;const price=data.prices?.[item.id];detail.querySelector('.material-price b').textContent=Number.isFinite(price)&&price>=0?price.toLocaleString('zh-CN',{maximumFractionDigits:2})+' ISK':'暂无参考价格';detail.querySelector('.material-price-source').textContent='ESI 市场均价 · 非实时成交价'+(data.source?.fetchedAt?'\n获取于 '+new Date(data.source.fetchedAt).toLocaleString('zh-CN'):'')+(data.source?.cacheState==='stale'?' · 过期缓存':'');}).catch(()=>{if(current())detail.querySelector('.material-price b').textContent='价格暂时不可用';});
+  descriptions.get(item.id).then(data=>{if(!current())return;const raw=data.description,description=detail.querySelector('.material-description-text');if(localizeData(raw)){description.dataset.localeData=JSON.stringify(raw);description.setAttribute('data-locale-html-text','');}else{delete description.dataset.localeData;description.removeAttribute('data-locale-html-text');}description.textContent=plainDescription(localizeData(raw))||'暂无物品介绍';}).catch(()=>{if(current())detail.querySelector('.material-description-text').textContent='介绍暂时不可用，重新悬停可重试';});
+  priceRequest.then(data=>{if(['stale','unavailable'].includes(data.source?.cacheState))priceRequest=null;if(!current())return;const price=data.prices?.[item.id];detail.querySelector('.material-price b').textContent=Number.isFinite(price)&&price>=0?price.toLocaleString(getLocale(),{maximumFractionDigits:2})+' ISK':'暂无参考价格';detail.querySelector('.material-price-source').textContent='ESI 市场均价 · 非实时成交价'+(data.source?.fetchedAt?'\n获取于 '+new Date(data.source.fetchedAt).toLocaleString(getLocale()):'')+(data.source?.cacheState==='stale'?' · 过期缓存':'');}).catch(()=>{if(current())detail.querySelector('.material-price b').textContent='价格暂时不可用';});
  }
  function position(){
   if(!popup.matches(':popover-open'))return;

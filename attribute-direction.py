@@ -1,3 +1,0 @@
-from pathlib import Path
-p=Path('item-info.js');s=p.read_text(encoding='utf-8');old="return {direction:value>base?'value-increased':'value-decreased',detail};";new="const metadata=data.attributes.find(a=>a.name===attr);const highIsGood=metadata?.highIsGood??!['speed','duration','reloadTime','cpu','power','capacitorNeed'].includes(attr);const improved=highIsGood?value>base:value<base;return {direction:improved?'value-improved':'value-worsened',detail};";assert old in s;s=s.replace(old,new);p.write_text(s,encoding='utf-8')
-p=Path('style.css');s=p.read_text(encoding='utf-8').replace('.item-attribute dd.value-increased','.item-attribute dd.value-improved').replace('.item-attribute dd.value-decreased','.item-attribute dd.value-worsened');p.write_text(s,encoding='utf-8')

@@ -1,8 +1,9 @@
+import {gameNameMarkup,gameName,getLocale,registerGameTypes,localizeData,metricMarkup} from './i18n.js';
 import {fighterOutputOption,toggleFighterOutput,defaultFighterOutput} from './fighter-output-selection.js';
 // Native fighter loadout presenter; server validates every change through the pinned engine.
 let catalogError='';
 let types=[];
-export const fighterCatalogReady=fetch('./api/fighters').then(r=>{if(!r.ok)throw Error('舰载机目录暂不可用');return r.json()}).then(d=>d.items.map(t=>({...t,kind:({light:'轻型',heavy:'重型',support:'支援'})[t.class]}))).catch(e=>{catalogError=e.message;return []}).then(items=>{types=items;});
+export const fighterCatalogReady=fetch('./api/fighters').then(r=>{if(!r.ok)throw Error('舰载机目录暂不可用');return r.json()}).then(d=>d.items.map(t=>({...t,kind:({light:'轻型',heavy:'重型',support:'支援'})[t.class]}))).catch(e=>{catalogError=e.message;return []}).then(items=>{types=items;registerGameTypes(items);});
 export const fighterIcon=t=>`<span class="fighter-icon-frame"><img class="fighter-type-icon" src="https://images.evetech.net/types/${t.id}/icon?size=64" alt="" width="32" height="32" draggable="false" loading="lazy">${(t.metaGroupId??t.meta)===2?'<i class="fighter-tech-corner" role="img" aria-label="二级科技" title="二级科技"></i>':''}</span>`;
 const icon=fighterIcon;
 const type=id=>types.find(t=>t.id===Number(id));
@@ -39,7 +40,7 @@ export function mountFighters(root,{ship,fit,report,mutate,browse,say,validate,o
   const t=entry&&type(entry.typeId),key=reserve?'reserve':'tubes';
   return `<div class="fighter-row ${entry?'filled':''}" data-fighter-index="${index}" data-fighter-list="${key}" ${entry?'draggable="true"':''}>
   <span class="fighter-tube">${reserve?'备':String(index+1).padStart(2,'0')}</span>
-  <button class="fighter-pick" aria-label="${entry?t.name:'选择发射管 '+(index+1)+' 的舰载机'}">${t?icon(t):'<span class="fighter-empty">＋</span>'}<span>${t?t.name:'空发射管'}<small>${t?t.kind:'选择或拖入中队'}</small></span></button>
+  <button class="fighter-pick" aria-label="${entry?t.name:'选择发射管 '+(index+1)+' 的舰载机'}">${t?icon(t):'<span class="fighter-empty">＋</span>'}<span>${t?gameNameMarkup(t):'空发射管'}<small>${t?t.kind:'选择或拖入中队'}</small></span></button>
   ${entry?`<div class="fighter-number"><button data-delta="-1" aria-label="减少中队数量">−</button><b>${entry.quantity}<small> / ${t.max}</small></b><button data-delta="1" aria-label="增加中队数量">＋</button></div>${!reserve?`<button class="fighter-active ${entry.active?'on':''}" data-active aria-pressed="${entry.active}">${entry.active?'参战':'待命'}</button>`:''}`:''}</div>`;
  };
  const quotas=Object.entries(bay.classLimits).map(([kind,limit])=>{
@@ -49,7 +50,7 @@ export function mountFighters(root,{ship,fit,report,mutate,browse,say,validate,o
   const color=known?(used>capacity?'limit-over':used===capacity?'limit-full':'limit-free'):'';
   return `<span class="fighter-class-quota" title="管内中队 / 上限；包含待命，备用不计入">${({light:'轻型',support:'支援',heavy:'重型'})[kind]} <b class="${color}">${Number.isFinite(used)?used:'—'}</b>/${Number.isFinite(capacity)?capacity:'—'}</span>`;
  }).join('');
- host.innerHTML=`<div class="slot-heading"><button class="bay-filter" data-browse>铁骑舰载机</button><span class="fighter-mock">N 引擎</span><span>${state.tubes.filter(Boolean).length} / ${count}</span></div><div class="fighter-quotas">${quotas}<span class="fighter-bay-capacity">机库 ${report.native.resources.find(r=>r.id==="fighterBay")?.used.toLocaleString()} / ${bay.capacityCubicMeters.toLocaleString()} m³</span></div><div class="fighter-tubes">${Array.from({length:count},(_,i)=>row(state.tubes[i],i)).join('')}</div><details class="fighter-reserve" open><summary>备用机库 <span>${state.reserve.length} 中队</span></summary><div class="fighter-reserve-drop">${state.reserve.map((e,i)=>row(e,i,true)).join('')}<button class="fighter-reserve-add">＋ 添加备用中队</button></div></details>`;
+ host.innerHTML=`<div class="slot-heading"><button class="bay-filter" data-browse>铁骑舰载机</button><span class="fighter-mock">N 引擎</span><span>${state.tubes.filter(Boolean).length} / ${count}</span></div><div class="fighter-quotas">${quotas}<span class="fighter-bay-capacity">机库 ${metricMarkup(report.native.resources.find(r=>r.id==="fighterBay")?.used,'',{maximumFractionDigits:3})} / ${metricMarkup(bay.capacityCubicMeters,'m³',{maximumFractionDigits:3})}</span></div><div class="fighter-tubes">${Array.from({length:count},(_,i)=>row(state.tubes[i],i)).join('')}</div><details class="fighter-reserve" open><summary>备用机库 <span>${state.reserve.length} 中队</span></summary><div class="fighter-reserve-drop">${state.reserve.map((e,i)=>row(e,i,true)).join('')}<button class="fighter-reserve-add">＋ 添加备用中队</button></div></details>`;
  const paintSelection=()=>host.querySelectorAll('.fighter-row').forEach(el=>{
   const active=selected?.list===el.dataset.fighterList&&selected?.index===Number(el.dataset.fighterIndex);
   el.classList.toggle('fighter-selected',active);el.querySelector('.fighter-pick').setAttribute('aria-pressed',String(active));
@@ -75,7 +76,7 @@ export function mountFighters(root,{ship,fit,report,mutate,browse,say,validate,o
   if(!abilities.length)return null;
   const header=document.createElement('div');header.className='menu-title fighter-weapon-header';
   const caption=document.createElement('div');caption.className='fighter-weapon-caption';
-  const name=document.createElement('span');name.textContent=t.name;const label=document.createElement('small');label.textContent='计入已选输出';caption.append(name,label);header.append(caption);
+  const name=document.createElement('span');name.dataset.gameType=t.id;name.textContent=gameName(t);const label=document.createElement('small');label.textContent='计入已选输出';caption.append(name,label);header.append(caption);
   const bar=document.createElement('div');bar.className='fighter-weapon-bar';header.append(bar);
   for(const a of abilities){
    const metric=fit.outputMetric||'nominalCycleDps';
@@ -84,7 +85,7 @@ export function mountFighters(root,{ship,fit,report,mutate,browse,say,validate,o
    const button=document.createElement('button');button.type='button';button.role='menuitemcheckbox';button.disabled=(!available&&!enabled)||host._busy;button.setAttribute('aria-checked',String(enabled));button.setAttribute('aria-label',(a.displayName.zh||a.displayName.en)+'计入DPS');
    button.title=available?((finite?'选择此武器会按有限弹量周期口径汇总已选输出；假定可发射，不代表可无限持续输出。':'只改变显示选择，不改变部署或消耗弹药。')+(list==='reserve'||!entry.active?'当前中队未参战，参战后计入。':'')):reading?.reason||'此能力没有可用的周期输出';
    const glyph=document.createElement('span');glyph.className='fighter-weapon-symbol';glyph.textContent=primary?'◎':a.duration.source.attributeId===2401?'✹':'↗';
-   const text=document.createElement('span');text.className='fighter-weapon-name';text.textContent=a.displayName.zh||a.displayName.en;
+   const text=document.createElement('span');text.className='fighter-weapon-name';text.dataset.localeData=JSON.stringify(a.displayName);text.textContent=localizeData(a.displayName);
    const stateLabel=document.createElement('small');stateLabel.textContent=!available?'当前不可计入':enabled?(finite?'已计入 · 有限弹量':'已计入'):(finite?'点击计入 · 有限弹量':'不计入');if(available&&(list==='reserve'||!entry.active)&&enabled)stateLabel.textContent='已选 · 待命';
    button.append(glyph,text,stateLabel);
    button.onclick=()=>{document.querySelector('#menu').hidden=true;const next=toggleFighterOutput(state,report.native.outputContributions?.items||[],list,index,a.abilityId,primary);mutate(()=>{fit.fighterLoadout=next.loadout;fit.outputMetric=next.metric},next.metric==='loadedCycleDps'?'已选输出按有限弹量周期计算 · 不代表持续输出':'已选输出恢复名义周期口径')};bar.append(button);

@@ -1,6 +1,7 @@
+import {getLocale} from './i18n.js';
 import {numberAttributes} from './scenario-display.js';
 import {panelReading,panelTip,panelAttributeTerm} from './native-panel-detail.js';
-const fmt=n=>Number.isFinite(n)?n.toLocaleString('zh-CN',{maximumFractionDigits:1}):'—';
+const fmt=n=>Number.isFinite(n)?n.toLocaleString(getLocale(),{maximumFractionDigits:1}):'—';
 const reasonText=r=>({INSTALLED_CRYSTAL_NOT_CONSUMABLE_MAGAZINE:'当前晶体不是消耗式弹仓，未提供换弹投影',ZERO_BASELINE:'总输出为零，伤害比例无定义',DPS_METRIC_REQUIRED:'当前选择不是每秒伤害口径',FINITE_ABILITY_USE_LOADED_CYCLE_BASIS:'有限次数武器不能按无限续射处理',RELOAD_PROJECTION_UNAVAILABLE:'换弹投影尚不可用',STATIC_OUTPUT_BLOCKERS:'部分装备静态效果尚不完整'}[r]||r);
 export function outputReading(selection){
  if(selection?.completeSelection&&Number.isFinite(selection.total))return fmt(selection.total);

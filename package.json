@@ -13,6 +13,8 @@
     "test:share-code": "node test_fit_image_code.mjs",
     "build:locale-vendor": "esbuild desktop/locale-vendor-entry.js --bundle --format=esm --platform=browser --minify --outfile=locale-vendor.js",
     "check:locales": "python scripts/check-locales.py",
+    "audit:locales": "node scripts/audit-hardcoded-locales.mjs",
+    "test:i18n": "node test_i18n.mjs",
     "check:ui": "node scripts/check-ui.cjs"
   },
   "devDependencies": {
@@ -23,6 +25,7 @@
     "electron": "44.3.0",
     "electron-builder": "26.15.3",
     "esbuild": "^0.25.12",
+    "jsdom": "26.1.0",
     "jsqr": "^1.4.0",
     "opencc-js": "^1.4.2",
     "qrcode": "^1.5.4"

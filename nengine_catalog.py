@@ -103,7 +103,7 @@ def item_metadata(item):
         'units':{str(k):v for k,v in data['dogmaUnits'].items()},
         'effects':[data['dogmaEffects'].get(i,{}) for i in item['effects']],
         'description':data['types'][item['id']].get('description',{})}
-    if item.get('kind')=='ship':
+    if item.get('kind') in ('ship','subsystem'):
         from nengine_adapter import bridge
         detail=bridge().call('catalog_item',{'typeId':item['id']})['result']
         result['shipTraits']={'items':detail['traits'],'source':detail.get('traitsSource'),'units':detail['units']}

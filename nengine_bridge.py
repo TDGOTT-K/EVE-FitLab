@@ -11,7 +11,7 @@ import subprocess
 import threading
 from collections import OrderedDict
 
-DEFAULT_ROOT = Path(__file__).resolve().parent.parent / 'N号引擎-UI接入-0.190-r33'
+DEFAULT_ROOT = Path(__file__).resolve().parent.parent / 'NEngine'
 
 class NEngineError(ValueError):
     """Keep the engine diagnostic intact for transaction conflict handling."""
@@ -21,7 +21,8 @@ class NEngineError(ValueError):
         super().__init__(json.dumps(payload,ensure_ascii=False))
 
 class NEngineBridge:
-    def __init__(self, root=None, state=None):
+    def __init__(self, root=None, state=None,read_only=False):
+        self.read_only=read_only
         self.root = Path(root or os.environ.get('FITLAB_NENGINE_ROOT', DEFAULT_ROOT)).resolve()
         if not (self.root / 'UI-BASELINE.json').is_file():
             raise ValueError('N 号引擎路径必须是带 UI-BASELINE.json 的独立副本')
@@ -31,7 +32,7 @@ class NEngineBridge:
         self.baseline = json.loads(manifest.read_text(encoding='utf-8-sig'))
         if not self.baseline.get('independentClone'):
             raise ValueError('拒绝连接非独立引擎副本')
-        self.state = Path(state or os.environ.get('FITLAB_NENGINE_STATE',Path(__file__).resolve().parent / 'state/nengine-ui-local-r40')).resolve()
+        self.state = Path(state or os.environ.get('FITLAB_NENGINE_STATE',Path(__file__).resolve().parent / 'state/native')).resolve()
         self.lock = threading.RLock()
         self.process = None
         self.sequence = 0
@@ -60,7 +61,7 @@ class NEngineBridge:
         self.state.mkdir(parents=True, exist_ok=True)
         self.process = subprocess.Popen([str(runtime/'dotnet.exe'), str(dll), '--data',
             str(self.root/self.baseline['dataDirectory']), '--state', str(self.state)],
-            cwd=self.root, env={**os.environ, 'DOTNET_ROOT':str(runtime)},
+            cwd=self.root, env={**os.environ, 'DOTNET_ROOT':str(runtime), 'NENGINE_MCP_STRUCTURED_ONLY':'1'},
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
             text=True, encoding='utf-8', bufsize=1,
             creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
@@ -90,14 +91,39 @@ class NEngineBridge:
             if 'error' in reply: raise ValueError(str(reply['error'].get('message','NEngine RPC error')))
             return reply['result']
 
+    def _read_key(self, name, arguments):
+        arguments=dict(arguments or {})
+        if name=='fit_analyze':
+            fit=dict(arguments['fit'])
+            # Only these explicit native defaults are equivalent; preserve null
+            # inventories, empty collections, unknown fields and array order.
+            if type(fit.get('schemaVersion')) is int and fit['schemaVersion']==1:fit.pop('schemaVersion')
+            for field in ('items','drones'):
+                if isinstance(fit.get(field),list):
+                    fit[field]=[{k:v for k,v in row.items() if not(k=='mutation' and v is None)} if isinstance(row,dict) else row for row in fit[field]]
+            arguments['fit']=fit
+            if arguments.get('context') is None:arguments['context']={}
+        return json.dumps([name,arguments],ensure_ascii=False,separators=(',',':'))
+
+    def _remember(self, key, payload):
+        cached=json.dumps(payload,ensure_ascii=False,separators=(',',':'))
+        size=len(cached.encode('utf-8'))+len(key.encode('utf-8'))
+        if size>16*1024*1024:return
+        if key in self.read_cache:self.read_cache_bytes-=self.read_cache.pop(key)[1]
+        self.read_cache[key]=(cached,size);self.read_cache_bytes+=size
+        while len(self.read_cache)>48 or self.read_cache_bytes>16*1024*1024:
+            _,(_,removed)=self.read_cache.popitem(last=False);self.read_cache_bytes-=removed
+
     def call(self, name, arguments=None):
-        if name not in {'mutation_workbench','booster_plan_summary','character_skill_snapshot','skill_points','fit_create','fit_inspect','fit_preview','fit_preview_input','fit_execute','fit_export','fit_import','engine_status','catalog_search','catalog_item','catalog_type_details','catalog_variants','fit_analyze','fit_valuation','fit_output_curves','fit_attributes','mutation_rule','mutation_roll','booster_plan_analyze','booster_plan_roll','booster_plan_verify','capacitor_scenario'}:
+        if self.read_only and (name not in {'engine_status','fit_analyze','fit_attributes','fit_output_curves','capacitor_scenario','fit_workbench'} or name=='fit_workbench' and (arguments or {}).get('request',{}).get('operation','analyze')!='analyze'):
+            raise ValueError('后台只读通道拒绝事务操作')
+        if name not in {'fit_workbench','mutation_workbench','booster_plan_summary','character_skill_snapshot','skill_points','fit_create','fit_inspect','fit_preview','fit_preview_input','fit_execute','fit_export','fit_import','engine_status','catalog_search','catalog_item','catalog_type_details','catalog_variants','fit_analyze','fit_valuation','fit_output_curves','fit_attributes','mutation_rule','mutation_roll','booster_plan_analyze','booster_plan_roll','booster_plan_verify','capacitor_scenario'}:
             raise ValueError('此适配层只开放静态装配和目录查询')
         with self.lock:
             self._start()
             # Only immutable snapshot queries; never cache session-dependent reads.
-            cacheable=name in {'fit_analyze','fit_preview_input','fit_attributes','capacitor_scenario'} and isinstance((arguments or {}).get('fit'),dict)
-            cache_key=json.dumps([name,arguments or {}],ensure_ascii=False,separators=(',',':')) if cacheable else None
+            cacheable=(name in {'fit_analyze','fit_preview_input','fit_attributes','capacitor_scenario'} and isinstance((arguments or {}).get('fit'),dict)) or (name=='fit_workbench' and (arguments or {}).get('request',{}).get('operation','analyze')=='analyze')
+            cache_key=self._read_key(name,arguments) if cacheable else None
             if cache_key in self.read_cache:
                 cached,size=self.read_cache.pop(cache_key);self.read_cache[cache_key]=(cached,size)
                 return json.loads(cached)
@@ -108,13 +134,14 @@ class NEngineBridge:
                 try: payload=json.loads(content)
                 except json.JSONDecodeError: payload={'message':content}
             if result.get('isError'): raise NEngineError(payload)
-            if cacheable:
-                cached=json.dumps(payload,ensure_ascii=False,separators=(',',':'))
-                size=len(cached.encode('utf-8'))+len(cache_key.encode('utf-8'))
-                if size<=16*1024*1024:
-                    self.read_cache[cache_key]=(cached,size);self.read_cache_bytes+=size
-                    while len(self.read_cache)>48 or self.read_cache_bytes>16*1024*1024:
-                        _,(_,removed)=self.read_cache.popitem(last=False);self.read_cache_bytes-=removed
+            if cacheable:self._remember(cache_key,payload)
+            # A public preview already carries both immutable analyses. Reuse
+            # them for exact-input reads, never for a session write or receipt.
+            if name=='fit_preview_input' and payload.get('ok'):
+                result=payload['result'];context=(arguments or {}).get('context') or {}
+                for fit,analysis in [((arguments or {}).get('fit'),result.get('baselineAnalysis')),(result.get('candidate'),result.get('analysis'))]:
+                    if isinstance(fit,dict) and isinstance(analysis,dict):
+                        self._remember(self._read_key('fit_analyze',{'fit':fit,'context':context}),{'ok':True,'result':analysis})
             return payload
 
     def discover(self):

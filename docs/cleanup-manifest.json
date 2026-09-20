@@ -1,0 +1,1106 @@
+[
+  {
+    "path": "engine/README.md",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/data/static-data/fitting-combat/dogma-rules.local.json",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/ConfiguredPathResolver.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/DependencyInjection.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/EdenOS.Application.csproj",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/JsonElementValueReader.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/JsonSerializerOptionsFactory.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/KeyValueManifestFile.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/RepositoryPathResolver.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/RootedPathResolver.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Abstractions/IKernelGateway.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Accounts/IndustrySkillCapabilityProjector.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Accounts/InMemoryAccountCharacterPoolService.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Accounts/IWorkspaceBoundMarketAccessService.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Accounts/LocalWorkspaceMarketGrantStore.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Accounts/VirtualCharacterCapabilityProfileFactory.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Accounts/VirtualCharacterTemplateCatalog.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Authentication/EsiAuthenticatedCharacterSkillsContracts.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Authentication/EsiAuthenticatedCharacterSkillsRunner.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Authentication/EsiCharacterIndustryCapabilityProjector.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Authentication/WorkspaceBoundEsiCredentialService.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/CharacterProgression/CharacterProgressionSkillCatalog.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/CharacterProgression/CharacterProgressionSkillCatalogProvider.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/CharacterProgression/InMemoryCharacterProgressionService.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Combat/InMemoryCombatSimulationService.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Configuration/RuntimeOptions.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Execution/ExecutionContextData.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Execution/ExecutionEvaluator.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Execution/ExecutionEventBlockerBuilder.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Execution/ExecutionNarrativeBuilder.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Execution/ExecutionNextActionBuilder.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Execution/ExecutionNodeStatusBuilder.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Execution/ExecutionReplanComputationAdjuster.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Execution/ExecutionResourceContentionAnalyzer.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Execution/ExecutionTrackingServiceCollection.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Execution/ExecutionViewBuilder.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Execution/InMemoryExecutionTrackingService.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/DogmaLocalization.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/FitAmmoAdvisor.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/FitEnvironmentProfileServiceCollection.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/FitTextCodec.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/InMemoryFitEnvironmentProfileService.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/InMemoryFitService.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/Dogma/DogmaFitAdapter.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/Dogma/DataSources/DogmaAttributeJsonOverlayStore.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/Dogma/DataSources/DogmaEffectJsonOverlayStore.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/Dogma/DataSources/IDogmaDataSource.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/Dogma/DataSources/JsonlFileDogmaDataSource.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/Dogma/DataSources/TypeDogmaJsonOverlayStore.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/Dogma/Engine/DogmaContext.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/Dogma/Engine/DogmaSemanticIds.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/Dogma/Engine/FittingCalculator.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/Dogma/EsfPatch/EsfPatchYamlCatalog.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/Dogma/Models/FitDocument.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/Dogma/Models/FittingCalculationModels.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/Dogma/Rules/DogmaRuleSet.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/Dogma/Rules/DogmaRuleSetLoader.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/Dogma/Sde/SdeCategory.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/Dogma/Sde/SdeDogmaAttribute.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/Dogma/Sde/SdeDogmaAttributeStore.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/Dogma/Sde/SdeDogmaEffect.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/Dogma/Sde/SdeDogmaEffectStore.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/Dogma/Sde/SdeGroup.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/Dogma/Sde/SdeGroupStore.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/Dogma/Sde/SdeType.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/Dogma/Sde/SdeTypeDogma.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/Dogma/Sde/SdeTypeDogmaStore.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/Dogma/Sde/SdeTypeStore.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/Dogma/Storage/JsonlLineReader.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/Dogma/Storage/JsonlOffsetIndex.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Fitting/Internal/FitComputationEngine.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/IdentityDirectory/IdentityDirectoryServiceCollection.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/IdentityDirectory/InMemoryIdentityDirectoryService.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/BootstrapMarketFactSeedData.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/EsiAuthenticatedStructureOrdersContracts.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/EsiAuthenticatedStructureOrdersRunner.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/EsiMarketHistoryIngressContracts.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/EsiMarketHistoryIngressCycleRunner.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/EsiMarketOrdersIngressContracts.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/EsiMarketOrdersIngressCycleRunner.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/InMemoryMarketFactsService.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/LocalAdjustedPriceStore.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/LocalMarketFactRefreshPipeline.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/LocalMarketFactStores.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/LocalMarketOrdersRuntime.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/LocalMarketRefreshRuntime.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/MarketFactFileCodec.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/MarketFactsDataPaths.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/MarketFactsServiceCollection.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/MarketHostSupport.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/MarketOrdersServiceContracts.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/MarketOrdersServiceCycleRunner.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/MarketOrdersServiceOpsStore.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/MarketOrdersServiceScheduler.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/MarketOrdersServiceWorker.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/MarketRefreshServiceContracts.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/MarketRefreshServiceCycleRunner.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/MarketRefreshServiceOpsStore.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/MarketRefreshServiceScheduler.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/MarketRefreshServiceWorker.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/MarketStatisticsProjectionCalculator.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/MetadataBootstrapCatalog.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Market/StructureDirectoryOverlayStore.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Planning/IndustrialAlternativePathPlanner.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Planning/IndustrialRecipeResolver.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Planning/IndustryPlanCharacterConstraintAnalyzer.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Planning/IndustryPlanComputationContext.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Planning/IndustryPlanComputationServiceCollection.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Planning/IndustryPlanComputationSummaryBuilder.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Planning/IndustryPlanCostModelBuilder.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Planning/IndustryPlanMarketPriceResolver.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Planning/IndustryPlanServiceCollection.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Planning/IndustryPlanTimeEstimator.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Planning/InMemoryIndustryPlanComputationService.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Planning/InMemoryIndustryPlanService.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Planning/LocalIndustryReferenceCatalog.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Planning/PlanningMetadataReader.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Properties/AssemblyInfo.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/RuntimeState/IdentityDirectoryRuntimeState.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/RuntimeState/LocalJsonStateStore.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/RuntimeState/WorkspacePlanMigrationService.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Services/PlaceholderKernelGateway.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Services/RuntimeSessionState.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/StarMap/EsiPublicStarMapFactsContracts.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/StarMap/EsiPublicStarMapFactsRunner.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/StarMap/FileBackedStarMapFactsService.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/StarMap/InMemoryStarMapService.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/StarMap/StarMapFactsDataPaths.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Tasks/InMemoryTaskPoolService.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Tasks/ITaskPoolExecutionCoordinator.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/Tasks/TaskPoolServiceCollection.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/UseCases/AccountCharacterPoolUseCases.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/UseCases/CharacterProgressionUseCases.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/UseCases/CombatUseCases.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/UseCases/EsiAuthenticationUseCases.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/UseCases/ExecutionUseCases.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/UseCases/FitUseCases.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/UseCases/IdentityDirectoryUseCases.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/UseCases/MarketUseCases.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/UseCases/PlanningComputationUseCases.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/UseCases/PlanningUseCases.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/UseCases/RuntimeHealthUseCase.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/UseCases/RuntimeMigrationUseCases.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/UseCases/StarMapFactUseCases.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/UseCases/StarMapRouteUseCases.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/UseCases/StarMapUseCases.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/application-csharp/EdenOS.Application/UseCases/TaskPoolUseCases.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/EdenOS.Contracts.csproj",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/Accounts/AccountContracts.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/Application/IUseCase.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/Authentication/EsiAuthenticationContracts.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/CharacterPool/CharacterPoolContracts.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/CharacterProgression/CharacterProgressionContracts.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/Combat/CombatContracts.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/Execution/ExecutionContracts.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/Execution/ExecutionRequests.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/Execution/IExecutionTrackingService.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/Fitting/FittingContracts.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/IdentityDirectory/IdentityDirectoryContracts.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/IdentityDirectory/IdentityDirectoryRequests.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/IdentityDirectory/IIdentityDirectoryService.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/Market/IMarketFactsService.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/Market/MarketContracts.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/Market/MarketRequests.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/Planning/IIndustryPlanComputationService.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/Planning/IIndustryPlanService.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/Planning/IndustryPlanContracts.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/Planning/PlanComputationContracts.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/Planning/PlanComputationRequests.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/Planning/PlanRequests.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/Runtime/RuntimeContracts.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/Runtime/WorkspacePlanMigrationContracts.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/StarMap/IStarMapFactsService.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/StarMap/IStarMapService.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/StarMap/StarMapContracts.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/StarMap/StarMapFactContracts.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/StarMap/StarMapFactRequests.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/StarMap/StarMapRequests.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/StarMap/StarMapRouteContracts.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/StarMap/StarMapRouteRequests.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/Tasks/ITaskPoolService.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/Tasks/TaskPoolContracts.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/Tasks/TaskRequests.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/UseCases/UseCaseResult.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "engine/src/contracts/EdenOS.Contracts/Workspaces/WorkspaceContracts.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "desktop/engine/FitLab.Engine.csproj",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "desktop/engine/Program.cs",
+    "reason": "Retired bundled Dogma engine and .NET 9 host; NEngine is the sole backend"
+  },
+  {
+    "path": "attribute-direction.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "build-catalog.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "build-item-metadata.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "damage-repair-display.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "document-controls.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "document-trace.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "document-workflow.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "expand-data.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "extend-slot-priority.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "extract.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "final-basic-values.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "finalize-workflow.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "fix-hover.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "fix-item-projection.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "fix-offline-engine.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "fix-search-collapse.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "fix-union.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "fix.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "inspect-engine.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "inspect-trace-live.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "instrument-engine.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "integrate-workflow.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "item-change-display.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "item-traces.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "locate-and-format.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "menu-icons.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "module-states.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "move-description.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "polish.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "prioritize-slot-metrics.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "refine-controls.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "refine-explanations.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "resource-explanations.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "show-real-trace.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "slot-metrics.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "soften-liquid.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "speed-info.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "split-slot-resources.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "suppress-basic-popups.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "test-item-traces.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "test-trace.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "trace-units.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "update-info.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "update-liquid.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "update-nested.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "update-stats.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "verify-drone-info.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "verify-energy.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "verify-extended.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "verify-graphs.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "verify-live-trace.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "verify-scenario-live.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "verify-states.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "verify-t3.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "wire-engine.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "wire-item-api.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "wire-item-view.py",
+    "reason": "One-off source patch, obsolete SDE generator or fixed-port legacy probe"
+  },
+  {
+    "path": "scripts/start-r54.ps1",
+    "reason": "Superseded by portable start.ps1 with isolated local state"
+  },
+  {
+    "path": "website-design/community.css",
+    "reason": "Byte-identical duplicate of website; website is now the single source"
+  },
+  {
+    "path": "website-design/download.css",
+    "reason": "Byte-identical duplicate of website; website is now the single source"
+  },
+  {
+    "path": "website-design/download.html",
+    "reason": "Byte-identical duplicate of website; website is now the single source"
+  },
+  {
+    "path": "website-design/download.js",
+    "reason": "Byte-identical duplicate of website; website is now the single source"
+  },
+  {
+    "path": "website-design/index.html",
+    "reason": "Byte-identical duplicate of website; website is now the single source"
+  },
+  {
+    "path": "website-design/language.js",
+    "reason": "Byte-identical duplicate of website; website is now the single source"
+  },
+  {
+    "path": "website-design/README.md",
+    "reason": "Byte-identical duplicate of website; website is now the single source"
+  },
+  {
+    "path": "website-design/site.js",
+    "reason": "Byte-identical duplicate of website; website is now the single source"
+  },
+  {
+    "path": "website-design/style.css",
+    "reason": "Byte-identical duplicate of website; website is now the single source"
+  },
+  {
+    "path": "website-design/translations.js",
+    "reason": "Byte-identical duplicate of website; website is now the single source"
+  },
+  {
+    "path": "website-design/assets/fitting.png",
+    "reason": "Byte-identical duplicate of website; website is now the single source"
+  },
+  {
+    "path": "website-design/assets/fitting.webp",
+    "reason": "Byte-identical duplicate of website; website is now the single source"
+  },
+  {
+    "path": "website-design/assets/logo.svg",
+    "reason": "Byte-identical duplicate of website; website is now the single source"
+  },
+  {
+    "path": "website-design/assets/qq-avatar.webp",
+    "reason": "Byte-identical duplicate of website; website is now the single source"
+  },
+  {
+    "path": "website-design/assets/qq-group.png",
+    "reason": "Byte-identical duplicate of website; website is now the single source"
+  },
+  {
+    "path": "website-design/assets/share.webp",
+    "reason": "Byte-identical duplicate of website; website is now the single source"
+  },
+  {
+    "path": "website-design/assets/sponsor.png",
+    "reason": "Byte-identical duplicate of website; website is now the single source"
+  },
+  {
+    "path": "data/catalog.json",
+    "reason": "Unused early catalog snapshot"
+  },
+  {
+    "path": "data/engine-shape.json",
+    "reason": "Unused retired Dogma response sample"
+  },
+  {
+    "path": "calculation_graph.py",
+    "reason": "Retired Python calculation chain, no longer imported by production; corresponding legacy-only tests removed"
+  },
+  {
+    "path": "capacitor.py",
+    "reason": "Retired Python calculation chain, no longer imported by production; corresponding legacy-only tests removed"
+  },
+  {
+    "path": "dps_curves.py",
+    "reason": "Retired Python calculation chain, no longer imported by production; corresponding legacy-only tests removed"
+  },
+  {
+    "path": "linked_scenario.py",
+    "reason": "Retired Python calculation chain, no longer imported by production; corresponding legacy-only tests removed"
+  },
+  {
+    "path": "sustained_tank.py",
+    "reason": "Retired Python calculation chain, no longer imported by production; corresponding legacy-only tests removed"
+  },
+  {
+    "path": "workspace_view.py",
+    "reason": "Retired Python calculation chain, no longer imported by production; corresponding legacy-only tests removed"
+  },
+  {
+    "path": "test_calculation_graph.py",
+    "reason": "Retired Python calculation chain, no longer imported by production; corresponding legacy-only tests removed"
+  },
+  {
+    "path": "test_capacitor.py",
+    "reason": "Retired Python calculation chain, no longer imported by production; corresponding legacy-only tests removed"
+  },
+  {
+    "path": "test_dps_curves.py",
+    "reason": "Retired Python calculation chain, no longer imported by production; corresponding legacy-only tests removed"
+  },
+  {
+    "path": "test_linked_scenario.py",
+    "reason": "Retired Python calculation chain, no longer imported by production; corresponding legacy-only tests removed"
+  },
+  {
+    "path": "test_workspace_view.py",
+    "reason": "Retired Python calculation chain, no longer imported by production; corresponding legacy-only tests removed"
+  },
+  {
+    "path": "desktop/prepare.py",
+    "reason": "Obsolete Dogma/SDE staging script; replaced by prepare_nengine.py"
+  }
+]

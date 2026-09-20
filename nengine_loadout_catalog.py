@@ -28,7 +28,7 @@ def loadout_catalog():
         elif 1087 in values:kind,slot='boosters',values[1087]
         else:continue
         if slot!=int(slot) or slot<=0:continue
-        item={'id':ident,'name':local(t['name']),'en':t['name'].get('en',''),
+        item={'id':ident,'name':local(t['name']),'en':t['name'].get('en',''),'names':t['name'],'descriptionNames':t.get('description',{}),
               'slot':int(slot),'group':local(group.get('name',{})),
               'metadataSource':{'buildNumber':data['source']['buildNumber'],'indexSha256':data['source']['indexSha256'],'typeId':ident},
               'navigationSource':'fitlab-benefit-taxonomy-v1'}
@@ -46,6 +46,6 @@ def loadout_catalog():
                 chance=effect.get('fittingUsageChanceAttributeID')
                 if chance is not None:
                     item['sideEffects'].append({'id':ref['effectID'],'name':local(effect.get('displayName',{})) or effect.get('name',str(ref['effectID'])),
-                                               'chanceAttributeId':chance})
+                                               'names':effect.get('displayName',{}),'chanceAttributeId':chance})
         result[kind].append(item)
     return result

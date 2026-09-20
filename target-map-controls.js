@@ -1,3 +1,4 @@
+import {getLocale} from './i18n.js';
 import {withoutScenario} from './scenario-presets.js';
 export function installTargetMapControls(root,{form,fits,ownFit,calculate,ownShipId,shipName,onTargetChange,health,plane}){
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -33,7 +34,7 @@ export function installTargetMapControls(root,{form,fits,ownFit,calculate,ownShi
    const value=declared?Number(control.value)*(local?100:1):0,max=local?100:capacity,unit=local?'%':'GJ';
    panel.innerHTML='<div class="target-map-menu-title">'+(local?'本舰初始电量':'对方固定电量')+'<button type="button" data-close aria-label="关闭电量设置">×</button></div><div class="scenario-energy-control"><output>'+(declared?value+' '+unit:'未声明')+'</output><input type="range" min="0" max="'+max+'" step="any" value="'+value+'" aria-label="'+(local?'本舰初始电量百分比':'对方固定电量GJ')+'"><div class="scenario-energy-buttons"><button type="button" data-empty>空电</button><button type="button" data-full>满电</button>'+(!local?'<button type="button" data-clear>未声明</button>':'')+'</div><small>'+(local?'只设置观察窗口起点。':'固定边界，仅计算本舰；不模拟对方电量变化。')+'</small></div>';
    const slider=panel.querySelector('input'),output=panel.querySelector('output');
-   const set=value=>{control.value=local?value/100:value;slider.value=value;output.textContent=Number(value).toLocaleString('zh-CN',{maximumFractionDigits:2})+' '+unit;form.dispatchEvent(new Event('input',{bubbles:true}));};
+   const set=value=>{control.value=local?value/100:value;slider.value=value;output.textContent=Number(value).toLocaleString(getLocale(),{maximumFractionDigits:2})+' '+unit;form.dispatchEvent(new Event('input',{bubbles:true}));};
    slider.oninput=()=>set(Number(slider.value));panel.querySelector('[data-empty]').onclick=()=>set(0);panel.querySelector('[data-full]').onclick=()=>set(max);
    panel.querySelector('[data-clear]')?.addEventListener('click',()=>{control.value='';output.textContent='未声明';form.dispatchEvent(new Event('input',{bubbles:true}))});
    panel.querySelector('[data-close]').onclick=()=>panel.hidden=true;position(e);slider.focus();

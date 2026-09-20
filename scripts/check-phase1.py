@@ -13,7 +13,7 @@ PYTHON_TESTS=[
  'test_native_inventory','test_native_edps','test_native_curves','test_native_capacitor',
  'test_native_attributes','test_native_booster_plan','test_native_catalog',
  'test_native_persistence','test_native_preview','test_native_sessions','test_native_edit_commands',
- 'test_eft_import','test_valuation','test_abyssal_instances','test_loadout_plans','test_loadout_layout']
+ 'test_scenario','test_eft_import','test_valuation','test_abyssal_instances','test_loadout_plans','test_loadout_layout']
 JS_TESTS=['test_analysis_status.mjs','test_native_share_code.mjs','test_fit_image_code.mjs',
  'test_native_edit_history.mjs','test_fit_save_controller.mjs','test_fitting_edit_snapshot.mjs',
  'test_native_attribute_detail.mjs','test_plan_attribute_inspection.mjs','test_crystal_stock.mjs','test_valuation_view.mjs']

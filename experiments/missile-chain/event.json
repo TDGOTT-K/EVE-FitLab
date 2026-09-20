@@ -1,0 +1,35 @@
+{
+  "missile": {
+    "id": "missile-580",
+    "sourceId": "phoenix",
+    "targetId": "bhaalgorn",
+    "launchedAtUs": 19000000,
+    "expiresAtUs": 26500000,
+    "launchPosition": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "status": "impacted",
+    "position": {
+      "x": 18000,
+      "y": 0,
+      "z": 0
+    }
+  },
+  "impact": {
+    "sequence": 678,
+    "timeUs": 24200000,
+    "kind": "MissileImpacted",
+    "sourceId": "phoenix",
+    "targetId": "bhaalgorn",
+    "reason": null,
+    "causeId": "580",
+    "entityId": "missile-580",
+    "amount": 294.25
+  },
+  "engineVersion": "0.210.6-ui.repair1",
+  "requestSha256": "05d6799437b6c69b7b8c46ff6a443ae3fec7f03c5ebad65125824227faae5705",
+  "sourceFileSha256": "b769099b831ece3750ebe8b4eb6343dcc2d963b1d581c4848edf54bd792560ba",
+  "note": "One real missile event, not the entire volley. Positions and shield surface response are visual staging, not engine collision data."
+}

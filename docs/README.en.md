@@ -1,44 +1,18 @@
-<p align="center"><img src="images/banner.svg" width="100%" alt="EVE FitLab"></p>
+# EVE FitLab — current development source
 
-# EVE FitLab
+FitLab combines a browser UI, Python local service and Electron desktop shell. Its only calculation backend is the independent [NEngine MCP host](https://github.com/TDGOTT-K/NEngine): **0.211.0-ui.workbench1, contract r59, 38 tools, SDE 3503375, static rules v59**. The old bundled Dogma engine and .NET 9 host have been removed.
 
-**Get your fit right before you undock.** A Windows fitting workspace for EVE Online: configure ships, simulate performance, manage characters and share importable fitting images.
+Clone the [FitLab](https://github.com/TDGOTT-K/EVE-FitLab) and [NEngine](https://github.com/TDGOTT-K/NEngine) repositories next to each other. Pin NEngine to `d5a5066a4a21a18910ffda4f9d15d3d11c15bc89`; its source is kept in the separate repository. See [source binding](nengine-source.json). Prepare NEngine's pinned .NET 10.0.401 SDK, SDE index and MCP/CLI builds following its README. Then run:
 
-[Website & downloads](https://imfishman.com/) · [Support development](../SPONSOR.md) · [Report an issue](https://github.com/TDGOTT-K/EVE-FitLab/issues) · [简体中文](../README.md)
+```powershell
+npm ci
+powershell -NoProfile -File scripts/start.ps1
+```
 
-> The third public test release **0.1.2-rc.2** is available. [Choose a version](https://imfishman.com/download) or [view the release](https://github.com/TDGOTT-K/EVE-FitLab/releases/tag/v0.1.2-rc.2). This is an unsigned test release; keep backups of important fits.
+Open http://127.0.0.1:5208/. The SSO callback uses port 5207. The launcher keeps all user state under ignored `state/`. Override the engine path with `-EngineRoot` and the UI port with `-Port`.
 
-## 💛 Tokens are expensive… spare a little fuel?
+The UI includes fitting libraries, skills, abyssal items, implants/boosters, fighter/drone inventories and image sharing. Availability and partial results follow the engine's explicit diagnostics. Seven locale resource sets exist; this is not a claim that every translation has been manually reviewed.
 
-<p align="center"><img src="images/please-feed-me.svg" width="150" alt="Please feed the developer"></p>
+Run `npm run check:ui`, `npm run check:locales`, `npm run test:i18n`, `npm run test:share-code`. Install `requirements-dev.txt` before running `python scripts/check-phase1.py`, which additionally requires the engine and fixed data and uses temporary state. These checks do not certify complete game mechanics or a release installer.
 
-I’m **ImFishMan**. If FitLab helps you, consider supporting its AI-assisted development and maintenance. **USDT · TRON (TRC20)**: `TYDiRLFWukWdHpiZKQdGLoX7ivH2PFtPBS`.
-
-**[QR code and donation details →](../SPONSOR.md)**. Donations are optional, with no feature or delivery commitments. Stars, translations, bug reports and sharing with your fleet are welcome too!
-
-## Features
-
-- Drag-and-drop fitting, rack actions, multiselection, drones, cargo and T3 subsystems.
-- Resources, DPS, defenses, capacitor calculations and visual target setup.
-- Character skills through EVE SSO or custom skill profiles and folders.
-- Ship tree, tags, notes, estimated prices and fit duplication.
-- Detailed share images with fitting QR codes for local re-import.
-- Simplified Chinese, Traditional Chinese, English and Japanese interfaces.
-
-<img src="images/fitting.webp" width="100%" alt="Actual fitting workspace, Chinese interface">
-
-## Development
-
-Requires Python 3.9+, Node.js/npm and .NET 9 SDK. Clone the repository, run `npm ci`, download the official EVE **JSONL SDE**, and set `FITLAB_SDE_ROOT` to its extracted directory. The generated catalogs currently correspond to SDE build **3248221**. Run `python run.py`, then open `http://127.0.0.1:5207/`. Ports 5207 and 5210 must be free.
-
-Required calculation engine sources are included under `engine/`; no private repository is needed. Full SDE is a separate large CCP data input. See the [main README](../README.md) for checks and [desktop documentation](../desktop/README.md) for packaging. The four-language website design is in `website-design/`.
-
-**Fighters (carrier fitting) and Abyssal modules are not supported yet.**
-
-The project is under active development: not a complete time-based combat simulator; real-account SSO verification, desktop code signing and automatic updates remain outstanding. Importing images requires a readable, complete fitting QR code.
-
-## Contact and license
-
-**深海的鱼 / ImFishMan** · wzx2377951590@gmail.com · QQ 2377951590 · Built with GPT-6-Astra.
-
-Original code: [MIT](../LICENSE). CCP game data/artwork and third-party components retain their own rights; see [notices](../THIRD_PARTY_NOTICES.md). Independent fan project, not affiliated with CCP Games.
+See [documentation](README.md), [desktop packaging](../desktop/README.md), [cleanup scope](workspace-cleanup.md) and [contributing](../CONTRIBUTING.md). The website's historical downloads and the package version are not a release announcement for this development snapshot.

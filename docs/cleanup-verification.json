@@ -1,0 +1,170 @@
+{
+  "phase1": {
+    "startedAtUtc": "20260920T132241Z",
+    "baseCommit": "a59f39598cd043d3863c9e0bc8c00aa0bca49d49",
+    "testsPassed": true,
+    "releaseReady": false,
+    "releaseBlockers": "docs/engine-v2/phase1-release.md",
+    "results": [
+      {
+        "command": [
+          "D:\\AI\\GPT6\\FITLAB-GitHub-Clean-20260920\\EVE-FitLab\\.venv\\Scripts\\python.exe",
+          "-m",
+          "unittest",
+          "test_fit_package",
+          "test_analysis_status",
+          "test_source_binding",
+          "test_read_cache",
+          "test_native_admission",
+          "test_module_activation",
+          "test_nengine_integration",
+          "test_nengine_output",
+          "test_nengine_scenario",
+          "test_nengine_mutations",
+          "test_native_inventory",
+          "test_native_edps",
+          "test_native_curves",
+          "test_native_capacitor",
+          "test_native_attributes",
+          "test_native_booster_plan",
+          "test_native_catalog",
+          "test_native_persistence",
+          "test_native_preview",
+          "test_native_sessions",
+          "test_native_edit_commands",
+          "test_scenario",
+          "test_eft_import",
+          "test_valuation",
+          "test_abyssal_instances",
+          "test_loadout_plans",
+          "test_loadout_layout",
+          "-v"
+        ],
+        "exitCode": 0,
+        "seconds": 196.632,
+        "log": "00.log"
+      },
+      {
+        "command": [
+          "node",
+          "test_analysis_status.mjs"
+        ],
+        "exitCode": 0,
+        "seconds": 1.051,
+        "log": "01.log"
+      },
+      {
+        "command": [
+          "node",
+          "test_native_share_code.mjs"
+        ],
+        "exitCode": 0,
+        "seconds": 13.935,
+        "log": "02.log"
+      },
+      {
+        "command": [
+          "node",
+          "test_fit_image_code.mjs"
+        ],
+        "exitCode": 0,
+        "seconds": 0.202,
+        "log": "03.log"
+      },
+      {
+        "command": [
+          "node",
+          "test_native_edit_history.mjs"
+        ],
+        "exitCode": 0,
+        "seconds": 7.921,
+        "log": "04.log"
+      },
+      {
+        "command": [
+          "node",
+          "test_fit_save_controller.mjs"
+        ],
+        "exitCode": 0,
+        "seconds": 0.075,
+        "log": "05.log"
+      },
+      {
+        "command": [
+          "node",
+          "test_fitting_edit_snapshot.mjs"
+        ],
+        "exitCode": 0,
+        "seconds": 0.218,
+        "log": "06.log"
+      },
+      {
+        "command": [
+          "node",
+          "test_native_attribute_detail.mjs"
+        ],
+        "exitCode": 0,
+        "seconds": 0.069,
+        "log": "07.log"
+      },
+      {
+        "command": [
+          "node",
+          "test_plan_attribute_inspection.mjs"
+        ],
+        "exitCode": 0,
+        "seconds": 4.009,
+        "log": "08.log"
+      },
+      {
+        "command": [
+          "node",
+          "test_crystal_stock.mjs"
+        ],
+        "exitCode": 0,
+        "seconds": 0.211,
+        "log": "09.log"
+      },
+      {
+        "command": [
+          "node",
+          "test_valuation_view.mjs"
+        ],
+        "exitCode": 0,
+        "seconds": 0.218,
+        "log": "10.log"
+      },
+      {
+        "command": [
+          "node",
+          "scripts/check-ui.cjs"
+        ],
+        "exitCode": 0,
+        "seconds": 1.018,
+        "log": "11.log"
+      }
+    ]
+  },
+  "serverRegression": {
+    "tests": 32,
+    "passed": true
+  },
+  "equipmentScanner": {
+    "tests": 97,
+    "skipped": 1,
+    "passed": true,
+    "nativeR59Validated": false
+  },
+  "runtimeScannerOffline": {
+    "tests": 103,
+    "passed": true,
+    "historicalEvidenceValidated": false
+  },
+  "engineIntegrity": {
+    "filesCompared": 475,
+    "differences": []
+  },
+  "desktopResourcesStaged": true,
+  "installerBuilt": false,
+  "githubPushed": false
+}

@@ -1,3 +1,5 @@
+import {diagnosticText} from './localized-diagnostics.js';
+import {getLocale} from './i18n.js';
 // Inventory identity operations only. Legality, wear and volume are engine-owned.
 export function detachUnmatchedCrystals(fit){
  let moved=0;
@@ -27,11 +29,10 @@ export function crystalProjection(report,id){
 export function crystalWearText(projection){
  if(!projection)return '损伤待计算';
  const settings=projection.wearInput.settings;
- return (100*(1-projection.item.wear.initialDamage/settings.hitpoints)).toLocaleString('zh-CN',{maximumFractionDigits:2})+'%';
+ return (100*(1-projection.item.wear.initialDamage/settings.hitpoints)).toLocaleString(getLocale(),{maximumFractionDigits:2})+'%';
 }
 export function crystalErrorText(error){
- let diagnostic;
- try{diagnostic=JSON.parse(error.message)?.error}catch{}
- const messages={CRYSTAL_INITIAL_DAMAGE:'损伤必须不小于 0，且小于该晶体耐久上限。',FIT_INVENTORY_DESTROYED_CRYSTAL:'已损毁晶体不能作为现存库存。',FIT_INVENTORY_CRYSTAL_MOUNT:'晶体与当前装备的弹种不匹配。',FIT_INVENTORY_CRYSTAL:'旧晶体堆叠缺少实体身份和损伤，请逐枚重新声明。'};
- return diagnostic?((messages[diagnostic.code]||diagnostic.message)+'（'+diagnostic.code+'）'):error.message;
+ let diagnostic=error.diagnostic?.error;
+ if(!diagnostic)try{diagnostic=JSON.parse(error.message)?.error}catch{}
+ return diagnostic?diagnosticText(diagnostic):error.message;
 }
