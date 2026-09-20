@@ -21,15 +21,15 @@ class NEngineError(ValueError):
         super().__init__(json.dumps(payload,ensure_ascii=False))
 
 class NEngineBridge:
-    def __init__(self, root=None, state=None,read_only=False,mcp_dll=None):
+    def __init__(self, root=None, state=None,read_only=False,mcp_dll=None,baseline_path=None):
         self.read_only=read_only
         self.mcp_dll=Path(mcp_dll).resolve() if mcp_dll else None
         self.root = Path(root or os.environ.get('FITLAB_NENGINE_ROOT', DEFAULT_ROOT)).resolve()
         if not (self.root / 'UI-BASELINE.json').is_file():
             raise ValueError('N 号引擎路径必须是带 UI-BASELINE.json 的独立副本')
         # Explicit current local derivative; original delivery manifest remains immutable.
-        manifest=self.root/'UI-LOCAL-BASELINE.json'
-        if not manifest.is_file():manifest=self.root/'UI-BASELINE.json'
+        manifest=Path(baseline_path).resolve() if baseline_path else self.root/'UI-LOCAL-BASELINE.json'
+        if not baseline_path and not manifest.is_file():manifest=self.root/'UI-BASELINE.json'
         self.baseline = json.loads(manifest.read_text(encoding='utf-8-sig'))
         if not self.baseline.get('independentClone'):
             raise ValueError('拒绝连接非独立引擎副本')

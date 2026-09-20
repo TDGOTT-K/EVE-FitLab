@@ -15,7 +15,8 @@ def resolve(rows,names):
     selected=[];matches=[]
     for name in names:
         if not isinstance(name,str) or not name.strip():raise ValueError('Attribute names must be nonempty strings')
-        query=name.casefold();exact=[r for r in rows if any(query==a.casefold() for a in r['aliases'])]
+        query=name.casefold();exact=[r for r in rows if name in (r['name'],str(r['attributeId']))]
+        if not exact:exact=[r for r in rows if any(query==a.casefold() for a in r['aliases'])]
         found=exact or [r for r in rows if any(query in a.casefold() for a in r['aliases'])]
         matches.append({'query':name,'state':'resolved' if len(found)==1 else 'ambiguous' if found else 'not_found','candidates':[{k:r[k] for k in ('attributeId','name','label')} for r in found]})
         if len(found)==1 and found[0] not in selected:selected.append(found[0])

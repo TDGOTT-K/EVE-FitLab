@@ -6,6 +6,7 @@ Native MCP remains unchanged. All actions use its public requests; no session-fi
 import argparse
 import hashlib
 import json
+import os
 import sys
 import tempfile
 from pathlib import Path
@@ -22,15 +23,20 @@ ANY={'type':'object'}
 TOOLS=[
  {'name':'fitlab_battle','description':'Run battles directly from fitting sessions; never browse or construct scenario graphs. prepare: id,seed,seconds,ships[{sessionId,revision,id,team,position:{x,y,z},reservePerWeapon}]. Engine loads each weapon to its native magazine capacity, adds the explicitly requested reserve, starts at full HP/capacitor and zero velocity unless overridden. Returns verified draftId, conditions and ability roster. start: draftId,jobId,policyPreset="stationary-weapons-v1" (locks enemy, fires conventional weapons; no movement/repair/EWAR/drones), OR policies:{team:JavaScript source}. status/result/events/cancel: jobId; status can waitSeconds:10 to avoid frequent polling. Custom tick returns {memory,intents}; use fitlab_tools for advanced policies only. Identical jobId/request retries never start a second job.','inputSchema':obj({'action':{'type':'string','enum':['prepare','start','status','result','events','cancel']},'id':S,'seed':{'type':'integer','minimum':0},'seconds':{'type':'integer','minimum':1,'maximum':3600},'ships':{'type':'array','minItems':2,'maxItems':32,'items':obj({'sessionId':S,'revision':I,'id':S,'team':S,'position':obj({'x':{'type':'number'},'y':{'type':'number'},'z':{'type':'number'}},['x','y','z']),'velocity':ANY,'reservePerWeapon':I,'supplies':ANY,'options':ANY},['sessionId','revision','id','team','position'])},'draftId':S,'jobId':S,'waitSeconds':{'type':'number','minimum':0,'maximum':10},'policyPreset':{'type':'string','enum':['stationary-weapons-v1']},'policies':{'type':'object','additionalProperties':S},'offset':I,'limit':I},['action'])},
  {'name':'fitlab_status','description':'Start here. Returns source version, workflow and supported capability boundaries. UI does not need to be running.','inputSchema':obj({})},
- {'name':'fitlab_search','description':'Batch resolve up to 30 item names. Returns candidates, never silently picks an ambiguous match. Use returned typeId.','inputSchema':obj({'names':{'type':'array','items':S,'minItems':1,'maxItems':30},'categoryId':I},['names'])},
+ {'name':'fitlab_search','description':'Find items by text/category/group/metaGroup/family plus inclusive BASE attribute filters and sorting in native units. query accepts text, groupId, categoryId, metaGroupId, familyOfTypeId, publishedOnly, filters:[{attribute,min,max}], attributes:[names or IDs], sortBy, descending, limit (1..30), cursor. query:{attributeSearch:"CPU"} discovers attribute IDs. Or names:[up to 30 names] resolves batches. Results include exact nextCall, source, missing counts and group facets. Never treat base values as fitted performance or support certification.','inputSchema':obj({'names':{'type':'array','items':S,'minItems':1,'maxItems':30},'categoryId':I,'query':obj({'text':S,'groupId':I,'categoryId':I,'metaGroupId':I,'familyOfTypeId':I,'publishedOnly':{'type':'boolean'},'filters':{'type':'array','maxItems':20,'items':obj({'attribute':S,'min':{'type':'number'},'max':{'type':'number'}},['attribute'])},'attributes':{'type':'array','items':S,'maxItems':20},'sortBy':S,'descending':{'type':'boolean'},'attributeSearch':S,'limit':{'type':'integer','minimum':1,'maximum':30},'cursor':S})})},
  {'name':'fitlab_fit','description':'Create/read/edit a durable fitting by sessionId. Read needs only sessionId. Create needs shipTypeId; optionally skillPreset="all5" resolves all published skills from the engine catalog, or supply explicit skills (default untrained). Edit needs revision, stable requestId and commands. Example remove: {kind:"remove",instanceId:"gun1"}; install: {kind:"install",item:{id:"gun1",typeId:484,slotIndex:0,active:true}}. Retry uncertain writes with the SAME revision/requestId/commands. No automatic save. For combat pass these sessions to fitlab_battle prepare; do not construct scenario graphs.','inputSchema':obj({'action':{'type':'string','enum':['create','read','edit','undo','redo','save']},'sessionId':S,'shipTypeId':I,'name':S,'skillPreset':{'type':'string','enum':['all5','untrained']},'skills':{'type':'object','additionalProperties':{'type':'integer','minimum':0,'maximum':5}},'revision':I,'requestId':S,'commands':{'type':'array','items':ANY},'context':ANY},['action','sessionId'])},
  {'name':'fitlab_tools','description':'Discover native tool descriptions on demand. No name lists all native tools; name returns description and a reference to its inputSchema. Large schema objects are explored with fitlab_result JSON pointers. Battle simulation exists; fullCombatSupported=false means incomplete EVE coverage, not absence of battle tools.','inputSchema':obj({'name':S})},
  {'name':'fitlab_call','description':'Invoke an advanced native tool using its discovered schema. Arguments are forwarded unchanged, including revision/requestId. Results are bounded and stored by reference, never silently truncated. For ordinary fits prefer fitlab_fit.','inputSchema':obj({'name':S,'arguments':ANY},['name','arguments'])},
  {'name':'fitlab_result','description':'Read a stored result by opaque resultId and JSON pointer (for example /analysis/weapons). Large objects return paged keys and child pointers; arrays return paged entries. References are content-addressed and persist across restarts.','inputSchema':obj({'resultId':S,'pointer':S,'offset':{'type':'integer','minimum':0},'limit':{'type':'integer','minimum':1,'maximum':30}},['resultId'])}
 ]
 
-# Task-oriented read/state actions; the native game contract remains r60.
+# Task-oriented read/state actions; catalog query contract is r61; game mechanics are unchanged.
 TOOLS.append({'name':'fitlab_item','description':'Read compact official item traits, activation configuration and common BASE attributes. typeId is required. Optional names accepts exact/internal/localized attribute names or numeric IDs as strings (for example shieldCapacity, maxVelocity, CPU). Ambiguous names return candidates. For skilled/fitted values use fitlab_fit attributes; for overall fitted stats use fitlab_fit read.','inputSchema':obj({'typeId':I,'names':{'type':'array','items':S,'minItems':1,'maxItems':30},'locale':S},['typeId'])})
+item_tool=TOOLS[-1]
+item_tool['inputSchema']['required']=[]
+item_tool['inputSchema']['properties']['typeIds']={'type':'array','items':I,'minItems':1,'maxItems':10}
+item_tool['description']+=' Alternatively typeIds (1..10) compares items in one call; names selects the same attributes for each. Use fitlab_search query for broad filtering/sorting.'
+
 fit_tool=next(t for t in TOOLS if t['name']=='fitlab_fit')
 fit_tool['inputSchema']['properties']['action']['enum']+=['attributes','state']
 fit_tool['inputSchema']['properties'].update({'names':{'type':'array','items':S,'minItems':1,'maxItems':30},'itemId':S,'locale':S,'instanceIds':{'type':'array','items':S,'minItems':1,'maxItems':100},'active':{'type':'boolean'},'online':{'type':'boolean'},'overheated':{'type':'boolean'}})
@@ -45,8 +51,8 @@ def encoded(value):
 
 
 class AgentMcp:
-    def __init__(self,engine,state,mcp_dll=None):
-        self.bridge=NEngineBridge(root=engine,state=state,mcp_dll=mcp_dll)
+    def __init__(self,engine,state,mcp_dll=None,baseline=None):
+        self.bridge=NEngineBridge(root=engine,state=state,mcp_dll=mcp_dll,baseline_path=baseline or os.environ.get('FITLAB_AGENT_BASELINE'))
         self.results=Path(state)/'agent-results'
         self.results.mkdir(parents=True,exist_ok=True)
         self.schemas=None
@@ -119,7 +125,7 @@ class AgentMcp:
                 raise NEngineError({'ok':False,'error':{'code':'RESULT_POINTER','message':'Path does not exist: '+pointer,'availableKeys':list(value)[:30] if isinstance(value,dict) else None,'keyCount':len(value) if isinstance(value,dict) else None},'recovery':'For fitting statistics use fitlab_fit read with sessionId. Raw fit inputs contain shipTypeId, not a ship object.'})
         offset=args.get('offset',0);limit=args.get('limit',20)
         if type(offset)!=int or offset<0 or type(limit)!=int or not 1<=limit<=30:raise ValueError('Invalid pagination')
-        if len(encoded(value))<=10000 and not offset:return {'pointer':pointer,'value':value}
+        if len(encoded(value))<=10000 and not offset and 'limit' not in args:return {'pointer':pointer,'value':value}
         def child(k):return pointer+'/'+str(k).replace('~','~0').replace('/','~1')
         if isinstance(value,dict):
             keys=list(value);entries=[]
@@ -158,6 +164,20 @@ class AgentMcp:
         if not isinstance(args,dict):raise ValueError('Tool arguments must be an object')
         if name=='fitlab_item':
             from agent_attributes import item
+            if 'typeIds' in args:
+                ids=args['typeIds']
+                if 'typeId' in args or not isinstance(ids,list) or not 1<=len(ids)<=10 or any(type(i)!=int or i<=0 for i in ids):raise ValueError('Use typeId OR 1..10 positive typeIds')
+                rows=[]
+                for identity in ids:
+                    try:
+                        detail=item(self,{k:v for k,v in args.items() if k!='typeIds'}|{'typeId':identity})
+                        value=detail.get('value') or self.load_result(detail['resultId'])
+                        compact={k:value[k] for k in ('names','scope','attributes','matches','selection','source')}
+                        compact['fullResultId']=detail['resultId']
+                        rows.append({'typeId':identity,'result':compact})
+                    except NEngineError as e:rows.append({'typeId':identity,'error':e.error})
+                return self.bounded(rows)
+            if type(args.get('typeId'))!=int or args['typeId']<=0:raise ValueError('Supply positive typeId or typeIds')
             return item(self,args)
         if name=='fitlab_battle':
             from agent_battle import battle
@@ -165,20 +185,12 @@ class AgentMcp:
         if name=='fitlab_status':
             s=self.native('engine_status',{})
             return {'engineVersion':s['engineVersion'],'source':s['source']['source']['buildNumber'],'contractRevision':s['publicContract']['revision'],
-                    'workflow':['fitlab_search (batch names)','fitlab_fit create','fitlab_fit edit (commands batch)','fitlab_fit read','fitlab_fit save'],
-                    'capabilities':{'fitting':'supported subsets; inspect errors and coverage','battle':'Use fitlab_battle prepare with fitting sessions, then start/status/result. Engine constructs all graphs. Coverage is incomplete; prepare validates admission.','imageExport':'not available through this MCP'},
+                    'workflow':['fitlab_search (query filters/sort or batch names)','fitlab_fit create','fitlab_fit edit (commands batch)','fitlab_fit read','fitlab_fit save'],
+                    'capabilities':{'catalog':'Use fitlab_search query for text/class/family plus base attribute bounds/sorting. Discover names/units with attributeSearch; follow nextCall. Use fitlab_item typeIds for compact comparisons. Fitted performance and price need dedicated tools.','fitting':'supported subsets; inspect errors and coverage','battle':'Use fitlab_battle prepare with fitting sessions, then start/status/result. Engine constructs all graphs. Coverage is incomplete; prepare validates admission.','imageExport':'not available through this MCP'},
                     'references':'Last 128 result snapshots retained. UI need not be running. Unknown write outcome: retry identical requestId/revision/commands.'}
         if name=='fitlab_search':
-            names=args['names']
-            if not isinstance(names,list) or not 1<=len(names)<=30 or any(not isinstance(n,str) or not n.strip() for n in names):raise ValueError('Provide 1..30 nonempty names')
-            rows=[]
-            for query in names:
-                params={'text':query,'limit':5}
-                if 'categoryId' in args:params['categoryId']=args['categoryId']
-                page=self.native('catalog_search',{'query':params})
-                rows.append({'query':query,'total':page['total'],'nextCursor':page.get('nextCursor'),
-                             'candidates':[{'typeId':i['typeId'],'names':{k:v for k,v in i['names'].items() if k in ('en','zh')},'groupId':i['groupId'],'categoryId':i['categoryId']} for i in page['items']]})
-            return self.bounded(rows)
+            from agent_search import search
+            return search(self,args)
         if name=='fitlab_fit':
             action=args['action'];sid=args['sessionId']
             if action=='attributes':
@@ -233,7 +245,10 @@ class AgentMcp:
                 return result
             return [{'name':n,'description':s.get('description','')} for n,s in self.schemas.items()]
         if name=='fitlab_call':return self.bounded(self.native(args['name'],args['arguments']))
-        if name=='fitlab_result':return self.read_result(args)
+        if name=='fitlab_result':
+            result=self.read_result(args)
+            if result.get('nextOffset') is not None:result['nextCall']={'tool':'fitlab_result','arguments':{**args,'offset':result['nextOffset']}}
+            return result
         raise ValueError('Unknown facade tool')
 
 
@@ -243,6 +258,7 @@ def error_payload(error,name,args):
     if 'recovery' in payload:return payload
     code=payload.get('error',{}).get('code')
     if name=='fitlab_result':recovery='Use the available result keys, or fitlab_fit read for fitted statistics. This read did not change a session.'
+    elif name=='fitlab_search':recovery='For unknown/ambiguous attributes use query:{attributeSearch: name}, then use the returned attribute ID. Follow nextCall unchanged for pagination; changing filters requires removing cursor. Values use native base units.'
     elif name=='fitlab_battle':recovery='Correct the named preparation field or fitting issue. For unpublished results poll status with waitSeconds:10; do not restart the battle.'
     elif code in ('OUTPUT_EXISTS','STALE_REVISION'):recovery='Read this session with fitlab_fit read; use its current revision. An existing session is not recreated.'
     elif name=='fitlab_fit' and args.get('action') in ('edit','state','undo','redo','save'):recovery='If the outcome is uncertain retry identical revision/requestId/commands. Passive module activation errors can be fixed with action:state, instanceIds and active:false; do not reinstall.'
@@ -257,7 +273,7 @@ def serve(agent):
             if 'id' not in message:continue
             method=message.get('method');params=message.get('params',{})
             if method=='initialize':
-                result={'protocolVersion':params.get('protocolVersion','2025-03-26'),'capabilities':{'tools':{}},'serverInfo':{'name':'fitlab-agent','version':'3.0'},'instructions':'Use fitlab_item for official traits/base attributes, fitlab_fit read for fitted statistics and attributes for named fitted values. Do not browse raw fit pointers for stats. For combat use fitlab_battle prepare/start/status/result; result includes a timeline with destruction, last damage and simulation end distinguished. Never report end HP as HP at victory. Use events kinds/sourceId/targetId filters for details. Passive modules are online but not active; use fitlab_fit state to change state without reinstalling. Do not construct engine graphs. Single stationary experiments are not general ship strength conclusions.'}
+                result={'protocolVersion':params.get('protocolVersion','2025-03-26'),'capabilities':{'tools':{}},'serverInfo':{'name':'fitlab-agent','version':'4.0'},'instructions':'Use fitlab_search query for conditional catalog discovery, attributeSearch for names/IDs, and nextCall for pagination. Use fitlab_item for official traits/base attributes, fitlab_fit read for fitted statistics and attributes for named fitted values. Do not browse raw fit pointers for stats. For combat use fitlab_battle prepare/start/status/result; result includes a timeline with destruction, last damage and simulation end distinguished. Never report end HP as HP at victory. Use events kinds/sourceId/targetId filters for details. Passive modules are online but not active; use fitlab_fit state to change state without reinstalling. Do not construct engine graphs. Single stationary experiments are not general ship strength conclusions.'}
             elif method=='ping':result={}
             elif method=='tools/list':result={'tools':TOOLS}
             elif method=='tools/call':
@@ -273,9 +289,9 @@ def serve(agent):
 
 
 if __name__=='__main__':
-    parser=argparse.ArgumentParser();parser.add_argument('--engine',required=True);parser.add_argument('--state',required=True);parser.add_argument('--mcp-dll');parser.add_argument('--call');parser.add_argument('--arguments');parser.add_argument('--out');args=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument('--engine',required=True);parser.add_argument('--state',required=True);parser.add_argument('--mcp-dll');parser.add_argument('--baseline');parser.add_argument('--call');parser.add_argument('--arguments');parser.add_argument('--out');args=parser.parse_args()
     sys.stdin.reconfigure(encoding='utf-8');sys.stdout.reconfigure(encoding='utf-8')
-    agent=AgentMcp(args.engine,args.state,args.mcp_dll)
+    agent=AgentMcp(args.engine,args.state,args.mcp_dll,args.baseline)
     try:
         if args.call:
             request=json.loads(Path(args.arguments).read_text(encoding='utf-8')) if args.arguments else {}

@@ -12,10 +12,10 @@ class AgentTests(unittest.TestCase):
   with tempfile.TemporaryDirectory() as state:
    agent=AgentMcp(root,state,dll)
    try:
-    self.assertLess(len(encoded(TOOLS)),8000)
-    frozen=json.loads(Path('contracts/agent-mcp-v3/tools.json').read_text(encoding='utf-8'))
+    self.assertLess(len(encoded(TOOLS)),9500)
+    frozen=json.loads(Path('contracts/agent-mcp-v4/tools.json').read_text(encoding='utf-8'))
     self.assertEqual(frozen['tools'],TOOLS)
-    status=agent.call('fitlab_status',{});self.assertEqual(status['contractRevision'],60)
+    status=agent.call('fitlab_status',{});self.assertEqual(status['contractRevision'],61)
     searches=agent.call('fitlab_search',{'names':['Phantasm','Heavy Pulse Laser II']})
     self.assertIn(17718,[i['typeId'] for i in searches['value'][0]['candidates']])
     created=agent.call('fitlab_fit',{'action':'create','sessionId':'test-agent','shipTypeId':17718,'skills':{'3318':0,'3424':0}})

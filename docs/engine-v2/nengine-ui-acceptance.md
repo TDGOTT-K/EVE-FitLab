@@ -773,3 +773,10 @@ UI：连续编辑共享展示所需的公开分析，native history用上次正�
 ### NUI-112：研究摘要验收（待模型实际叙述验收）
 
 三真实任务公开回执确认66.2秒毁灭、68.7秒后海军型7679.94HP、300秒13713.48HP分开展示，未知获胜瞬间HP不补值。实际DSH报告约5.8k字符，按目标筛毁灭事件428字符，2项装配属性798字符；新facade CLI同结果。4项Python集成/投影测试、DSH历史查询与从头装配战斗回归通过。无武器靶船不要求备用弹量、直接setActive纠错、未发布结果ready:false及下一步调用。只改agent入口，未改网页或引擎公式。详见agent-research-v3.md。
+
+
+## NUI-113：Agent条件搜索与查询闭环（r61 / facade v4）
+
+引擎目录新增基础属性AND范围过滤、排序、属性ID/原生单位发现与来源绑定分页；Agent开放原生分类/分组/meta/同族条件，批量名称搜索提供可执行nextCall，批量物品对比内联属性，小结果也正确分页。缺失值保持null/state，过滤/排序排除数量明确。9目录+3契约专项通过，Python装配/研究/搜索回归通过；实际DSH投影、原生/代理CLI一致性通过。93候选分页无遗漏重复，热查询约10ms；冷目录仍约4.4秒。见agent-catalog-v4.md及output/catalog-*-verification.json。
+
+独立artifacts/catalog-build-001与UI-AGENT-BASELINE.json仅部署给DSH，网页r60与其他会话i18n工作不改。旧冻结文件不覆盖，无新游戏公式；价格/装配后性能/舰船兼容性仍需专用接口，不声称条件搜索能自动完成配装优化。

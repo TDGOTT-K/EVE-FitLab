@@ -573,3 +573,10 @@ UI改动只在已有入口、显示与悬停说明：角色管理＋→从EVE官
 ### NUI-112：研究时间口径和任务级查询
 
 2026-09-21，agent-mcp-v3/8工具，原生引擎r60保持。battle result用公开回执/事件组合毁灭、最后正伤害快照和声明终点，未知精确同步血量明确unavailable；新增事件筛选、named fitted attributes、compact item、模块直接状态修改。无新业务公式，仅原生数值投影及微秒转秒。facade CLI/MCP逐字段一致，三真实任务及新装配战斗回归通过。DSH已重启，未打包。见agent-research-v3.md。
+
+
+## NUI-113：Agent条件搜索与查询闭环（r61 / facade v4）
+
+引擎目录新增基础属性AND范围过滤、排序、属性ID/原生单位发现与来源绑定分页；Agent开放原生分类/分组/meta/同族条件，批量名称搜索提供可执行nextCall，批量物品对比内联属性，小结果也正确分页。缺失值保持null/state，过滤/排序排除数量明确。9目录+3契约专项通过，Python装配/研究/搜索回归通过；实际DSH投影、原生/代理CLI一致性通过。93候选分页无遗漏重复，热查询约10ms；冷目录仍约4.4秒。见agent-catalog-v4.md及output/catalog-*-verification.json。
+
+独立artifacts/catalog-build-001与UI-AGENT-BASELINE.json仅部署给DSH，网页r60与其他会话i18n工作不改。旧冻结文件不覆盖，无新游戏公式；价格/装配后性能/舰船兼容性仍需专用接口，不声称条件搜索能自动完成配装优化。
