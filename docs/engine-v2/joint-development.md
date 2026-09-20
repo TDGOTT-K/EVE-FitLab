@@ -563,3 +563,8 @@ UI改动只在已有入口、显示与悬停说明：角色管理＋→从EVE官
 ### NUI-110：DSH agent MCP入口与负零修复
 
 0.211.1-ui.agent1/r59，UI-LOCAL-022。原生38工具不变；独立agent-mcp-v1六工具提供批量检索、会话摘要、按需schema和结果引用。仅组合公开原生调用，无新公式。实际DSH负零校验及幽灵级MCP/CLI对照通过，合成battle start/status/result通过。详见agent-mcp-v1.md。DSH配置备份后切换、已重启，原会话保留；默认引擎构建同步，未重新打包。
+
+
+### NUI-111：装配会话到战斗的直接入口
+
+2026-09-21，LOCAL-023，0.212.0-ui.battleentry1/r60/39原生工具。新增公开battle_assemble，与CLI sde-battle同一EveBattleAssembler；agent-mcp-v2七工具加入fitlab_battle prepare/start/status/result/events/cancel。不让模型构造场景计算图。全V通过公开技能目录生成；补给读取原生弹仓且备用数量显式输入。初始条件、能力、脚本模板和限制随prepare返回。原r59/v1冻结不改。详见agent-battle-v2.md；独立引擎构建、DSH及网页已同步重启，未打包。

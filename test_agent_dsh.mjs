@@ -51,7 +51,7 @@ await connect({serverName:'fitlab',transport:'stdio',command:path.join(root,'.to
 });
 let facadeSchemaChars;
 await connect({serverName:'fitlab',transport:'stdio',command:process.env.FITLAB_PYTHON||'python',args:[path.resolve('agent_mcp.py'),'--engine',root,'--state',path.join(state,'agent'),'--mcp-dll',dll],toolCallTimeoutMs:90000},async(call,tools)=>{
- assert.equal(tools.size,6);facadeSchemaChars=JSON.stringify([...tools.values()].map(t=>({name:t.name,description:t.description,parameters:t.parameters}))).length;
+ assert.equal(tools.size,7);facadeSchemaChars=JSON.stringify([...tools.values()].map(t=>({name:t.name,description:t.description,parameters:t.parameters}))).length;
  assert(facadeSchemaChars<8000);
  await call('fitlab_status',{});
  await call('fitlab_search',{names:['Phantasm','Heavy Pulse Laser II','Multifrequency M']});
@@ -77,5 +77,5 @@ await connect({serverName:'fitlab',transport:'stdio',command:process.env.FITLAB_
  assert.equal(job.status,'complete',JSON.stringify(job));
  await call('fitlab_call',{name:'battle_result',arguments:{jobId:'agent-job'}});
 });
-console.log(JSON.stringify({nativeCount,facadeToolCount:6,facadeSchemaChars,evidence},null,2));
+console.log(JSON.stringify({nativeCount,facadeToolCount:7,facadeSchemaChars,evidence},null,2));
 fs.mkdirSync('output',{recursive:true});fs.writeFileSync('output/agent-dsh-verification.json',JSON.stringify({nativeCount,facadeSchemaChars,evidence},null,2));
