@@ -530,6 +530,10 @@ UI改动只在已有入口、显示与悬停说明：角色管理＋→从EVE官
 
 0.210.5-ui.mutation1 / r58-ui-mutation1：mutation_workbench及CLI入口提供手动范围校验、联合概率/期望、实际分批试验。规则沿用既有SDE/随机模型。手动保存经公开接口核验，UI仅做单位展示与交互；随机命中保留可重放receipt。见abyssal-edit-and-trials.md与引擎docs/ui-local-changes.md。独立提交，不打包，不修改主库/历史候选。
 
+### LOCAL-018 导弹距离应用
+
+2026-09-20：独立引擎0.210.9-ui.missilerange1/r58按已有飞行投影限制导弹静态应用距离，补精确曲线边界，公开结构不变。名义伤害保持原义，应用伤害超程归零，缺失距离明确不可用。UI只展示引擎采样与静态范围说明，详见NUI-105。
+
 ### LOCAL-017 导弹制导脚本
 
 2026-09-20：独立引擎0.210.8-ui.guidance1/r58补齐导弹制导脚本准入、公开chargePolicy以及既有SDE修饰对已安装导弹的位置选择。UI按公开脚本策略跳过弹仓补满、弹量编辑和弹量提示，显示已装载脚本。无前端加成公式。验证见NUI-103及test_guidance_scripts.py；未打包。

@@ -37,5 +37,5 @@ def _build(key):
         'angularLinearSpeedReferenceMeters':result['angularLinearSpeedReferenceMeters'],'ideal':ideal,'totalDps':baseline['total'],'target':{'distance':target['distanceMeters'],'signature':target['signatureMeters'],
         'angular':target['angularRadiansPerSecond'],'speed':target['speedMetersPerSecond']},
         'yMax':(1 if result['sampledPeak'] is None else max(1,result['sampledPeak'])),'sampledPeak':result['sampledPeak'],
-        'scope':('固定'+{'shield':'护盾','armor':'装甲','hull':'结构'}.get((target.get('layer') or {}).get('name'),'目标')+'层 EDPS · 已扣抗性' if effective else 'N 引擎静态应用 · 不扣抗性')+' · 导弹假定成功交付'+(' · 有限弹量周期，非持续输出' if baseline['metric']=='loadedCycleDps' else ''),
+        'scope':('固定'+{'shield':'护盾','armor':'装甲','hull':'结构'}.get((target.get('layer') or {}).get('name'),'目标')+'层 EDPS · 已扣抗性' if effective else 'N 引擎静态应用 · 不扣抗性')+' · 导弹按标称射程截断 · 不计追击与飞行延迟'+(' · 有限弹量周期，非持续输出' if baseline['metric']=='loadedCycleDps' else ''),
         'native':result,'request':request}
