@@ -1028,3 +1028,42 @@ Object.assign(window.siteTranslations, {
     "ja": "第3回公開テスト版 · 2026-09-20"
   }
 });
+
+Object.assign(window.siteTranslations, {
+  "第五个公开测试版现已上线，欢迎体验并反馈问题。": {
+    "zh-CN": "第五个公开测试版现已上线，欢迎体验并反馈问题。",
+    "zh-TW": "第五個公開測試版現已上線，歡迎體驗並回報問題。",
+    "en": "The fifth public test release is available. Try it and share feedback.",
+    "ja": "第5回公開テスト版を公開しました。ぜひお試しいただき、ご意見をお寄せください。"
+  },
+  "优化装配编辑响应，完善槽位预览与导弹射程显示。": {
+    "zh-CN": "优化装配编辑响应，完善槽位预览与导弹射程显示。",
+    "zh-TW": "最佳化裝配編輯回應，完善槽位預覽與飛彈射程顯示。",
+    "en": "Faster fitting edits with improved slot previews and missile range displays.",
+    "ja": "装備編集の応答性を改善し、スロットプレビューとミサイル射程表示を更新。"
+  },
+  "减少重复分析与界面重绘，属性详情按需加载，电容结果独立更新。": {
+    "zh-CN": "减少重复分析与界面重绘，属性详情按需加载，电容结果独立更新。",
+    "zh-TW": "減少重複分析與介面重繪，屬性詳情按需載入，電容結果獨立更新。",
+    "en": "Less redundant analysis and rendering, on-demand attribute details and independent capacitor updates.",
+    "ja": "重複分析と再描画を削減し、属性詳細を必要時に読み込み、キャパシタ結果を個別に更新。"
+  },
+  "完善槽位预览、自动放置与制导脚本处理，更新导弹射程和速度显示。": {
+    "zh-CN": "完善槽位预览、自动放置与制导脚本处理，更新导弹射程和速度显示。",
+    "zh-TW": "完善槽位預覽、自動放置與導引腳本處理，更新飛彈射程和速度顯示。",
+    "en": "Improved slot previews, automatic placement, guidance scripts and missile range and speed displays.",
+    "ja": "スロットプレビュー、自動配置、誘導スクリプト処理、ミサイル射程と速度表示を改善。"
+  },
+  "改善估价悬浮面板、参考价格与子系统技能特性展示。": {
+    "zh-CN": "改善估价悬浮面板、参考价格与子系统技能特性展示。",
+    "zh-TW": "改善估價浮動面板、參考價格與子系統技能特性展示。",
+    "en": "Improved valuation panels, reference prices and subsystem skill trait displays.",
+    "ja": "価格評価パネル、参考価格、サブシステムのスキル特性表示を改善。"
+  },
+  "第四个公开测试版 · 2026-09-20": {
+    "zh-CN": "第四个公开测试版 · 2026-09-20",
+    "zh-TW": "第四個公開測試版 · 2026-09-20",
+    "en": "Fourth public test release · 2026-09-20",
+    "ja": "第4回公開テスト版 · 2026-09-20"
+  }
+});
