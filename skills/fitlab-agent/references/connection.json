@@ -1,0 +1,4 @@
+{
+  "cli": "../../../fitlab.py",
+  "config": "../../../agent-config.json"
+}

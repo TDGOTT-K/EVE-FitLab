@@ -1,0 +1,717 @@
+{
+  "id": "fitlab-agent-mcp",
+  "revision": 5,
+  "tools": [
+    {
+      "name": "fitlab_catalog",
+      "description": "describe: Official description/ship skill bonuses and base attributes by name OR typeId. Exact name auto-resolves; ambiguity returns candidates. search: Filter/sort explicit base attributes in native units. Follow next action for more. Missing filter values are excluded and counted. resolve: Resolve multiple names without guessing ambiguous matches. attributes: Discover official attribute IDs/names/units before filtering. compare: Compare the same named base attributes across items in one call. variants: Official variation family, not guessed replacements. charges: Discover declared ammunition/script groups; preview verifies the actual pair.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "describe",
+              "search",
+              "resolve",
+              "attributes",
+              "compare",
+              "variants",
+              "charges"
+            ]
+          },
+          "typeId": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "name": {
+            "type": "string"
+          },
+          "attributes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "maxItems": 20
+          },
+          "locale": {
+            "type": "string"
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string"
+              },
+              "groupId": {
+                "type": "integer"
+              },
+              "categoryId": {
+                "type": "integer"
+              },
+              "metaGroupId": {
+                "type": "integer"
+              },
+              "familyOfTypeId": {
+                "type": "integer"
+              },
+              "publishedOnly": {
+                "type": "boolean"
+              },
+              "filters": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "attribute": {
+                      "type": "string"
+                    },
+                    "min": {
+                      "type": "number"
+                    },
+                    "max": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "attribute"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 0,
+                "maxItems": 20
+              },
+              "attributes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 0,
+                "maxItems": 20
+              },
+              "sortBy": {
+                "type": "string"
+              },
+              "descending": {
+                "type": "boolean"
+              },
+              "attributeSearch": {
+                "type": "string"
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 30
+              },
+              "cursor": {
+                "type": "string"
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          },
+          "names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "maxItems": 30
+          },
+          "categoryId": {
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30
+          },
+          "cursor": {
+            "type": "string"
+          },
+          "typeIds": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "minItems": 1,
+            "maxItems": 10
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_fitting",
+      "description": "list: Find durable fitting sessions and their revisions; working/saved metadata remain distinct. Changed library invalidates cursor. create: Create durable fit; default skills untrained, optional all5. Returns calculated summary/revision. read: Calculated fitted totals, modules and readiness. edit: Atomic changes at revision with stable requestId. install.item includes slotIndex, chargeTypeId and active. Passive modules use active:false. No automatic save. preview: Evaluate the same changes without committing. Returns deltas and diagnostics. attributes: Named fitted values for ship or module.<instanceId>/charge.<instanceId>. outputs: List output contribution IDs, families and application metadata for curves/research. curves: Engine DPS curves: default online ship weapons or explicit contributionIds. Explicit target geometry or declared ideal reference. No combat or sustained-output claim. save: Explicitly save the draft at revision.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "list",
+              "create",
+              "read",
+              "edit",
+              "preview",
+              "attributes",
+              "outputs",
+              "curves",
+              "save"
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "includeClosed": {
+            "type": "boolean"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30
+          },
+          "cursor": {
+            "type": "string"
+          },
+          "sessionId": {
+            "type": "string"
+          },
+          "shipTypeId": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "skillPreset": {
+            "type": "string",
+            "enum": [
+              "untrained",
+              "all5"
+            ]
+          },
+          "skills": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 5
+            }
+          },
+          "revision": {
+            "type": "integer"
+          },
+          "changes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "install",
+                    "remove",
+                    "setCharge",
+                    "setOnline",
+                    "setActive",
+                    "setOverheated",
+                    "setSkills",
+                    "setName",
+                    "setTags"
+                  ]
+                },
+                "item": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "typeId": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 2147483647
+                    },
+                    "slotIndex": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 31
+                    },
+                    "chargeTypeId": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "online": {
+                      "type": "boolean"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "overheated": {
+                      "type": "boolean"
+                    },
+                    "mutation": {
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "typeId",
+                    "slotIndex"
+                  ],
+                  "additionalProperties": false
+                },
+                "instanceId": {
+                  "type": "string"
+                },
+                "chargeTypeId": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "online": {
+                  "type": "boolean"
+                },
+                "active": {
+                  "type": "boolean"
+                },
+                "overheated": {
+                  "type": "boolean"
+                },
+                "skills": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 5
+                  }
+                },
+                "name": {
+                  "type": "string"
+                },
+                "tags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 0,
+                  "maxItems": 30
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 128
+          },
+          "requestId": {
+            "type": "string"
+          },
+          "attributes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "maxItems": 30
+          },
+          "itemId": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string"
+          },
+          "contributionIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "maxItems": 100
+          },
+          "target": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "distanceMeters": {
+                "type": "number"
+              },
+              "signatureMeters": {
+                "type": "number"
+              },
+              "speedMetersPerSecond": {
+                "type": "number"
+              },
+              "angularRadiansPerSecond": {
+                "type": "number"
+              },
+              "layer": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "distanceMeters",
+              "signatureMeters",
+              "speedMetersPerSecond",
+              "angularRadiansPerSecond"
+            ],
+            "additionalProperties": false
+          },
+          "metric": {
+            "type": "string",
+            "enum": [
+              "appliedCycleDps",
+              "appliedLoadedCycleDps",
+              "effectiveCycleDps",
+              "effectiveLoadedCycleDps"
+            ]
+          },
+          "intervals": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 128
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_battle",
+      "description": "prepare: Validate immutable fitting revisions, conditions and finite ammo; returns draftId and capability limits. Does not start. run: Prepare and start an experiment in one call with stable jobId, then bounded wait. Reuse identical input after uncertain outcome. Conditions are retained with the job. start: Start the prepared draft once; default stationary weapons only. No movement/repair/EWAR/drone policy implied. wait: Wait up to 60 seconds; returns final report or actionable pending state. Failure is not combat defeat. report: Experiment-bound result: destruction time, last-damage snapshot, end snapshot and damage application are distinct. expectedDraftId rejects cross-experiment substitution. events: Filtered authoritative events; next preserves filters and cursor. cancel: Cooperative cancellation; partial checkpoint is not completed battle. resume: Resume only a compatible resumable checkpoint at expected revision. Keeps attempt identity.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "prepare",
+              "run",
+              "start",
+              "wait",
+              "report",
+              "events",
+              "cancel",
+              "resume"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "seed": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "seconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3600
+          },
+          "ships": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sessionId": {
+                  "type": "string"
+                },
+                "revision": {
+                  "type": "integer"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "team": {
+                  "type": "string"
+                },
+                "position": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number"
+                    },
+                    "y": {
+                      "type": "number"
+                    },
+                    "z": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "z"
+                  ],
+                  "additionalProperties": false
+                },
+                "velocity": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number"
+                    },
+                    "y": {
+                      "type": "number"
+                    },
+                    "z": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "z"
+                  ],
+                  "additionalProperties": false
+                },
+                "reservePerWeapon": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1000000
+                },
+                "supplies": {
+                  "type": "object"
+                },
+                "options": {
+                  "type": "object"
+                }
+              },
+              "required": [
+                "sessionId",
+                "revision",
+                "id",
+                "team",
+                "position"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 2,
+            "maxItems": 32
+          },
+          "policyPreset": {
+            "type": "string",
+            "enum": [
+              "stationary-weapons-v1"
+            ]
+          },
+          "policies": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "jobId": {
+            "type": "string"
+          },
+          "waitSeconds": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 60
+          },
+          "draftId": {
+            "type": "string"
+          },
+          "expectedDraftId": {
+            "type": "string"
+          },
+          "kinds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 0,
+            "maxItems": 20
+          },
+          "sourceId": {
+            "type": "string"
+          },
+          "targetId": {
+            "type": "string"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "revision": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_jobs",
+      "description": "list: Discover job IDs/states/bytes and storage, including old results. storage: Quota, remaining bytes and next actions. compact: dryRun defaults true. Reclaim redundant recovery only for an inactive job at revision; final results and identities are retained. Apply only when cleanup is requested.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "list",
+              "storage",
+              "compact"
+            ]
+          },
+          "afterId": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30
+          },
+          "jobId": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "integer"
+          },
+          "dryRun": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_help",
+      "description": "overview: Task routes and runnable examples, from ship traits to weapons/curves and combat research. operation: Exact operation schema and example route. native: Advanced native tool discovery. Omit name to list. Ordinary tasks use catalog/fitting/battle/jobs.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "overview",
+              "operation",
+              "native"
+            ]
+          },
+          "domain": {
+            "type": "string"
+          },
+          "operation": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_status",
+      "description": "read: Version/source/coverage and storage health. No browser required.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "read"
+            ]
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_raw",
+      "description": "call: Advanced native escape hatch; arguments follow help.native schema, with native side-effect semantics.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "call"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "arguments": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_result",
+      "description": "read: Page a full detail reference; ordinary results are already task-shaped.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "read"
+            ]
+          },
+          "resultId": {
+            "type": "string"
+          },
+          "pointer": {
+            "type": "string"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000000
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

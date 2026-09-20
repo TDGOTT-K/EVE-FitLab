@@ -1,0 +1,4 @@
+interface:
+  display_name: "FitLab Research"
+  short_description: "Query EVE data, analyze fittings, and run reproducible research."
+  default_prompt: "Use $fitlab-agent to answer an EVE fitting or combat research question with source-bound evidence."

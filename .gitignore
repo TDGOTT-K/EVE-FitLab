@@ -32,3 +32,6 @@ venv/
 # Private development notes and temporary deployment probes
 docs/2026-09-14-*.md
 website/downloads/*test*
+
+# Machine-specific Agent connection (template is committed).
+/agent-config.json

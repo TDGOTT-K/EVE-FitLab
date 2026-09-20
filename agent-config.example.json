@@ -1,0 +1,6 @@
+{
+  "engine": "ABSOLUTE_PATH_TO_ENGINE",
+  "state": "ABSOLUTE_PATH_TO_AGENT_STATE",
+  "mcp_dll": "ABSOLUTE_PATH_TO_NEngine.Mcp.dll",
+  "baseline": "ABSOLUTE_PATH_TO_UI-AGENT-V5-BASELINE.json"
+}
