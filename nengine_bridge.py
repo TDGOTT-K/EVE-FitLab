@@ -60,7 +60,7 @@ class NEngineBridge:
         self.state.mkdir(parents=True, exist_ok=True)
         self.process = subprocess.Popen([str(runtime/'dotnet.exe'), str(dll), '--data',
             str(self.root/self.baseline['dataDirectory']), '--state', str(self.state)],
-            cwd=self.root, env={**os.environ, 'DOTNET_ROOT':str(runtime)},
+            cwd=self.root, env={**os.environ, 'DOTNET_ROOT':str(runtime), 'NENGINE_MCP_STRUCTURED_ONLY':'1'},
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
             text=True, encoding='utf-8', bufsize=1,
             creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))

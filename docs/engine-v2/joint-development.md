@@ -530,6 +530,10 @@ UI改动只在已有入口、显示与悬停说明：角色管理＋→从EVE官
 
 0.210.5-ui.mutation1 / r58-ui-mutation1：mutation_workbench及CLI入口提供手动范围校验、联合概率/期望、实际分批试验。规则沿用既有SDE/随机模型。手动保存经公开接口核验，UI仅做单位展示与交互；随机命中保留可重放receipt。见abyssal-edit-and-trials.md与引擎docs/ui-local-changes.md。独立提交，不打包，不修改主库/历史候选。
 
+### LOCAL-019 全技能性能
+
+2026-09-20：0.210.10-ui.selectionperf1/r58将输出选择查询复用基础分析，保持原Aggregate及隔离缓存；FitLab子进程显式启用structuredContent-only成功回执，默认MCP客户端不变。见NUI-107与引擎台账；剩余全技能延迟仍开放，不以轻量样本宣称完成。
+
 ### LOCAL-018 导弹距离应用
 
 2026-09-20：独立引擎0.210.9-ui.missilerange1/r58按已有飞行投影限制导弹静态应用距离，补精确曲线边界，公开结构不变。名义伤害保持原义，应用伤害超程归零，缺失距离明确不可用。UI只展示引擎采样与静态范围说明，详见NUI-105。
