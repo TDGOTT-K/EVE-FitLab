@@ -68,5 +68,16 @@ try{
  const reloaded={...saveInput,revision:savedUndo.revision+1};history.reset();
  const reopenSaved=await history.save(reloaded,async input=>(await api('save',{...input,_saveRequestId:crypto.randomUUID()})).result);
  assert.equal(reopenSaved.nativeSession.id,history.state().id);assert.equal(history.state().revision,1);assert.equal(history.state().canUndo,false);
- console.log('Real native history: apply/undo/redo, no-op UI changes, owner separation, lost create/apply recovery passed');
+ history.reset();
+ const prepared=(await api('prepare',{before,after})).result;
+ const analysis=(await api('preview-input',{fit:prepared.fit,commands:prepared.commands})).result;
+ await history.apply(before,after);await history.undo();
+ const previewCount=requests.filter(r=>r.action==='preview-input').length;
+ loseApply=true;
+ await assert.rejects(history.apply(before,after,history.capture(),{beforeHash:analysis.baselineAnalysis.fitHash,afterHash:Promise.resolve(analysis.candidateHash)}),/lost apply response/);
+ const shared=await history.retry();assert.equal(shared.result.replayed,true);
+ assert.equal(requests.filter(r=>r.action==='preview-input').length,previewCount);
+ assert.equal((await history.undo()).result.working.items.length,0);
+ assert.equal((await history.redo()).result.working.items.length,1);
+ console.log('Real native history: shared analysis hashes, apply/undo/redo, no-op UI changes, owner separation, lost create/apply recovery passed');
 }finally{child.stdin.end();await new Promise(resolve=>{if(child.exitCode!==null)resolve();else child.once('exit',resolve);});lines.close();}

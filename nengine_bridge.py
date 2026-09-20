@@ -90,6 +90,29 @@ class NEngineBridge:
             if 'error' in reply: raise ValueError(str(reply['error'].get('message','NEngine RPC error')))
             return reply['result']
 
+    def _read_key(self, name, arguments):
+        arguments=dict(arguments or {})
+        if name=='fit_analyze':
+            fit=dict(arguments['fit'])
+            # Only these explicit native defaults are equivalent; preserve null
+            # inventories, empty collections, unknown fields and array order.
+            if type(fit.get('schemaVersion')) is int and fit['schemaVersion']==1:fit.pop('schemaVersion')
+            for field in ('items','drones'):
+                if isinstance(fit.get(field),list):
+                    fit[field]=[{k:v for k,v in row.items() if not(k=='mutation' and v is None)} if isinstance(row,dict) else row for row in fit[field]]
+            arguments['fit']=fit
+            if arguments.get('context') is None:arguments['context']={}
+        return json.dumps([name,arguments],ensure_ascii=False,separators=(',',':'))
+
+    def _remember(self, key, payload):
+        cached=json.dumps(payload,ensure_ascii=False,separators=(',',':'))
+        size=len(cached.encode('utf-8'))+len(key.encode('utf-8'))
+        if size>16*1024*1024:return
+        if key in self.read_cache:self.read_cache_bytes-=self.read_cache.pop(key)[1]
+        self.read_cache[key]=(cached,size);self.read_cache_bytes+=size
+        while len(self.read_cache)>48 or self.read_cache_bytes>16*1024*1024:
+            _,(_,removed)=self.read_cache.popitem(last=False);self.read_cache_bytes-=removed
+
     def call(self, name, arguments=None):
         if name not in {'mutation_workbench','booster_plan_summary','character_skill_snapshot','skill_points','fit_create','fit_inspect','fit_preview','fit_preview_input','fit_execute','fit_export','fit_import','engine_status','catalog_search','catalog_item','catalog_type_details','catalog_variants','fit_analyze','fit_valuation','fit_output_curves','fit_attributes','mutation_rule','mutation_roll','booster_plan_analyze','booster_plan_roll','booster_plan_verify','capacitor_scenario'}:
             raise ValueError('此适配层只开放静态装配和目录查询')
@@ -97,7 +120,7 @@ class NEngineBridge:
             self._start()
             # Only immutable snapshot queries; never cache session-dependent reads.
             cacheable=name in {'fit_analyze','fit_preview_input','fit_attributes','capacitor_scenario'} and isinstance((arguments or {}).get('fit'),dict)
-            cache_key=json.dumps([name,arguments or {}],ensure_ascii=False,separators=(',',':')) if cacheable else None
+            cache_key=self._read_key(name,arguments) if cacheable else None
             if cache_key in self.read_cache:
                 cached,size=self.read_cache.pop(cache_key);self.read_cache[cache_key]=(cached,size)
                 return json.loads(cached)
@@ -108,13 +131,14 @@ class NEngineBridge:
                 try: payload=json.loads(content)
                 except json.JSONDecodeError: payload={'message':content}
             if result.get('isError'): raise NEngineError(payload)
-            if cacheable:
-                cached=json.dumps(payload,ensure_ascii=False,separators=(',',':'))
-                size=len(cached.encode('utf-8'))+len(cache_key.encode('utf-8'))
-                if size<=16*1024*1024:
-                    self.read_cache[cache_key]=(cached,size);self.read_cache_bytes+=size
-                    while len(self.read_cache)>48 or self.read_cache_bytes>16*1024*1024:
-                        _,(_,removed)=self.read_cache.popitem(last=False);self.read_cache_bytes-=removed
+            if cacheable:self._remember(cache_key,payload)
+            # A public preview already carries both immutable analyses. Reuse
+            # them for exact-input reads, never for a session write or receipt.
+            if name=='fit_preview_input' and payload.get('ok'):
+                result=payload['result'];context=(arguments or {}).get('context') or {}
+                for fit,analysis in [((arguments or {}).get('fit'),result.get('baselineAnalysis')),(result.get('candidate'),result.get('analysis'))]:
+                    if isinstance(fit,dict) and isinstance(analysis,dict):
+                        self._remember(self._read_key('fit_analyze',{'fit':fit,'context':context}),{'ok':True,'result':analysis})
             return payload
 
     def discover(self):

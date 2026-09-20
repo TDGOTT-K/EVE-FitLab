@@ -1,3 +1,4 @@
+import {capacitorHtml} from './native-capacitor-view.js';
 import {pilotPortrait} from './pilot-portrait.js';
 import {showFitTextExport} from './fit-text-export.js';
 import {mountFitTagInput} from './fit-tag-input.js';
@@ -55,10 +56,10 @@ const bayFoldState=new Map();
 let ship=byId(587),fitRecord={id:crypto.randomUUID(),name:'裂谷级 · 我的装配',shipId:587,cargo:[],skills:[],characterName:'无技能 · 基础对照'},report=null,reportVersion=-1,analysisVersion=0,analysisTimer,analysisState='pending';
 const nativeHistory=createNativeEditHistory(api);let editTransition=null;
 const cachedItem=requestCache(id=>api('items/'+id),128);
-const cachedCalculation=requestCache(fit=>api('analyze',fit),12);
+const cachedCalculation=requestCache(fit=>api('analyze-static',fit),12);
 let pilotPortraitCharacters=[];
 let attackMode='dps';try{attackMode=localStorage.getItem('fitlab-attack-mode')==='edps'?'edps':'dps'}catch{}
-function getCalculation(fit){fit={...fit,attackMode};if(fit.activeScenarioId||Object.keys(fit.scenario||{}).length)return api('analyze',fit);return cachedCalculation(JSON.stringify(fit),fit)}
+function getCalculation(fit){fit={...fit,attackMode};if(fit.activeScenarioId||Object.keys(fit.scenario||{}).length)return api('analyze-static',fit);return cachedCalculation(JSON.stringify(fit),fit)}
 const treeOpen=new Set(),searchCollapsed=new Set();
 let treeSearchQuery="";
 const labels={subsystem:'子系统',high:'高槽',mid:'中槽',low:'低槽',rig:'改装件'}, counts={subsystem:subsystemSlots(ship).length,high:ship.attrs['14']||0,mid:ship.attrs['13']||0,low:ship.attrs['12']||0,rig:ship.attrs['1137']||0};
@@ -92,7 +93,7 @@ function watchEdit(task,owner,rollback,message){
  }).finally(()=>{if(nativeHistory.capture()===owner)$('#editor-page').inert=false;});
  settle(task);
 }
-function mutate(fn,msg,precomputed){if(!canEditNow())return;cancelInstallPreview();const owner=nativeHistory.capture(),rollback=historyRollback(),before=currentFit();redoHistory=[];history.push(editSnapshot());if(history.length>30)history.shift();fn();const detached=detachUnmatchedCrystals({...fitRecord,slots});if(detached)msg+=' · 晶体已移至货舱';if(filter?.ammo&&!needsAmmo(byId(slots.find(s=>s.key===filter.key)?.item)))filter=null;const after=currentFit();refreshEditView(precomputed);watchEdit(nativeHistory.apply(before,after,owner),owner,rollback,msg);}
+function mutate(fn,msg,precomputed){if(!canEditNow())return;const beforeHash=reportVersion===analysisVersion?report?.native?.fitHash:null;cancelInstallPreview();const owner=nativeHistory.capture(),rollback=historyRollback(),before=currentFit();redoHistory=[];history.push(editSnapshot());if(history.length>30)history.shift();fn();const detached=detachUnmatchedCrystals({...fitRecord,slots});if(detached)msg+=' · 晶体已移至货舱';if(filter?.ammo&&!needsAmmo(byId(slots.find(s=>s.key===filter.key)?.item)))filter=null;const after=currentFit();let validated=null;if(beforeHash){const key=JSON.stringify({...after,attackMode});const resultPromise=precomputed?.key===key?Promise.resolve(precomputed.result):getCalculation(after);precomputed={key,resultPromise};validated={beforeHash,afterHash:resultPromise.then(r=>r.native.fitHash)};validated.afterHash.catch(()=>{});}refreshEditView(precomputed);watchEdit(nativeHistory.apply(before,after,owner,validated),owner,rollback,msg);}
 function undo(){if(!history.length||!canEditNow())return;cancelInstallPreview();const owner=nativeHistory.capture(),rollback=historyRollback();redoHistory.push(editSnapshot());applyEditSnapshot(history.pop());filter=null;refreshEditView();watchEdit(nativeHistory.undo(owner),owner,rollback,'已撤销最近一次操作');}
 function redo(){if(!redoHistory.length||!canEditNow())return;cancelInstallPreview();const owner=nativeHistory.capture(),rollback=historyRollback();history.push(editSnapshot());applyEditSnapshot(redoHistory.pop());filter=null;refreshEditView();watchEdit(nativeHistory.redo(owner),owner,rollback,'已重做最近一次操作');}
 $('#redo').onclick=redo;
@@ -395,8 +396,24 @@ function restoreFit(record){nativeHistory.reset();editTransition=null;$('#editor
 const fitSaver=createFitSaver({read:currentFit,capture:()=>nativeHistory.capture(),write:(input,owner)=>nativeHistory.save(input,request=>api('save',request),owner),accept:(saved,{unchanged})=>{fitRecord={...fitRecord,id:saved.id,revision:saved.revision,updatedAt:saved.updatedAt};localStorage.setItem('fitlab-working-draft',JSON.stringify(currentFit()));$('#save').textContent=unchanged?'已保存 · '+new Date(saved.updatedAt).toLocaleTimeString():'已保存上一版本 · 当前改动待保存';}});
 function persistFit(){return fitSaver.save()}
 document.addEventListener('fitlab-attack-mode',e=>{attackMode=e.detail==='edps'?'edps':'dps';try{localStorage.setItem('fitlab-attack-mode',attackMode)}catch{}scheduleAnalysis()});
+let capacitorRefreshTimer=null;
+function refreshCapacitorLater(result,input,version){
+ clearTimeout(capacitorRefreshTimer);
+ if(result.provider!=='nengine'||result.capacitorScenario?.state!=='pending')return;
+ const owner=nativeHistory.capture();
+ capacitorRefreshTimer=setTimeout(async()=>{
+  try{
+   if(owner.running)await owner.running.catch(()=>{});
+   if(version!==analysisVersion||report!==result)return;
+   const capacitor=await api('analyze-capacitor',input);
+   if(version!==analysisVersion||report!==result)return;
+   result.capacitorScenario=capacitor;
+   if(!previewRestore){const host=$('#native-capacitor');if(host)host.innerHTML=capacitorHtml(result,catalog);}
+  }catch(e){if(version===analysisVersion&&report===result){result.capacitorScenario={state:'unavailable',reason:e.message};if(!previewRestore){const host=$('#native-capacitor');if(host)host.innerHTML=capacitorHtml(result,catalog);}}}
+ },150);
+}
 function scheduleAnalysis(precomputed){document.dispatchEvent(new CustomEvent('fitlab-calculation-invalidated'));if(!$('#info-window').hidden)closeInfo();analysisState='pending';updateScenarioStatus();cancelInstallPreview();$('.inspector').classList.add('calculating');analysisVersion++;refreshSlotMetrics();clearTimeout(analysisTimer);$('#engine-status').textContent='计算中…';analysisTimer=setTimeout(()=>runAnalysis(precomputed),precomputed?0:50)}
-async function runAnalysis(precomputed){const version=analysisVersion;try{await Promise.all([ship,...slots.filter(s=>s.item).map(s=>byId(s.item))].map(hydrateType));if(version!==analysisVersion)return;counts.subsystem=subsystemSlots(ship).length;const pending=fresh();let structureChanged=false;for(const slot of pending)if(!slots.some(s=>s.key===slot.key)){slots.push(slot);structureChanged=true;}if(structureChanged||!report){renderSlots();renderTree();}const input=currentFit();const result=precomputed?.key===JSON.stringify({...input,attackMode})?precomputed.result:await getCalculation(input);if(version!==analysisVersion)return;report=result;reportVersion=version;const missingAmmo=slots.filter(s=>s.ammo&&!scriptSlot(s)&&!ammoDefaultsAttempted.has(fitRecord.id+':'+s.key+':'+s.ammo)&&(crystalSlot(s)?!fitRecord.crystals?.some(c=>c.moduleId===s.key):s.loadedCharges===undefined));if(result.provider==='nengine'&&missingAmmo.length&&!fitRecord.nativeFitId&&canEditNow()){const candidate=currentFit();missingAmmo.forEach(s=>ammoDefaultsAttempted.add(fitRecord.id+':'+s.key+':'+s.ammo));try{await fillNewAmmo(candidate,missingAmmo.map(s=>s.key));if(version!==analysisVersion)return;mutate(()=>{slots=candidate.slots;if(candidate.crystals)fitRecord.crystals=candidate.crystals},'弹药默认满仓，晶体默认全新 · 可撤销');return;}catch(error){say('默认装填暂不可用：'+error.message)}}if(result.provider==='nengine')$('.status .source').textContent='N '+result.engineVersion+' · SDE '+result.source.buildNumber+' · 副本';analysisState='complete';updateScenarioStatus();syncEngineSlots();refreshSlotMetrics();renderBayConfig();$('.inspector').classList.remove('calculating');$('#engine-status').textContent=`${result.provider==='nengine'?'N '+result.engineVersion:'Dogma'} · ${result.skillCount} 项技能`;$('.notice').textContent=analysisStatusText(result);renderResources();renderShipStats()}catch(e){if(version!==analysisVersion)return;$('.inspector').classList.remove('calculating');analysisState='failed';updateScenarioStatus();report=null;reportVersion=-1;renderResources();renderShipStats();refreshSlotMetrics();$('#engine-status').textContent='计算失败 · 当前数据不可用';$('.notice').textContent=e.message;say('装配已保留，计算失败：'+e.message)}}
+async function runAnalysis(precomputed){const version=analysisVersion;try{await Promise.all([ship,...slots.filter(s=>s.item).map(s=>byId(s.item))].map(hydrateType));if(version!==analysisVersion)return;counts.subsystem=subsystemSlots(ship).length;const pending=fresh();let structureChanged=false;for(const slot of pending)if(!slots.some(s=>s.key===slot.key)){slots.push(slot);structureChanged=true;}if(structureChanged||!report){renderSlots();renderTree();}const input=currentFit();const result=precomputed?.key===JSON.stringify({...input,attackMode})?await(precomputed.resultPromise||precomputed.result):await getCalculation(input);if(version!==analysisVersion)return;report=result;reportVersion=version;const missingAmmo=slots.filter(s=>s.ammo&&!scriptSlot(s)&&!ammoDefaultsAttempted.has(fitRecord.id+':'+s.key+':'+s.ammo)&&(crystalSlot(s)?!fitRecord.crystals?.some(c=>c.moduleId===s.key):s.loadedCharges===undefined));if(result.provider==='nengine'&&missingAmmo.length&&!fitRecord.nativeFitId&&canEditNow()){const candidate=currentFit();missingAmmo.forEach(s=>ammoDefaultsAttempted.add(fitRecord.id+':'+s.key+':'+s.ammo));try{await fillNewAmmo(candidate,missingAmmo.map(s=>s.key));if(version!==analysisVersion)return;mutate(()=>{slots=candidate.slots;if(candidate.crystals)fitRecord.crystals=candidate.crystals},'弹药默认满仓，晶体默认全新 · 可撤销');return;}catch(error){say('默认装填暂不可用：'+error.message)}}if(result.provider==='nengine')$('.status .source').textContent='N '+result.engineVersion+' · SDE '+result.source.buildNumber+' · 副本';analysisState='complete';updateScenarioStatus();syncEngineSlots();refreshSlotMetrics();renderBayConfig();$('.inspector').classList.remove('calculating');$('#engine-status').textContent=`${result.provider==='nengine'?'N '+result.engineVersion:'Dogma'} · ${result.skillCount} 项技能`;$('.notice').textContent=analysisStatusText(result);renderResources();renderShipStats();refreshCapacitorLater(result,input,version)}catch(e){if(version!==analysisVersion)return;$('.inspector').classList.remove('calculating');analysisState='failed';updateScenarioStatus();report=null;reportVersion=-1;renderResources();renderShipStats();refreshSlotMetrics();$('#engine-status').textContent='计算失败 · 当前数据不可用';$('.notice').textContent=e.message;say('装配已保留，计算失败：'+e.message)}}
 const flow=document.createElement('dialog');flow.id='flow-dialog';document.body.append(flow);
 function openFlow(title,body){flow.innerHTML=`<div class="flow-head"><b>${esc(title)}</b><button aria-label="关闭">×</button></div><div class="flow-body">${body}</div><p id="flow-error"></p>`;flow.querySelector('.flow-head button').onclick=()=>flow.close();flow.showModal()}
 function guarded(fn){return async()=>{try{await fn()}catch(e){say(e.message);if(flow.open)$('#flow-error').textContent=e.message}}}
@@ -597,7 +614,7 @@ function syncEngineSlots(){
  const next=fresh().map(s=>slots.find(x=>x.key===s.key)||s);
  for(const s of slots)if(s.item&&!next.some(x=>x.key===s.key))next.push(s);
  const changed=JSON.stringify(next)!==JSON.stringify(slots);slots=next;
- if(changed||subsystemSlots(ship).length){renderSlots();renderTree()}
+ if(changed){renderSlots();renderTree()}
  else for(const el of $('#slots').querySelectorAll('[data-rack-limits]'))el.innerHTML=rackLimits(el.dataset.rackLimits);
  localStorage.setItem('fitlab-working-draft',JSON.stringify(currentFit()));
 }
@@ -746,7 +763,7 @@ function openBatchMenu(e,keys,title){
 }
 function cancelInstallPreview(){
  clearTimeout(previewTimer);previewTimer=null;previewToken++;previewKey=null;
- if(previewRestore){previewRestore();previewRestore=null;}
+ if(previewRestore){previewRestore();previewRestore=null;const cap=$('#native-capacitor');if(cap&&report?.capacitorScenario?.state!=='pending')cap.innerHTML=capacitorHtml(report,catalog);}
  document.querySelector('.fit-install-preview')?.remove();$('.inspector')?.classList.remove('install-preview-active');
  $('#slots')?.querySelectorAll('.preview-target').forEach(e=>e.classList.remove('preview-target'));
 }

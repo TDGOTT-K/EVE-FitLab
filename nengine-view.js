@@ -33,7 +33,7 @@ export function mountNativeStats(root,report,{mode='hp',onMode,onDamageEdit,cata
  const a=report.native,attrs=a.attributes;
  const attr=(label,id,unit='',scale=1)=>{const t=attrs['ship/'+id];return row(label,(id===70&&Number.isFinite(t?.value)?t.value.toFixed(5):fmt(scaleReading(t?.value,scale),unit)),panelTrace(t,label,unit,report,catalog,scale))};
  const detail=(title,value,unit,terms=[],conditions=[])=>panelReading(title,value,unit,terms,conditions);
- let html=capacitorHtml(report,catalog);
+ let html='<div id="native-capacitor">'+capacitorHtml(report,catalog)+'</div>';
  const unit=report.attackMode==='edps'?'EDPS':'DPS';
  const current=displayOutputSelection(report,report.outputSelection,report.outputContext?.selection?.contributionIds),base=displayOutputSelection(report,report.baselineOutputSelection,report.outputContext?.selection?.contributionIds),comparison=report.native.outputContributions.comparison;
  const comparisons=report.scenarioTarget?[['无情景基准',outputReading(base)+' DPS'],['差量',fmt(comparison?.delta.value,unit)],['相对基准',comparison?.ratio.state==='available'?fmt(comparison.ratio.value*100,'%'):'不可用 · '+(comparison?.ratio.reason||'缺少比较结果')]]:[];

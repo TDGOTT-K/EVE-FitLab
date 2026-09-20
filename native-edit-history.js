@@ -14,14 +14,14 @@ export function createNativeEditHistory(api){
    if(inspected.session.revision!==0||inspected.analysis.fitHash!==hash||!inspected.session.allowIncompleteDraft)throw conflict('编辑会话与待恢复的初始装配不一致');
    owner.revision=0;
   }
-  owner.opened=true;
+  owner.fitHash=hash;owner.opened=true;
  }
  async function execute(owner,operation,requestId,expectedHash,commands){
   const args={sessionId:owner.id,revision:owner.revision,requestId,operation};
   if(commands)args.commands=commands;
   return {args,finish:result=>{
    if(result.appliedFitHash!==expectedHash||result.analysis.fitHash!==expectedHash)throw conflict('编辑回执与当前装配不同，请检查会话状态');
-   owner.revision=result.revision;return result;
+   owner.revision=result.revision;owner.fitHash=result.appliedFitHash;return result;
   }};
  }
  function run(owner,operation){
@@ -43,12 +43,14 @@ export function createNativeEditHistory(api){
   reset(){current=fresh();return current;},
   capture(){return current;},
   state(owner=current){return {id:owner.id,revision:owner.revision,opened:owner.opened,busy:owner.busy,pending:!!owner.pending||!!owner.savePending,pendingSave:!!owner.savePending,canUndo:!!owner.undo.length,canRedo:!!owner.redo.length};},
-  apply(before,after,owner=current){
+  apply(before,after,owner=current,validated=null){
    before=structuredClone(before);after=structuredClone(after);const requestId=crypto.randomUUID();
    return begin(owner,async()=>{
     const prepared=await call('prepare',{before,after});
     if(!prepared.commands.length)return async()=>{owner.undo.push({changed:false});owner.redo=[];return {changed:false};};
-    const preview=await call('preview-input',{fit:prepared.fit,commands:prepared.commands});
+    // The host may share the exact before/after public analyses already needed
+    // for rendering. Execute still performs native validation and hash checks.
+    const preview=validated&&owner.opened&&owner.fitHash?{baselineAnalysis:{fitHash:owner.fitHash},candidateHash:await validated.afterHash}:await call('preview-input',{fit:prepared.fit,commands:prepared.commands});
     await ensure(owner,prepared.fit,preview.baselineAnalysis.fitHash);
     const change={changed:true,beforeHash:preview.baselineAnalysis.fitHash,afterHash:preview.candidateHash};
     const tx=await execute(owner,'apply',requestId,change.afterHash,prepared.commands);
@@ -80,7 +82,7 @@ export function createNativeEditHistory(api){
      saved=await write({...input,_editSession:{id:owner.id,revision:owner.revision}});
     }
     catch(error){owner.savePending=!error.status||error.status>=500;throw error;}
-    if(owner.opened){if(saved.nativeSession?.id!==owner.id)throw conflict('保存回执不属于当前编辑会话');owner.revision=saved.nativeSession.revision;}
+    if(owner.opened){if(saved.nativeSession?.id!==owner.id)throw conflict('保存回执不属于当前编辑会话');owner.revision=saved.nativeSession.revision;owner.fitHash=null;}
     owner.savePending=false;return saved;
    });
   },

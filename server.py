@@ -123,7 +123,7 @@ def validate_fit(f):
  if os.environ.get('FITLAB_CALCULATOR','nengine')=='nengine':
   return {**f,'slots':[{**v,'state':module_state(v),'online':module_state(v)!='Offline'} if v.get('item') else dict(v) for v in f['slots']]}
  return f
-def analyze(f,resolve_links=True,native_query=None):
+def analyze(f,resolve_links=True,native_query=None,include_capacitor=True):
  if os.environ.get("FITLAB_CALCULATOR", "nengine")=="nengine":
   validate_fit(f)
   from nengine_adapter import analyze as native_analyze
@@ -132,7 +132,8 @@ def analyze(f,resolve_links=True,native_query=None):
   result=native_analyze(f,target=target,native_query=native_query)
   result['scenarioTargetSource']=source
   from nengine_capacitor import attach_capacitor
-  attach_capacitor(f,result,read_library()['fits'] if resolve_links else [])
+  if include_capacitor:attach_capacitor(f,result,read_library()['fits'] if resolve_links else [])
+  else:result['capacitorScenario']={'state':'pending','reason':'电容续航计算中…'}
   from analysis_status import classify_report
   result['analysisStatus']=classify_report(result)
   return result
@@ -353,6 +354,10 @@ class Handler(SimpleHTTPRequestHandler):
     with LOCK:
      if self.path.endswith('/export'):return self.reply(export_package(body['fit'],read_library()['fits'],analyze,validate_fit))
      return self.reply(import_package(body['document'],analyze,validate_fit))
+   if self.path=='/api/analyze-static':
+    with LOCK:return self.reply(analyze(body,include_capacitor=False))
+   if self.path=='/api/analyze-capacitor':
+    with LOCK:return self.reply(analyze(body)['capacitorScenario'])
    if self.path=='/api/analyze':
     with LOCK:return self.reply(analyze(body))
    if self.path=='/api/preview':

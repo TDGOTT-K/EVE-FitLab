@@ -14,7 +14,7 @@ export function capacitorPresentation(report,catalog=[]){
  const failed=r?.firstFailedPaymentSeconds,zero=r?.firstZeroSeconds,supply=r?.firstSupplyStoppedSeconds;
  // A periodic failure is not a depletion time for the average model. Name it
  // exactly, as the legacy inspector did, while retaining both verdicts.
- const summary=stable===true?'稳定'+(Number.isFinite(fraction)?' · '+fmt(fraction*100,'%'):''):stable===false?(Number.isFinite(failed)?duration(failed)+' · 供电不足':'不稳定 · 续航待确定'):'暂无法确定';
+ const summary=data?.state==='pending'?'续航计算中…':stable===true?'稳定'+(Number.isFinite(fraction)?' · '+fmt(fraction*100,'%'):''):stable===false?(Number.isFinite(failed)?duration(failed)+' · 供电不足':'不稳定 · 续航待确定'):'暂无法确定';
  const recharge=r?.recharge||native.capacitorRecharge||local?.recharge;
  const capTrace=panelTrace(native.attributes?.['ship/482'],'电容容量','GJ',report,catalog),timeTrace=panelTrace(native.attributes?.['ship/55'],'回充时间','s',report,catalog,1000);
  const terms=[['电容容量',fmt(recharge?.capacity,'GJ'),null,capTrace],['回充时间',timeTrace.result,null,timeTrace]];

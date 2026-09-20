@@ -33,5 +33,24 @@ class ReadCache(unittest.TestCase):
       with self.assertRaises(NEngineError):client.call('fit_analyze',{'fit':{}})
      self.assertEqual(rpc.call_count,2);self.assertEqual(len(client.read_cache),0)
    finally:client.close()
+ def test_preview_seeds_exact_reads_without_caching_transactions(self):
+  with tempfile.TemporaryDirectory() as directory:
+   c=NEngineBridge(state=Path(directory));before={'shipTypeId':621,'items':[]};after={'schemaVersion':1,'shipTypeId':621,'items':[{'id':'a','typeId':501,'mutation':None}]}
+   response={'structuredContent':{'ok':True,'result':{'candidate':after,'baselineAnalysis':{'fitHash':'b','errors':[]},'analysis':{'fitHash':'a','errors':[]}}}}
+   try:
+    with patch.object(c,'_start'),patch.object(c,'_rpc',return_value=response) as rpc:
+     result=c.call('fit_preview_input',{'fit':before,'commands':[{'kind':'install'}]})
+     result['result']['analysis']['errors'].append('changed')
+     self.assertEqual(c.call('fit_analyze',{'fit':before})['result']['fitHash'],'b')
+     short={'shipTypeId':621,'items':[{'id':'a','typeId':501}]}
+     self.assertEqual(c.call('fit_analyze',{'fit':short,'context':{}})['result']['errors'],[])
+     self.assertEqual(rpc.call_count,1)
+     for different in ({**short,'inventory':None},{**short,'inventory':{'cargo':[]}},{**short,'schemaVersion':True},{**short,'skills':None}):
+      c.call('fit_analyze',{'fit':different})
+     c.call('fit_analyze',{'fit':short,'context':False})
+     self.assertEqual(rpc.call_count,6)
+     c.call('fit_execute',{'sessionId':'s'});c.call('fit_execute',{'sessionId':'s'})
+     self.assertEqual(rpc.call_count,8)
+   finally:c.close()
 
 if __name__=='__main__':unittest.main()

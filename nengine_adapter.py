@@ -45,7 +45,7 @@ def native_fit(f, build):
     if len(fighters)>200: raise ValueError('本适配层一次最多分析 200 个舰载机中队')
     result={'id':f.get('nativeFitId') or f.get('id') or 'fitlab-draft','name':f.get('name'),'tags':f.get('tags',[]),'buildNumber':build,
         'shipTypeId':f['shipId'],'omittedSkills':'untrained',
-        'skills':{str(s['skillTypeId']):s['level'] for s in f.get('skills',[])},
+        'skills':dict(sorted({str(s['skillTypeId']):s['level'] for s in f.get('skills',[])}.items(),key=lambda pair:int(pair[0]))),
         'tacticalModeTypeId':f.get('tacticalModeTypeId'),'items':items,'subsystems':subsystems,
         'drones':drones,'fighters':fighters,
         'implants':[{'id':f'implant-{i}','typeId':x['typeId']} for i,x in enumerate(implants)],

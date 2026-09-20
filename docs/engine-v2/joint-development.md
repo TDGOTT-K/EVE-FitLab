@@ -530,6 +530,10 @@ UI改动只在已有入口、显示与悬停说明：角色管理＋→从EVE官
 
 0.210.5-ui.mutation1 / r58-ui-mutation1：mutation_workbench及CLI入口提供手动范围校验、联合概率/期望、实际分批试验。规则沿用既有SDE/随机模型。手动保存经公开接口核验，UI仅做单位展示与交互；随机命中保留可重放receipt。见abyssal-edit-and-trials.md与引擎docs/ui-local-changes.md。独立提交，不打包，不修改主库/历史候选。
 
+### LOCAL-020 真实金鹏编辑性能续作
+
+2026-09-20：0.210.11-ui.editperf1/r58成功验证复用及Dogma目标索引，完整金鹏分析golden一致。UI连续编辑共享公开分析hash；首次会话/保存后仍走原预览确认基准，后续以原生回执维护基准，不以展示快照替代事务身份。电容异步更新仅改变展示调度，完整/api/analyze仍保留。见NUI-108，剩余延迟仍开放。
+
 ### LOCAL-019 全技能性能
 
 2026-09-20：0.210.10-ui.selectionperf1/r58将输出选择查询复用基础分析，保持原Aggregate及隔离缓存；FitLab子进程显式启用structuredContent-only成功回执，默认MCP客户端不变。见NUI-107与引擎台账；剩余全技能延迟仍开放，不以轻量样本宣称完成。
