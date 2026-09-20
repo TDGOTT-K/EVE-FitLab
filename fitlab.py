@@ -26,8 +26,8 @@ def serve(api):
             message=json.loads(line)
             if 'id' not in message:continue
             method=message.get('method');p=message.get('params',{})
-            if method=='initialize':result={'protocolVersion':p.get('protocolVersion','2025-03-26'),'serverInfo':{'name':'fitlab','version':'6.0'},'capabilities':{'tools':{}},
-                'instructions':'FitLab v6 uses distinct operation tools named fitlab_DOMAIN_OPERATION (no action argument). Simple facts: fitlab_catalog_describe by official name. Research: catalog search/compare and fitting outputs/curves; combat only when needed. help overview routes tasks. Follow next tool/arguments. Results state distinguishes pending/partial/failed/complete. HP times are not interchangeable; damage application is not hit probability. A report is bound to experiment conditions, never to a different current fit. jobs compact previews storage cleanup. Do not delete engine files through a shell. Use raw only for advanced native capabilities.'}
+            if method=='initialize':result={'protocolVersion':p.get('protocolVersion','2025-03-26'),'serverInfo':{'name':'fitlab','version':'7.0'},'capabilities':{'tools':{}},
+                'instructions':'FitLab v7 uses distinct operation tools named fitlab_DOMAIN_OPERATION (no action argument). Simple facts: fitlab_catalog_describe by official name. Research: catalog search/compare and fitting outputs/curves; combat only when needed. help overview routes tasks. Follow next tool/arguments. Results state distinguishes pending/partial/failed/complete. HP times are not interchangeable; damage application is not hit probability. A report is bound to experiment conditions, never to a different current fit. jobs compact previews storage cleanup. Do not delete engine files through a shell. Use raw only for advanced native capabilities.'}
             elif method=='ping':result={}
             elif method=='tools/list':result={'tools':tools()}
             elif method=='tools/call':
@@ -93,4 +93,4 @@ if __name__=='__main__':
     sys.stdin.reconfigure(encoding='utf-8');sys.stdout.reconfigure(encoding='utf-8')
     try:raise SystemExit(main())
     except (ValueError,OSError) as e:
-        print(encoded({'apiVersion':'fitlab-agent-v6','ok':False,'state':'error','issues':[{'code':'CLI_INPUT','message':str(e)}]}),file=sys.stderr);raise SystemExit(2)
+        print(encoded({'apiVersion':'fitlab-agent-v7','ok':False,'state':'error','issues':[{'code':'CLI_INPUT','message':str(e)}]}),file=sys.stderr);raise SystemExit(2)

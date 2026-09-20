@@ -1,0 +1,2542 @@
+{
+  "id": "fitlab-agent-mcp",
+  "revision": 7,
+  "tools": [
+    {
+      "name": "fitlab_catalog_describe",
+      "description": "Official description/ship skill bonuses and base attributes by name OR typeId. Exact name auto-resolves; ambiguity returns candidates.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "typeId": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "name": {
+            "type": "string"
+          },
+          "attributes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 0,
+            "maxItems": 20
+          },
+          "locale": {
+            "type": "string"
+          }
+        },
+        "required": [],
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "required": [
+              "typeId"
+            ],
+            "not": {
+              "required": [
+                "name"
+              ]
+            }
+          },
+          {
+            "required": [
+              "name"
+            ],
+            "not": {
+              "required": [
+                "typeId"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "fitlab_catalog_search",
+      "description": "Filter/sort explicit base attributes in native units. Follow next action for more. Missing filter values are excluded and counted.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string"
+              },
+              "groupId": {
+                "type": "integer"
+              },
+              "categoryId": {
+                "type": "integer"
+              },
+              "metaGroupId": {
+                "type": "integer"
+              },
+              "familyOfTypeId": {
+                "type": "integer"
+              },
+              "publishedOnly": {
+                "type": "boolean"
+              },
+              "filters": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "attribute": {
+                      "type": "string"
+                    },
+                    "min": {
+                      "type": "number"
+                    },
+                    "max": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "attribute"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 0,
+                "maxItems": 20
+              },
+              "attributes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 0,
+                "maxItems": 20
+              },
+              "sortBy": {
+                "type": "string"
+              },
+              "descending": {
+                "type": "boolean"
+              },
+              "attributeSearch": {
+                "type": "string"
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 30
+              },
+              "cursor": {
+                "type": "string"
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_catalog_resolve",
+      "description": "Resolve multiple names without guessing ambiguous matches.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "maxItems": 30
+          },
+          "categoryId": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "names"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_catalog_attributes",
+      "description": "Discover official attribute IDs/names/units before filtering.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30
+          },
+          "cursor": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_catalog_compare",
+      "description": "Compare the same named base attributes across items in one call.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "typeIds": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "minItems": 1,
+            "maxItems": 10
+          },
+          "attributes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "maxItems": 20
+          },
+          "locale": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "typeIds",
+          "attributes"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_catalog_variants",
+      "description": "Official variation family, not guessed replacements.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "typeId": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "name": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30
+          },
+          "cursor": {
+            "type": "string"
+          }
+        },
+        "required": [],
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "required": [
+              "typeId"
+            ],
+            "not": {
+              "required": [
+                "name"
+              ]
+            }
+          },
+          {
+            "required": [
+              "name"
+            ],
+            "not": {
+              "required": [
+                "typeId"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "fitlab_catalog_charges",
+      "description": "Discover declared ammunition/script groups; preview verifies the actual pair.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "typeId": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [],
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "required": [
+              "typeId"
+            ],
+            "not": {
+              "required": [
+                "name"
+              ]
+            }
+          },
+          {
+            "required": [
+              "name"
+            ],
+            "not": {
+              "required": [
+                "typeId"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "fitlab_fitting_roster",
+      "description": "Read actual drones/fighters/subsystems/implants/boosters and authoritative fitted bay/primary-output projections. setFighters/setDrones etc replace the whole named collection.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "sessionId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_fitting_list",
+      "description": "Find durable fitting sessions and their revisions; working/saved metadata remain distinct. Changed library invalidates cursor.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "includeClosed": {
+            "type": "boolean"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30
+          },
+          "cursor": {
+            "type": "string"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_fitting_create",
+      "description": "Create durable fit; default skills untrained, optional all5. Returns calculated summary/revision.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string"
+          },
+          "shipTypeId": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "skillPreset": {
+            "type": "string",
+            "enum": [
+              "untrained",
+              "all5"
+            ]
+          },
+          "skills": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 5
+            }
+          }
+        },
+        "required": [
+          "sessionId",
+          "shipTypeId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_fitting_read",
+      "description": "Calculated fitted totals, modules and readiness.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "sessionId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_fitting_edit",
+      "description": "Atomic changes at revision with stable requestId. install.item includes slotIndex, chargeTypeId and active. Passive modules use active:false. No automatic save.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "changes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "install",
+                    "remove",
+                    "setCharge",
+                    "setOnline",
+                    "setActive",
+                    "setOverheated",
+                    "setSkills",
+                    "setName",
+                    "setTags",
+                    "setFighters",
+                    "setDrones",
+                    "setSubsystems",
+                    "setImplants",
+                    "setBoosters"
+                  ]
+                },
+                "item": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "typeId": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 2147483647
+                    },
+                    "slotIndex": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 31
+                    },
+                    "chargeTypeId": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "online": {
+                      "type": "boolean"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "overheated": {
+                      "type": "boolean"
+                    },
+                    "mutation": {
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "typeId",
+                    "slotIndex"
+                  ],
+                  "additionalProperties": false
+                },
+                "instanceId": {
+                  "type": "string"
+                },
+                "chargeTypeId": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "online": {
+                  "type": "boolean"
+                },
+                "active": {
+                  "type": "boolean"
+                },
+                "overheated": {
+                  "type": "boolean"
+                },
+                "skills": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 5
+                  }
+                },
+                "name": {
+                  "type": "string"
+                },
+                "tags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 0,
+                  "maxItems": 30
+                },
+                "fighters": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "typeId": {
+                        "type": "integer"
+                      },
+                      "memberIds": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "minItems": 1,
+                        "maxItems": 12
+                      },
+                      "deployed": {
+                        "type": "boolean"
+                      },
+                      "location": {
+                        "type": "string",
+                        "enum": [
+                          "reserve",
+                          "tube"
+                        ]
+                      },
+                      "tubeIndex": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 11
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "typeId",
+                      "memberIds",
+                      "deployed"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "minItems": 0,
+                  "maxItems": 100
+                },
+                "drones": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "typeId": {
+                        "type": "integer"
+                      },
+                      "deployed": {
+                        "type": "boolean"
+                      },
+                      "mutation": {
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "typeId",
+                      "deployed"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "minItems": 0,
+                  "maxItems": 100
+                },
+                "subsystems": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "typeId": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "typeId"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "minItems": 0,
+                  "maxItems": 4
+                },
+                "implants": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "typeId": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "typeId"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "minItems": 0,
+                  "maxItems": 10
+                },
+                "boosters": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "typeId": {
+                        "type": "integer"
+                      },
+                      "enabledSideEffects": {
+                        "type": "array",
+                        "items": {
+                          "type": "integer"
+                        },
+                        "minItems": 0,
+                        "maxItems": 20
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "typeId"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "minItems": 0,
+                  "maxItems": 32
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "additionalProperties": false,
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "install"
+                    },
+                    "item": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "typeId": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 2147483647
+                        },
+                        "slotIndex": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 31
+                        },
+                        "chargeTypeId": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ]
+                        },
+                        "online": {
+                          "type": "boolean"
+                        },
+                        "active": {
+                          "type": "boolean"
+                        },
+                        "overheated": {
+                          "type": "boolean"
+                        },
+                        "mutation": {
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "typeId",
+                        "slotIndex"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "item"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "remove"
+                    },
+                    "instanceId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "instanceId"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "setCharge"
+                    },
+                    "instanceId": {
+                      "type": "string"
+                    },
+                    "chargeTypeId": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "instanceId",
+                    "chargeTypeId"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "setOnline"
+                    },
+                    "instanceId": {
+                      "type": "string"
+                    },
+                    "online": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "instanceId",
+                    "online"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "setActive"
+                    },
+                    "instanceId": {
+                      "type": "string"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "instanceId",
+                    "active"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "setOverheated"
+                    },
+                    "instanceId": {
+                      "type": "string"
+                    },
+                    "overheated": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "instanceId",
+                    "overheated"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "setSkills"
+                    },
+                    "skills": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 5
+                      }
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "skills"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "setName"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "name"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "setTags"
+                    },
+                    "tags": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "minItems": 0,
+                      "maxItems": 30
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "tags"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "setFighters"
+                    },
+                    "fighters": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "typeId": {
+                            "type": "integer"
+                          },
+                          "memberIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "minItems": 1,
+                            "maxItems": 12
+                          },
+                          "deployed": {
+                            "type": "boolean"
+                          },
+                          "location": {
+                            "type": "string",
+                            "enum": [
+                              "reserve",
+                              "tube"
+                            ]
+                          },
+                          "tubeIndex": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 11
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "typeId",
+                          "memberIds",
+                          "deployed"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 0,
+                      "maxItems": 100
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "fighters"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "setDrones"
+                    },
+                    "drones": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "typeId": {
+                            "type": "integer"
+                          },
+                          "deployed": {
+                            "type": "boolean"
+                          },
+                          "mutation": {
+                            "type": "object"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "typeId",
+                          "deployed"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 0,
+                      "maxItems": 100
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "drones"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "setSubsystems"
+                    },
+                    "subsystems": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "typeId": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "typeId"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 0,
+                      "maxItems": 4
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "subsystems"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "setImplants"
+                    },
+                    "implants": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "typeId": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "typeId"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 0,
+                      "maxItems": 10
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "implants"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "setBoosters"
+                    },
+                    "boosters": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "typeId": {
+                            "type": "integer"
+                          },
+                          "enabledSideEffects": {
+                            "type": "array",
+                            "items": {
+                              "type": "integer"
+                            },
+                            "minItems": 0,
+                            "maxItems": 20
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "typeId"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 0,
+                      "maxItems": 32
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "boosters"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 128
+          },
+          "requestId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "sessionId",
+          "revision",
+          "requestId",
+          "changes"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_fitting_preview",
+      "description": "Evaluate the same changes without committing. Returns deltas and diagnostics.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "changes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "install",
+                    "remove",
+                    "setCharge",
+                    "setOnline",
+                    "setActive",
+                    "setOverheated",
+                    "setSkills",
+                    "setName",
+                    "setTags",
+                    "setFighters",
+                    "setDrones",
+                    "setSubsystems",
+                    "setImplants",
+                    "setBoosters"
+                  ]
+                },
+                "item": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "typeId": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 2147483647
+                    },
+                    "slotIndex": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 31
+                    },
+                    "chargeTypeId": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    },
+                    "online": {
+                      "type": "boolean"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "overheated": {
+                      "type": "boolean"
+                    },
+                    "mutation": {
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "typeId",
+                    "slotIndex"
+                  ],
+                  "additionalProperties": false
+                },
+                "instanceId": {
+                  "type": "string"
+                },
+                "chargeTypeId": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "online": {
+                  "type": "boolean"
+                },
+                "active": {
+                  "type": "boolean"
+                },
+                "overheated": {
+                  "type": "boolean"
+                },
+                "skills": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 5
+                  }
+                },
+                "name": {
+                  "type": "string"
+                },
+                "tags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 0,
+                  "maxItems": 30
+                },
+                "fighters": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "typeId": {
+                        "type": "integer"
+                      },
+                      "memberIds": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "minItems": 1,
+                        "maxItems": 12
+                      },
+                      "deployed": {
+                        "type": "boolean"
+                      },
+                      "location": {
+                        "type": "string",
+                        "enum": [
+                          "reserve",
+                          "tube"
+                        ]
+                      },
+                      "tubeIndex": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 11
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "typeId",
+                      "memberIds",
+                      "deployed"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "minItems": 0,
+                  "maxItems": 100
+                },
+                "drones": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "typeId": {
+                        "type": "integer"
+                      },
+                      "deployed": {
+                        "type": "boolean"
+                      },
+                      "mutation": {
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "typeId",
+                      "deployed"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "minItems": 0,
+                  "maxItems": 100
+                },
+                "subsystems": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "typeId": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "typeId"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "minItems": 0,
+                  "maxItems": 4
+                },
+                "implants": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "typeId": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "typeId"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "minItems": 0,
+                  "maxItems": 10
+                },
+                "boosters": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "typeId": {
+                        "type": "integer"
+                      },
+                      "enabledSideEffects": {
+                        "type": "array",
+                        "items": {
+                          "type": "integer"
+                        },
+                        "minItems": 0,
+                        "maxItems": 20
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "typeId"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "minItems": 0,
+                  "maxItems": 32
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "additionalProperties": false,
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "install"
+                    },
+                    "item": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "typeId": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 2147483647
+                        },
+                        "slotIndex": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 31
+                        },
+                        "chargeTypeId": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ]
+                        },
+                        "online": {
+                          "type": "boolean"
+                        },
+                        "active": {
+                          "type": "boolean"
+                        },
+                        "overheated": {
+                          "type": "boolean"
+                        },
+                        "mutation": {
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "typeId",
+                        "slotIndex"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "item"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "remove"
+                    },
+                    "instanceId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "instanceId"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "setCharge"
+                    },
+                    "instanceId": {
+                      "type": "string"
+                    },
+                    "chargeTypeId": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "instanceId",
+                    "chargeTypeId"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "setOnline"
+                    },
+                    "instanceId": {
+                      "type": "string"
+                    },
+                    "online": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "instanceId",
+                    "online"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "setActive"
+                    },
+                    "instanceId": {
+                      "type": "string"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "instanceId",
+                    "active"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "setOverheated"
+                    },
+                    "instanceId": {
+                      "type": "string"
+                    },
+                    "overheated": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "instanceId",
+                    "overheated"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "setSkills"
+                    },
+                    "skills": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 5
+                      }
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "skills"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "setName"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "name"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "setTags"
+                    },
+                    "tags": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "minItems": 0,
+                      "maxItems": 30
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "tags"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "setFighters"
+                    },
+                    "fighters": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "typeId": {
+                            "type": "integer"
+                          },
+                          "memberIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "minItems": 1,
+                            "maxItems": 12
+                          },
+                          "deployed": {
+                            "type": "boolean"
+                          },
+                          "location": {
+                            "type": "string",
+                            "enum": [
+                              "reserve",
+                              "tube"
+                            ]
+                          },
+                          "tubeIndex": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 11
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "typeId",
+                          "memberIds",
+                          "deployed"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 0,
+                      "maxItems": 100
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "fighters"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "setDrones"
+                    },
+                    "drones": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "typeId": {
+                            "type": "integer"
+                          },
+                          "deployed": {
+                            "type": "boolean"
+                          },
+                          "mutation": {
+                            "type": "object"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "typeId",
+                          "deployed"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 0,
+                      "maxItems": 100
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "drones"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "setSubsystems"
+                    },
+                    "subsystems": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "typeId": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "typeId"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 0,
+                      "maxItems": 4
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "subsystems"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "setImplants"
+                    },
+                    "implants": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "typeId": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "typeId"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 0,
+                      "maxItems": 10
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "implants"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "setBoosters"
+                    },
+                    "boosters": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "typeId": {
+                            "type": "integer"
+                          },
+                          "enabledSideEffects": {
+                            "type": "array",
+                            "items": {
+                              "type": "integer"
+                            },
+                            "minItems": 0,
+                            "maxItems": 20
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "typeId"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 0,
+                      "maxItems": 32
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "boosters"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 128
+          }
+        },
+        "required": [
+          "sessionId",
+          "revision",
+          "changes"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_fitting_attributes",
+      "description": "Named fitted values for ship or module.<instanceId>/charge.<instanceId>.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string"
+          },
+          "attributes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "maxItems": 30
+          },
+          "itemId": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "sessionId",
+          "attributes"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_fitting_outputs",
+      "description": "Paged compact output IDs, per-metric values/states and native scoped totals. Follow next; pages bind fitHash. Full traces remain by reference.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 12
+          },
+          "expectedFitHash": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "sessionId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_fitting_curves",
+      "description": "Engine DPS curves: default online ship weapons or explicit contributionIds. Explicit target geometry or declared ideal reference. No combat or sustained-output claim.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string"
+          },
+          "expectedFitHash": {
+            "type": "string"
+          },
+          "contributionIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "maxItems": 100
+          },
+          "target": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "distanceMeters": {
+                "type": "number"
+              },
+              "signatureMeters": {
+                "type": "number"
+              },
+              "speedMetersPerSecond": {
+                "type": "number"
+              },
+              "angularRadiansPerSecond": {
+                "type": "number"
+              },
+              "layer": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "distanceMeters",
+              "signatureMeters",
+              "speedMetersPerSecond",
+              "angularRadiansPerSecond"
+            ],
+            "additionalProperties": false
+          },
+          "metric": {
+            "type": "string",
+            "enum": [
+              "appliedCycleDps",
+              "appliedLoadedCycleDps",
+              "effectiveCycleDps",
+              "effectiveLoadedCycleDps"
+            ]
+          },
+          "intervals": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 128
+          }
+        },
+        "required": [
+          "sessionId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_fitting_save",
+      "description": "Explicitly save the draft at revision.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "integer"
+          },
+          "requestId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "sessionId",
+          "revision",
+          "requestId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_battle_policies",
+      "description": "Discover preset coverage and optionally check a prepared draft without changing fitting or starting a battle.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "draftId": {
+            "type": "string"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_battle_prepare",
+      "description": "Validate immutable fitting revisions, conditions and finite ammo; returns draftId and capability limits. Does not start.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "seed": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "seconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3600
+          },
+          "ships": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sessionId": {
+                  "type": "string"
+                },
+                "revision": {
+                  "type": "integer"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "team": {
+                  "type": "string"
+                },
+                "position": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number"
+                    },
+                    "y": {
+                      "type": "number"
+                    },
+                    "z": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "z"
+                  ],
+                  "additionalProperties": false
+                },
+                "velocity": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number"
+                    },
+                    "y": {
+                      "type": "number"
+                    },
+                    "z": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "z"
+                  ],
+                  "additionalProperties": false
+                },
+                "reservePerWeapon": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1000000
+                },
+                "supplies": {
+                  "type": "object"
+                },
+                "options": {
+                  "type": "object"
+                }
+              },
+              "required": [
+                "sessionId",
+                "revision",
+                "id",
+                "team",
+                "position"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 2,
+            "maxItems": 32
+          }
+        },
+        "required": [
+          "id",
+          "seed",
+          "seconds",
+          "ships"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_battle_run",
+      "description": "Prepare and start an experiment in one call with stable jobId, then bounded wait. Reuse identical input after uncertain outcome. Conditions are retained with the job.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "seed": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "seconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3600
+          },
+          "ships": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sessionId": {
+                  "type": "string"
+                },
+                "revision": {
+                  "type": "integer"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "team": {
+                  "type": "string"
+                },
+                "position": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number"
+                    },
+                    "y": {
+                      "type": "number"
+                    },
+                    "z": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "z"
+                  ],
+                  "additionalProperties": false
+                },
+                "velocity": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number"
+                    },
+                    "y": {
+                      "type": "number"
+                    },
+                    "z": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y",
+                    "z"
+                  ],
+                  "additionalProperties": false
+                },
+                "reservePerWeapon": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1000000
+                },
+                "supplies": {
+                  "type": "object"
+                },
+                "options": {
+                  "type": "object"
+                }
+              },
+              "required": [
+                "sessionId",
+                "revision",
+                "id",
+                "team",
+                "position"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 2,
+            "maxItems": 32
+          },
+          "policyPreset": {
+            "type": "string",
+            "enum": [
+              "stationary-weapons-v1",
+              "stationary-weapons-defense-v1"
+            ]
+          },
+          "policies": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "jobId": {
+            "type": "string"
+          },
+          "waitSeconds": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 60
+          }
+        },
+        "required": [
+          "id",
+          "seed",
+          "seconds",
+          "ships",
+          "jobId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_battle_start",
+      "description": "Start the prepared draft once; default stationary weapons only. No movement/repair/EWAR/drone policy implied.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "draftId": {
+            "type": "string"
+          },
+          "jobId": {
+            "type": "string"
+          },
+          "policyPreset": {
+            "type": "string",
+            "enum": [
+              "stationary-weapons-v1",
+              "stationary-weapons-defense-v1"
+            ]
+          },
+          "policies": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "waitSeconds": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 60
+          }
+        },
+        "required": [
+          "draftId",
+          "jobId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_battle_wait",
+      "description": "Wait up to 60 seconds; returns final report or actionable pending state. Failure is not combat defeat.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string"
+          },
+          "waitSeconds": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 60
+          }
+        },
+        "required": [
+          "jobId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_battle_report",
+      "description": "Experiment-bound result: destruction time, last-damage snapshot, end snapshot and damage application are distinct. expectedDraftId rejects cross-experiment substitution.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string"
+          },
+          "expectedDraftId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "jobId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_battle_events",
+      "description": "Filtered authoritative events; next preserves filters and cursor.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string"
+          },
+          "kinds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 0,
+            "maxItems": 20
+          },
+          "sourceId": {
+            "type": "string"
+          },
+          "targetId": {
+            "type": "string"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
+        },
+        "required": [
+          "jobId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_battle_cancel",
+      "description": "Cooperative cancellation; partial checkpoint is not completed battle.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "jobId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_battle_resume",
+      "description": "Resume only a compatible resumable checkpoint at expected revision. Keeps attempt identity.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "jobId",
+          "revision"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_jobs_list",
+      "description": "Discover job IDs/states/bytes and storage, including old results.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "afterId": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_jobs_storage",
+      "description": "Quota, remaining bytes and next actions.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_jobs_compact",
+      "description": "dryRun defaults true. Reclaim redundant recovery only for an inactive job at revision; final results and identities are retained. Apply only when cleanup is requested.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "integer"
+          },
+          "dryRun": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "jobId",
+          "revision"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_help_overview",
+      "description": "Task routes and runnable examples, from ship traits to weapons/curves and combat research.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_help_operation",
+      "description": "Exact operation schema and example route.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string"
+          },
+          "operation": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "domain",
+          "operation"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_help_native",
+      "description": "Advanced native tool discovery. Omit name to list. Ordinary tasks use catalog/fitting/battle/jobs.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_status_read",
+      "description": "Version/source/coverage and storage health. No browser required.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_raw_call",
+      "description": "Advanced native escape hatch; arguments follow help.native schema, with native side-effect semantics.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "arguments": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "name",
+          "arguments"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_result_read",
+      "description": "Page a full detail reference; ordinary results are already task-shaped.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "resultId": {
+            "type": "string"
+          },
+          "pointer": {
+            "type": "string"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000000
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30
+          }
+        },
+        "required": [
+          "resultId"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

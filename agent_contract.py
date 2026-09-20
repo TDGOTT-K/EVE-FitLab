@@ -62,8 +62,8 @@ OPS={
   'edit':('Atomic changes at revision with stable requestId. install.item includes slotIndex, chargeTypeId and active. Passive modules use active:false. No automatic save.',obj({**EDIT,'requestId':S},['sessionId','revision','requestId','changes'])),
   'preview':('Evaluate the same changes without committing. Returns deltas and diagnostics.',obj(EDIT,['sessionId','revision','changes'])),
   'attributes':('Named fitted values for ship or module.<instanceId>/charge.<instanceId>.',obj({'sessionId':S,'attributes':arr(S,30,1),'itemId':S,'locale':S},['sessionId','attributes'])),
-  'outputs':('List output contribution IDs, families and application metadata for curves/research.',obj({'sessionId':S},['sessionId'])),
-  'curves':('Engine DPS curves: default online ship weapons or explicit contributionIds. Explicit target geometry or declared ideal reference. No combat or sustained-output claim.',obj({'sessionId':S,'contributionIds':arr(S,100,1),'target':TARGET,'metric':enum('appliedCycleDps','appliedLoadedCycleDps','effectiveCycleDps','effectiveLoadedCycleDps'),'intervals':integer(2,128)},['sessionId'])),
+  'outputs':('Paged compact output IDs, per-metric values/states and native scoped totals. Follow next; pages bind fitHash. Full traces remain by reference.',obj({'sessionId':S,'offset':integer(0,100000),'limit':integer(1,12),'expectedFitHash':S},['sessionId'])),
+  'curves':('Engine DPS curves: default online ship weapons or explicit contributionIds. Explicit target geometry or declared ideal reference. No combat or sustained-output claim.',obj({'sessionId':S,'expectedFitHash':S,'contributionIds':arr(S,100,1),'target':TARGET,'metric':enum('appliedCycleDps','appliedLoadedCycleDps','effectiveCycleDps','effectiveLoadedCycleDps'),'intervals':integer(2,128)},['sessionId'])),
   'save':('Explicitly save the draft at revision.',obj({'sessionId':S,'revision':I,'requestId':S},['sessionId','revision','requestId'])),
  },
  'battle':{

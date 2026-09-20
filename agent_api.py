@@ -26,7 +26,12 @@ class AgentApi:
             if domain not in OPS or action not in OPS[domain]:raise ValueError('Unknown operation. Use help overview.')
             validate(args,OPS[domain][action][1])
             data,state,issues,next_actions=self.dispatch(domain,action,args)
-            return {'apiVersion':'fitlab-agent-v6','ok':True,'state':state,'data':data,'issues':issues,'next':next_actions}
+            # Bounded detail/paging must always be reachable from the envelope.
+            if isinstance(data,dict):
+                for key in ('next','nextCall','groupsNextCall'):
+                    candidate=data.get(key)
+                    if isinstance(candidate,dict) and 'tool' in candidate and candidate not in next_actions:next_actions.append(candidate)
+            return {'apiVersion':'fitlab-agent-v7','ok':True,'state':state,'data':data,'issues':issues,'next':next_actions}
         except Exception as e:
             error=e.error if isinstance(e,NEngineError) else {'code':'INVALID_ARGUMENT','message':str(e)}
             next_actions=[step('help','operation',domain=domain,operation=action)] if domain in OPS and action in OPS[domain] else [step('help','overview')]
@@ -35,10 +40,11 @@ class AgentApi:
             elif error.get('code')=='EVE_MODULE_CATEGORY':
                 error={**error,'hint':'install is for slot modules. Use setFighters/setDrones/setSubsystems/setImplants/setBoosters for other collections; inspect fitting roster first.'}
                 next_actions=[step('fitting','roster',sessionId=args['sessionId'])] if args.get('sessionId') else next_actions
+            elif error.get('code')=='FIT_CHANGED':next_actions=[step('fitting','outputs',sessionId=args['sessionId'])]
             elif error.get('code') in ('JOB_VERSION',):next_actions=[step('jobs','list')]
             elif error.get('code') in ('STALE_REVISION','OUTPUT_EXISTS') and args.get('sessionId'):next_actions=[step('fitting','read',sessionId=args['sessionId'])]
             elif error.get('code')=='CATALOG_ATTRIBUTE':next_actions=[step('catalog','attributes',text='')]
-            return {'apiVersion':'fitlab-agent-v6','ok':False,'state':'error','data':None,'issues':[error],'next':next_actions}
+            return {'apiVersion':'fitlab-agent-v7','ok':False,'state':'error','data':None,'issues':[error],'next':next_actions}
 
     def identity(self,args):
         if ('typeId' in args)==('name' in args):raise ValueError('Supply exactly one of name or typeId.')
@@ -53,6 +59,9 @@ class AgentApi:
         result=dict(value)
         if 'summary' in result:
             result['summary']=self.unwrap(result['summary'])
+            from agent_outputs import totals
+            full=self.core.load_result(result['fullResultId'])
+            result['summary']['outputTotals']=totals(full.get('analysis',{}))
             correction=result['summary'].get('suggestedCorrection')
             if correction:
                 ids=correction['arguments']['instanceIds']
@@ -95,7 +104,7 @@ class AgentApi:
                     'buildNumber':status['source']['source']['buildNumber'],'indexHash':status['source']['indexSha256'],
                     'fullFittingSupported':status['fullFittingSupported'],'fullCombatSupported':status['fullCombatSupported']}
             usage=self.native('battle_storage',{})
-            return {'engine':native,'storage':usage,'capabilities':list(OPS),'interface':'v6 task API; engine is numerical authority'},'ready',self.storage_issues(usage),[step('help','overview')]
+            return {'engine':native,'storage':usage,'capabilities':list(OPS),'interface':'v7 task API; engine is numerical authority'},'ready',self.storage_issues(usage),[step('help','overview')]
         if domain=='catalog':return self.catalog(action,a)
         if domain=='fitting':return self.fitting(action,a)
         if domain=='jobs':
@@ -161,6 +170,7 @@ class AgentApi:
         return self.bound(result),'ready',[],[]
 
     def fitting(self,action,a):
+        from agent_outputs import totals
         if action=='roster':
             inspected=self.native('fit_inspect',{'sessionId':a['sessionId']});session=inspected['session'];analysis=inspected['analysis']
             return {'sessionId':a['sessionId'],'revision':session['revision'],'fitHash':analysis['fitHash'],
@@ -188,10 +198,23 @@ class AgentApi:
             result=self.native('fit_preview',{'sessionId':a['sessionId'],'revision':a['revision'],'commands':a['changes']})
             return {'sessionId':a['sessionId'],'revision':result['baseRevision'],'candidateHash':result['candidateHash'],
                     'committable':result['committable'],'resourceDeltas':result['resourceDeltas'],'metricDeltas':result['metricDeltas'],
-                    'errors':result['analysis']['errors'],'warnings':result['analysis']['warnings'],'detailResultId':self.core.store(result)},'preview',[],[]
+                    'errors':result['analysis']['errors'],'warnings':result['analysis']['warnings'],'detailResultId':self.core.store(result),'outputTotals':totals(result['analysis'])},'preview',[],[]
         inspected=self.native('fit_inspect',{'sessionId':a['sessionId']});analysis=inspected['analysis'];fit=inspected['session']['working']
         output=analysis.get('outputContributions') or {};items=output.get('items',[])
-        if action=='outputs':return self.bound({'sessionId':a['sessionId'],'revision':inspected['session']['revision'],'fitHash':analysis['fitHash'],'outputs':[{k:i.get(k) for k in ('id','kind','source','status','reason','fitAdmitted','metrics','application','assumptions')} for i in items],'scope':output.get('scope'),'detailResultId':self.core.store(output)}),'ready',[],[]
+        if action=='outputs':
+            from agent_outputs import compact_item,totals
+            if a.get('expectedFitHash') is not None and a['expectedFitHash']!=analysis['fitHash']:
+                raise NEngineError({'error':{'code':'FIT_CHANGED','message':'Fitting changed between pages. Restart outputs from offset 0.'}})
+            offset=a.get('offset',0);limit=a.get('limit',12)
+            compact=[compact_item(i) for i in items[offset:offset+limit]]
+            end=offset+len(compact)
+            next_actions=[step('fitting','outputs',sessionId=a['sessionId'],offset=end,limit=limit,expectedFitHash=analysis['fitHash'])] if end<len(items) else []
+            return {'sessionId':a['sessionId'],'revision':inspected['session']['revision'],'fitHash':analysis['fitHash'],
+                'source':output.get('source'),'outputs':compact,'total':len(items),'offset':offset,'nextOffset':end if next_actions else None,
+                'outputTotals':totals(analysis),'scope':output.get('scope'),'errors':analysis['errors'],
+                'detailResultId':self.core.store(output)},'needs_correction' if analysis['errors'] else 'ready',analysis['errors'],next_actions
+        if a.get('expectedFitHash') is not None and a['expectedFitHash']!=analysis['fitHash']:
+            raise NEngineError({'error':{'code':'FIT_CHANGED','message':'Fitting changed since diagnostic. Read outputs again before comparing curves.'}})
         ids=a.get('contributionIds',[i['id'] for i in items if i['kind']=='ship_weapon' and i['source'].get('online')])
         query={'selection':{'metric':a.get('metric','appliedCycleDps'),'contributionIds':ids},'intervals':a.get('intervals',16)}
         if 'target' in a:query['target']={'id':'research-target',**a['target']}
@@ -202,7 +225,19 @@ class AgentApi:
         result['selectionPolicy']='explicit_contribution_ids' if 'contributionIds' in a else 'online_ship_weapons_potential_output_not_activation_or_sustained'
         result['excludedContributionIds']=[i['id'] for i in items if i['id'] not in ids]
         result['detailResultId']=self.core.store(full)
-        return result,full['state'],[],[]
+        from agent_outputs import diagnostics,recovery_plans
+        result['selectionDiagnostics']=diagnostics(items,ids,query['selection']['metric'])
+        result['nativeBaseline']=full.get('baseline')
+        result['recoveryPlans']=[];next_actions=[]
+        if full['state']!='ready':
+            if full.get('reason')=='INCOMPLETE_OUTPUT_SELECTION':
+                result['recoveryPlans']=recovery_plans(items,ids,query['selection']['metric'])
+                for plan in result['recoveryPlans']:
+                    call=step('fitting','curves',**{**a,'contributionIds':plan['contributionIds'],'metric':plan['metric'],'expectedFitHash':analysis['fitHash']})
+                    plan['nextCall']=call;next_actions.append(call)
+            if not next_actions:next_actions=[step('fitting','outputs',sessionId=a['sessionId'])]
+        issues=[{'code':full.get('reason') or 'CURVE_UNAVAILABLE','message':'Requested curve unavailable; inspect per-contribution diagnostics. Recovery plans explicitly change the selection or metric.'}] if full['state']!='ready' else []
+        return result,full['state'],issues,next_actions
 
     def binding_path(self,request_hash):
         if len(request_hash)!=64 or any(c not in '0123456789abcdef' for c in request_hash):raise ValueError('Invalid request hash')

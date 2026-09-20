@@ -798,3 +798,8 @@ Isolated artifacts/agent-v5-build-001 + UI-AGENT-V5-BASELINE.json; DSH uses fres
 35 explicit operation tools replace domain/action union schemas; CLI grouping remains. Existing native fighter/drone/subsystem/implant/booster setters are typed, roster reports diagnostics and primary outputs. New explicit weapons-defense policy validates native hardener bindings; capability mismatch never auto-refits. Battle reports expose timestamp-bound citable facts and unavailable claims. Skill/prompt updated. Engine r62 unchanged; old frozen v5 stays intact, same state/binaries retained.
 
 Shared API, fighter/defense regression and actual DSH model-facing/CLI parity pass; evidence and limits in agent-platform-v6.md and output/agent-v6-*.json. No package/push or webpage changes; actual model obedience still requires observation.
+
+
+## NUI-116: compact outputs and actionable curve recovery (Agent v7)
+
+Same-receipt scoped weapon/drone and deployed-fighter-primary totals; compact metric-state output pagination with fitHash guard; per-item curve diagnostics/native exclusions; explicit subset/loaded-cycle alternatives retain targets and cannot masquerade as original combined/sustained output. Generic retained-result next promoted to envelope. No game formulas or engine code change, native r62 unchanged. Frozen v6 retained, 35 operation names remain. See agent-output-v7.md and output/agent-v7-*.json for disposable carrier, CLI and real DSH projection evidence. Existing state/webpage preserved, no packaging/push.

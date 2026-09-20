@@ -15,6 +15,6 @@ try{
  const args={},tool=tools.get('mcp__fitlab__fitlab_status_read');assert(tool);
  const raw=await tool.execute(args,{signal:AbortSignal.timeout(90000)});
  const reply=JSON.parse((await tool.output.render(args,raw)).map(b=>b.text||'').join('\n'));
- assert(reply.ok);assert.equal(reply.apiVersion,'fitlab-agent-v6');assert.equal(reply.data.engine.contractRevision,62);
+ assert(reply.ok);assert.equal(reply.apiVersion,'fitlab-agent-v7');assert.equal(reply.data.engine.contractRevision,62);
  console.log(JSON.stringify({tools:tools.size,...reply.data},null,2));
 }finally{for(const d of disposers.reverse())await d?.()}

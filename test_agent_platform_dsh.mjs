@@ -17,7 +17,7 @@ async function call(domain,action,args={}){
  const input=args,tool=tools.get('mcp__fitlab__fitlab_'+domain+'_'+action),start=performance.now();
  assert(tool,domain);const raw=await tool.execute(input,{signal:AbortSignal.timeout(120000)});assert(isJsonValue(raw));
  const text=(await tool.output.render(input,raw)).map(b=>b.text||'').join('\n');const result=JSON.parse(text);
- assert(result.apiVersion==='fitlab-agent-v6');assert(result.ok,text);calls.push({domain,action,ms:performance.now()-start,characters:text.length});return result;
+ assert(result.apiVersion==='fitlab-agent-v7');assert(result.ok,text);calls.push({domain,action,ms:performance.now()-start,characters:text.length});return result;
 }
 try{
  await plugin.apply(ctx,{...plugin.Config({serverName:'fitlab',transport:'stdio',command:'python',args:[path.resolve('fitlab.py'),'--config',config,'mcp'],toolCallTimeoutMs:120000}),failOnStartupError:true});
@@ -40,7 +40,14 @@ try{
  await call('fitting','create',{sessionId:'carrier-example',shipTypeId:23911,skillPreset:'all5'});
  await call('fitting','edit',{sessionId:'carrier-example',revision:0,requestId:'fighters',changes:[{kind:'setFighters',fighters:[{id:'sq',typeId:40558,memberIds:['a','b','c','d','e','f'],deployed:true,location:'tube',tubeIndex:0}]}]});
  const roster=await call('fitting','roster',{sessionId:'carrier-example'});assert(roster.data.projections.fighterPrimaryNominalDps>0);assert.equal(roster.data.errors.length,0);
+ const outputs=await call('fitting','outputs',{sessionId:'carrier-example'});assert.equal(outputs.data.outputs.length,3);assert(outputs.data.outputs[0].metrics.nominalCycleDps.value>0);
+ const failedCurve=await call('fitting','curves',{sessionId:'carrier-example',contributionIds:['fighter.sq/primary','fighter.sq/rockets'],metric:'appliedCycleDps',target:{distanceMeters:5000,signatureMeters:385,speedMetersPerSecond:0,angularRadiansPerSecond:0},intervals:4});
+ assert.equal(failedCurve.state,'unavailable');assert.equal(failedCurve.next.length,2);
+ for(const next of failedCurve.next){assert.equal(next.tool,'fitlab_fitting_curves');assert.equal((await call('fitting','curves',next.arguments)).state,'ready');}
+ const curveInput=path.join(state,'curve.json');fs.writeFileSync(curveInput,JSON.stringify({sessionId:'carrier-example',contributionIds:['fighter.sq/primary','fighter.sq/rockets'],metric:'appliedCycleDps',target:{distanceMeters:5000,signatureMeters:385,speedMetersPerSecond:0,angularRadiansPerSecond:0},intervals:4}));
+ const curveCli=spawnSync('python',['fitlab.py','--config',config,'fitting','curves','--input',curveInput],{encoding:'utf8'});assert.equal(curveCli.status,0,curveCli.stderr);assert.deepEqual(JSON.parse(curveCli.stdout),failedCurve);
+
  const cli=spawnSync('python',['fitlab.py','--config',config,'catalog','describe','--name','狞獾级'],{encoding:'utf8'});assert.equal(cli.status,0,cli.stderr);assert.deepEqual(JSON.parse(cli.stdout),description);
- fs.writeFileSync('output/agent-v6-dsh-verification.json',JSON.stringify({toolCount:tools.size,calls,cliParity:true},null,2));
+ fs.writeFileSync('output/agent-v7-dsh-verification.json',JSON.stringify({toolCount:tools.size,calls,cliParity:true},null,2));
  console.log(JSON.stringify({calls,cliParity:true},null,2));
 }finally{for(const d of disposers.reverse())await d?.();fs.rmSync(state,{recursive:true,force:true})}

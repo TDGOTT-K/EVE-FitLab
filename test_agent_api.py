@@ -11,8 +11,8 @@ from agent_contract import tools,OPS
 
 class AgentPlatformTests(unittest.TestCase):
     def test_frozen_contract(self):
-        self.assertEqual(json.loads(Path('contracts/agent-mcp-v6/tools.json').read_text(encoding='utf-8'))['tools'],tools())
-        self.assertEqual(json.loads(Path('contracts/agent-mcp-v6/operations.json').read_text(encoding='utf-8')),json.loads(json.dumps(OPS)))
+        self.assertEqual(json.loads(Path('contracts/agent-mcp-v7/tools.json').read_text(encoding='utf-8'))['tools'],tools())
+        self.assertEqual(json.loads(Path('contracts/agent-mcp-v7/operations.json').read_text(encoding='utf-8')),json.loads(json.dumps(OPS)))
 
     def test_general_tasks_and_cli_parity(self):
         c=json.loads(Path(os.environ.get('FITLAB_TEST_CONFIG','output/agent-v5-config.json')).read_text(encoding='utf-8'))
@@ -89,7 +89,7 @@ class AgentPlatformTests(unittest.TestCase):
                 path=Path(state)/'request.json';path.write_text(json.dumps({**request,'jobId':'cli-frigates','id':'cli-frigates','seconds':3,'waitSeconds':0}),encoding='utf-8')
                 run=subprocess.run(['python','fitlab.py','--config',str(config),'battle','run','--input',str(path)],capture_output=True,encoding='utf-8',timeout=120)
                 self.assertEqual(run.returncode,0,run.stderr);self.assertEqual(json.loads(run.stdout)['state'],'complete')
-                Path('output/agent-v6-acceptance.json').write_text(json.dumps({'trace':trace,'curves':curves,'battle':report,'cliParity':True,'cliWorkerLifecycle':True},ensure_ascii=False,indent=2),encoding='utf-8')
+                Path('output/agent-v7-acceptance.json').write_text(json.dumps({'trace':trace,'curves':curves,'battle':report,'cliParity':True,'cliWorkerLifecycle':True},ensure_ascii=False,indent=2),encoding='utf-8')
             finally:api.close()
 
 

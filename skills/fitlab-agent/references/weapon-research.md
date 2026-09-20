@@ -17,3 +17,9 @@ Example request after creating an actual fitting:
 ```json
 {"sessionId":"laser-example","target":{"distanceMeters":1000,"signatureMeters":40,"speedMetersPerSecond":100,"angularRadiansPerSecond":0.02},"intervals":16}
 ```
+
+## Recovering an unavailable curve
+
+`selectionDiagnostics` lists each selected contribution's native base metric state/value/reason. `nativeBaseline` retains the engine's own exclusions. `recoveryPlans` changes the selection or metric explicitly and provides executable calls in top-level `next`, preserving target, interval count and fitHash. They are alternative analyses, not the originally requested combined curve. Do not label a loaded-cycle curve as sustained output. For example fighter primary supports nominalCycleDps while finite fighter rockets require loadedCycleDps; analyze the offered subsets with their stated exclusions rather than inventing a combined sustained DPS. A recovery call still validates application/target and may remain unavailable. If fitHash changes, restart discovery rather than combining stale results.
+
+Editing fighters returns deployedFighterPrimaryNominalDps directly from the same native receipt. Use that returned value rather than doubling an earlier partial-roster DPS. Do not infer a generic number of equivalent ships from one bare-hull nominal-DPS comparison.
