@@ -22,7 +22,7 @@ STATIONARY = '''function tick({observation,memory}) {
 
 def battle(agent,args):
     action=args['action']
-    allowed={'action'}|({'id','seed','seconds','ships'} if action=='prepare' else {'draftId','jobId','policies','policyPreset'} if action=='start' else {'jobId','waitSeconds'} if action=='status' else {'jobId','offset','limit'} if action=='events' else {'jobId'})
+    allowed={'action'}|({'id','seed','seconds','ships'} if action=='prepare' else {'draftId','jobId','policies','policyPreset'} if action=='start' else {'jobId','waitSeconds'} if action=='status' else {'jobId','offset','limit','kinds','sourceId','targetId'} if action=='events' else {'jobId'})
     if set(args)-allowed:raise ValueError('Unexpected fields for battle '+action)
     required={'prepare':{'id','seed','seconds','ships'},'start':{'draftId','jobId'},'status':{'jobId'},'result':{'jobId'},'events':{'jobId'},'cancel':{'jobId'}}.get(action)
     if required is None:raise ValueError('Unknown battle action')
@@ -42,8 +42,9 @@ def battle(agent,args):
                 raise NEngineError({'ok':False,'error':{'code':'BATTLE_FIT_NOT_READY','message':'Fix this fitting before battle: '+ship['sessionId'],'issues':blockers},'analysisResultId':agent.store(analysis)})
             supplies=ship.get('supplies')
             if supplies is None:
-                if 'reservePerWeapon' not in ship:raise ValueError('Specify reservePerWeapon (for example 30), or explicit supplies per ability. There is no unlimited ammunition default.')
-                reserve=ship['reservePerWeapon']
+                needs_supply=bool(analysis.get('weapons') or analysis.get('capacitorInjectors') or analysis.get('bombLaunchers'))
+                if needs_supply and 'reservePerWeapon' not in ship:raise ValueError('Specify reservePerWeapon (for example 30), or explicit supplies per ability. There is no unlimited ammunition default.')
+                reserve=ship.get('reservePerWeapon',0)
                 if type(reserve)!=int or not 0<=reserve<=1000000:raise ValueError('reservePerWeapon must be a finite integer 0..1000000')
                 supplies={}
                 for key,weapon in analysis.get('weapons',{}).items():
@@ -91,8 +92,12 @@ def battle(agent,args):
             result=agent.native('battle_status',{'jobId':args['jobId']})
             if result['status'] not in ('queued','running') or time.monotonic()>=deadline:return agent.bounded(result)
             time.sleep(min(.2,max(0,deadline-time.monotonic())))
-    if action in ('result','cancel'):
+    if action=='result':
+        from agent_research import report
+        return report(agent,args['jobId'])
+    if action=='cancel':
         return agent.bounded(agent.native('battle_'+action,{'jobId':args['jobId']}))
     if action=='events':
-        return agent.bounded(agent.native('battle_events',{'jobId':args['jobId'],'offset':args.get('offset',0),'limit':args.get('limit',30)}))
+        from agent_research import filtered_events
+        return filtered_events(agent,args)
     raise ValueError('Unknown battle action')

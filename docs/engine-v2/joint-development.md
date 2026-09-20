@@ -568,3 +568,8 @@ UI改动只在已有入口、显示与悬停说明：角色管理＋→从EVE官
 ### NUI-111：装配会话到战斗的直接入口
 
 2026-09-21，LOCAL-023，0.212.0-ui.battleentry1/r60/39原生工具。新增公开battle_assemble，与CLI sde-battle同一EveBattleAssembler；agent-mcp-v2七工具加入fitlab_battle prepare/start/status/result/events/cancel。不让模型构造场景计算图。全V通过公开技能目录生成；补给读取原生弹仓且备用数量显式输入。初始条件、能力、脚本模板和限制随prepare返回。原r59/v1冻结不改。详见agent-battle-v2.md；独立引擎构建、DSH及网页已同步重启，未打包。
+
+
+### NUI-112：研究时间口径和任务级查询
+
+2026-09-21，agent-mcp-v3/8工具，原生引擎r60保持。battle result用公开回执/事件组合毁灭、最后正伤害快照和声明终点，未知精确同步血量明确unavailable；新增事件筛选、named fitted attributes、compact item、模块直接状态修改。无新业务公式，仅原生数值投影及微秒转秒。facade CLI/MCP逐字段一致，三真实任务及新装配战斗回归通过。DSH已重启，未打包。见agent-research-v3.md。

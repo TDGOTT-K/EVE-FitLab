@@ -18,7 +18,7 @@ async function call(name,args){
 }
 try{
  await plugin.apply(ctx,{...plugin.Config({serverName:'fitlab',transport:'stdio',command:'python',args:[path.resolve('agent_mcp.py'),'--engine',root,'--state',state,'--mcp-dll',dll],toolCallTimeoutMs:90000}),failOnStartupError:true});
- assert.equal(tools.size,7);
+ assert.equal(tools.size,8);
  await call('fitlab_status',{});
  const ships=(await call('fitlab_search',{names:['Caracal','Caracal Navy Issue'],categoryId:6})).value;
  const items=(await call('fitlab_search',{names:['Heavy Missile Launcher I','Scourge Heavy Missile']})).value;

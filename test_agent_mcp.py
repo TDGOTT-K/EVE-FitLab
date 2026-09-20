@@ -13,7 +13,7 @@ class AgentTests(unittest.TestCase):
    agent=AgentMcp(root,state,dll)
    try:
     self.assertLess(len(encoded(TOOLS)),8000)
-    frozen=json.loads(Path('contracts/agent-mcp-v2/tools.json').read_text(encoding='utf-8'))
+    frozen=json.loads(Path('contracts/agent-mcp-v3/tools.json').read_text(encoding='utf-8'))
     self.assertEqual(frozen['tools'],TOOLS)
     status=agent.call('fitlab_status',{});self.assertEqual(status['contractRevision'],60)
     searches=agent.call('fitlab_search',{'names':['Phantasm','Heavy Pulse Laser II']})
