@@ -20,6 +20,27 @@ STATIONARY = '''function tick({observation,memory}) {
 }'''
 
 
+DEFENSE = STATIONARY.replace("  if(!target)continue;", """  const local={entityId:ship.id,observedRevision:observation.revision};
+  for(const ability of ship.abilities) {
+   if(ability.mechanism!=='selfEffect'||ability.active)continue;
+   intents.push({...local,kind:'ActivateAbility',abilityId:ability.id,targetId:ship.id,commandId:`${observation.timeUs}:${ship.id}:${ability.id}:self`});
+  }
+  if(!target)continue;""")
+
+
+def preset_support(draft,preset):
+    bindings={p['shipId']:p for p in draft['assembly']['participants']}
+    blockers=[]
+    for ship in draft['assembly']['scenario']['ships']:
+        binding=bindings[ship['id']]
+        hardeners=set((binding.get('hardeners') or {}).keys())
+        for ability in ship.get('abilities',[]):
+            if ability['mechanism'] in ('direct','missile'):continue
+            if preset=='stationary-weapons-defense-v1' and ability['mechanism']=='selfEffect' and ability['id'] in hardeners:continue
+            blockers.append({'shipId':ship['id'],'abilityId':ability['id'],'mechanism':ability['mechanism']})
+    return blockers
+
+
 def battle(agent,args):
     action=args['action']
     allowed={'action'}|({'id','seed','seconds','ships'} if action=='prepare' else {'draftId','jobId','policies','policyPreset'} if action=='start' else {'jobId','waitSeconds'} if action=='status' else {'jobId','offset','limit','kinds','sourceId','targetId'} if action=='events' else {'jobId'})
@@ -74,10 +95,12 @@ def battle(agent,args):
         if draft['engineVersion']!=status['engineVersion'] or draft['runtime']!=status['publicContract']['controllerRuntimeId']:raise ValueError('Engine/runtime changed; prepare this battle again.')
         if ('policies' in args)==('policyPreset' in args):raise ValueError('Select exactly one: policies or policyPreset.')
         if 'policyPreset' in args:
-            if args['policyPreset']!='stationary-weapons-v1':raise ValueError('Unknown preset')
-            if any(a['mechanism'] not in ('direct','missile') for s in draft['assembly']['scenario']['ships'] for a in s.get('abilities',[])):
-                raise ValueError('Stationary preset only supports conventional gun/missile batteries. Supply explicit policies for other abilities.')
-            policies={p['team']:STATIONARY for p in draft['snapshots']}
+            if args['policyPreset'] not in ('stationary-weapons-v1','stationary-weapons-defense-v1'):raise ValueError('Unknown preset')
+            blockers=preset_support(draft,args['policyPreset'])
+            if blockers:
+                from nengine_bridge import NEngineError
+                raise NEngineError({'error':{'code':'POLICY_CAPABILITY_MISMATCH','message':'Selected policy cannot drive these abilities. Keep the requested fitting; inspect battle policies or provide explicit supported scripts.','issues':blockers}})
+            policies={p['team']:DEFENSE if args['policyPreset']=='stationary-weapons-defense-v1' else STATIONARY for p in draft['snapshots']}
         else:policies=args['policies']
         teams={p['team'] for p in draft['snapshots']}
         if set(policies)!=teams:raise ValueError('Policies must cover exactly all participant teams: '+','.join(sorted(teams)))

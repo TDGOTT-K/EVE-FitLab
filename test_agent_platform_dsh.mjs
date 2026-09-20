@@ -14,17 +14,17 @@ fs.writeFileSync(config,JSON.stringify({...c,state}));
 const tools=new Map(),disposers=[],calls=[];
 const ctx={root:{},logger:console,effect(fn){disposers.push(fn())},tools:{register(t){tools.set(t.name,t);return ()=>tools.delete(t.name)}}};
 async function call(domain,action,args={}){
- const input={action,...args},tool=tools.get('mcp__fitlab__fitlab_'+domain),start=performance.now();
+ const input=args,tool=tools.get('mcp__fitlab__fitlab_'+domain+'_'+action),start=performance.now();
  assert(tool,domain);const raw=await tool.execute(input,{signal:AbortSignal.timeout(120000)});assert(isJsonValue(raw));
  const text=(await tool.output.render(input,raw)).map(b=>b.text||'').join('\n');const result=JSON.parse(text);
- assert(result.apiVersion==='fitlab-agent-v5');assert(result.ok,text);calls.push({domain,action,ms:performance.now()-start,characters:text.length});return result;
+ assert(result.apiVersion==='fitlab-agent-v6');assert(result.ok,text);calls.push({domain,action,ms:performance.now()-start,characters:text.length});return result;
 }
 try{
  await plugin.apply(ctx,{...plugin.Config({serverName:'fitlab',transport:'stdio',command:'python',args:[path.resolve('fitlab.py'),'--config',config,'mcp'],toolCallTimeoutMs:120000}),failOnStartupError:true});
- assert.equal(tools.size,8);
+ assert.equal(tools.size,35);
  const description=await call('catalog','describe',{name:'狞獾级'});assert(description.data.traits.some(t=>t.kind==='skill_per_level'));
  const search=await call('catalog','search',{query:{groupId:40,sortBy:'cpu',limit:2}});assert.equal(search.data.items.length,2);
- const next=search.next[0];assert(next);await call('catalog',next.arguments.action,Object.fromEntries(Object.entries(next.arguments).filter(([k])=>k!=='action')));
+ const next=search.next[0];assert(next);await call('catalog','search',next.arguments);
  await call('fitting','create',{sessionId:'rifter-example',shipTypeId:587,skillPreset:'all5'});
  await call('fitting','edit',{sessionId:'rifter-example',revision:0,requestId:'weapon-1',changes:[{kind:'install',item:{id:'gun',typeId:2889,slotIndex:0,chargeTypeId:185,active:true}}]});
  const curve=await call('fitting','curves',{sessionId:'rifter-example',target:{distanceMeters:1000,signatureMeters:40,speedMetersPerSecond:100,angularRadiansPerSecond:0.02},intervals:4});
@@ -37,7 +37,10 @@ try{
  const jobs=await call('jobs','list');assert.equal(jobs.data.items.length,1);
  const preview=await call('jobs','compact',{jobId:'dsh-frigates',revision:jobs.data.items[0].revision});assert.equal(preview.state,'preview');
 
+ await call('fitting','create',{sessionId:'carrier-example',shipTypeId:23911,skillPreset:'all5'});
+ await call('fitting','edit',{sessionId:'carrier-example',revision:0,requestId:'fighters',changes:[{kind:'setFighters',fighters:[{id:'sq',typeId:40558,memberIds:['a','b','c','d','e','f'],deployed:true,location:'tube',tubeIndex:0}]}]});
+ const roster=await call('fitting','roster',{sessionId:'carrier-example'});assert(roster.data.projections.fighterPrimaryNominalDps>0);assert.equal(roster.data.errors.length,0);
  const cli=spawnSync('python',['fitlab.py','--config',config,'catalog','describe','--name','狞獾级'],{encoding:'utf8'});assert.equal(cli.status,0,cli.stderr);assert.deepEqual(JSON.parse(cli.stdout),description);
- fs.writeFileSync('output/agent-v5-dsh-verification.json',JSON.stringify({toolCount:tools.size,calls,cliParity:true},null,2));
+ fs.writeFileSync('output/agent-v6-dsh-verification.json',JSON.stringify({toolCount:tools.size,calls,cliParity:true},null,2));
  console.log(JSON.stringify({calls,cliParity:true},null,2));
 }finally{for(const d of disposers.reverse())await d?.();fs.rmSync(state,{recursive:true,force:true})}

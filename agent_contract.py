@@ -19,13 +19,27 @@ ITEM=obj({'id':S,'typeId':integer(1,2147483647),'slotIndex':integer(0,31),'charg
 CHANGE=obj({'kind':enum('install','remove','setCharge','setOnline','setActive','setOverheated','setSkills','setName','setTags'),
     'item':ITEM,'instanceId':S,'chargeTypeId':{'type':['integer','null']},'online':B,'active':B,'overheated':B,
     'skills':{'type':'object','additionalProperties':integer(0,5)},'name':S,'tags':arr(S,30)},['kind'])
+# Collection setters replace the named collection, preserving all other fit fields.
+COLLECTIONS={
+ 'fighters':arr(obj({'id':S,'typeId':I,'memberIds':arr(S,12,1),'deployed':B,'location':enum('reserve','tube'),'tubeIndex':integer(0,11)},['id','typeId','memberIds','deployed']),100),
+ 'drones':arr(obj({'id':S,'typeId':I,'deployed':B,'mutation':O},['id','typeId','deployed']),100),
+ 'subsystems':arr(obj({'id':S,'typeId':I},['id','typeId']),4),
+ 'implants':arr(obj({'id':S,'typeId':I},['id','typeId']),10),
+ 'boosters':arr(obj({'id':S,'typeId':I,'enabledSideEffects':arr(I,20)},['id','typeId']),32),
+}
+CHANGE['properties']['kind']['enum'] += ['set'+k[0].upper()+k[1:] for k in COLLECTIONS]
+CHANGE['properties'].update(COLLECTIONS)
+CHANGE_FIELDS={'install':['item'],'remove':['instanceId'],'setCharge':['instanceId','chargeTypeId'],
+ 'setOnline':['instanceId','online'],'setActive':['instanceId','active'],'setOverheated':['instanceId','overheated'],
+ 'setSkills':['skills'],'setName':['name'],'setTags':['tags'],**{'set'+k[0].upper()+k[1:]:[k] for k in COLLECTIONS}}
+CHANGE['oneOf']=[obj({'kind':{'const':kind},**{field:CHANGE['properties'][field] for field in fields}},['kind',*fields]) for kind,fields in CHANGE_FIELDS.items()]
 VEC=obj({'x':N,'y':N,'z':N},['x','y','z'])
 TARGET=obj({'id':S,'distanceMeters':N,'signatureMeters':N,'speedMetersPerSecond':N,'angularRadiansPerSecond':N,'layer':O},
            ['distanceMeters','signatureMeters','speedMetersPerSecond','angularRadiansPerSecond'])
 SHIP=obj({'sessionId':S,'revision':I,'id':S,'team':S,'position':VEC,'velocity':VEC,'reservePerWeapon':integer(0,1000000),'supplies':O,'options':O},
          ['sessionId','revision','id','team','position'])
 PREPARE={'id':S,'seed':integer(0,2147483647),'seconds':integer(1,3600),'ships':arr(SHIP,32,2)}
-POLICY={'policyPreset':enum('stationary-weapons-v1'),'policies':{'type':'object','additionalProperties':S}}
+POLICY={'policyPreset':enum('stationary-weapons-v1','stationary-weapons-defense-v1'),'policies':{'type':'object','additionalProperties':S}}
 EDIT={'sessionId':S,'revision':integer(0,2147483647),'changes':arr(CHANGE,128,1)}
 WAIT={'jobId':S,'waitSeconds':integer(0,60)}
 
@@ -41,6 +55,7 @@ OPS={
   'charges':('Discover declared ammunition/script groups; preview verifies the actual pair.',obj(IDENTITY)),
  },
  'fitting':{
+  'roster':('Read actual drones/fighters/subsystems/implants/boosters and authoritative fitted bay/primary-output projections. setFighters/setDrones etc replace the whole named collection.',obj({'sessionId':S},['sessionId'])),
   'list':('Find durable fitting sessions and their revisions; working/saved metadata remain distinct. Changed library invalidates cursor.',obj({'text':S,'includeClosed':B,'limit':integer(1,30),'cursor':S})),
   'create':('Create durable fit; default skills untrained, optional all5. Returns calculated summary/revision.',obj({'sessionId':S,'shipTypeId':I,'name':S,'skillPreset':enum('untrained','all5'),'skills':{'type':'object','additionalProperties':integer(0,5)}},['sessionId','shipTypeId'])),
   'read':('Calculated fitted totals, modules and readiness.',obj({'sessionId':S},['sessionId'])),
@@ -52,6 +67,7 @@ OPS={
   'save':('Explicitly save the draft at revision.',obj({'sessionId':S,'revision':I,'requestId':S},['sessionId','revision','requestId'])),
  },
  'battle':{
+  'policies':('Discover preset coverage and optionally check a prepared draft without changing fitting or starting a battle.',obj({'draftId':S})),
   'prepare':('Validate immutable fitting revisions, conditions and finite ammo; returns draftId and capability limits. Does not start.',obj(PREPARE,['id','seed','seconds','ships'])),
   'run':('Prepare and start an experiment in one call with stable jobId, then bounded wait. Reuse identical input after uncertain outcome. Conditions are retained with the job.',obj({**PREPARE,**POLICY,'jobId':S,'waitSeconds':integer(0,60)},['id','seed','seconds','ships','jobId'])),
   'start':('Start the prepared draft once; default stationary weapons only. No movement/repair/EWAR/drone policy implied.',obj({'draftId':S,'jobId':S,**POLICY,'waitSeconds':integer(0,60)},['draftId','jobId'])),
@@ -76,17 +92,33 @@ OPS={
  'result':{'read':('Page a full detail reference; ordinary results are already task-shaped.',obj({'resultId':S,'pointer':S,'offset':integer(0,10000000),'limit':integer(1,30)},['resultId']))},
 }
 
+# Identity and policy choices are visible before dispatch, not inferred from errors.
+for action in ('describe','variants','charges'):
+    OPS['catalog'][action][1]['oneOf']=[{'required':['typeId'],'not':{'required':['name']}},{'required':['name'],'not':{'required':['typeId']}}]
+
 def tools():
-    result=[]
-    for domain,actions in OPS.items():
-        props={'action':enum(*actions)}
-        for _,schema in actions.values():props.update(schema['properties'])
-        result.append({'name':'fitlab_'+domain,'description':' '.join(f'{name}: {d}' for name,(d,_) in actions.items()),
-                       'inputSchema':obj(props,['action'])})
-    return result
+    # Separate operations make required fields truthful in client/model schemas.
+    return [{'name':'fitlab_'+domain+'_'+action,'description':description,'inputSchema':schema}
+            for domain,actions in OPS.items() for action,(description,schema) in actions.items()]
+
+
+def operation_for_tool(name):
+    return next(((domain,action) for domain,actions in OPS.items() for action in actions
+                 if name=='fitlab_'+domain+'_'+action),None)
 
 
 def validate(value,schema,path='$'):
+    if 'not' in schema:
+        try:validate(value,schema['not'],path)
+        except ValueError:pass
+        else:raise ValueError(f'{path}: conflicting fields')
+    if 'const' in schema and value!=schema['const']:raise ValueError(f'{path}: expected {schema["const"]}')
+    if 'oneOf' in schema:
+        matches=0
+        for branch in schema['oneOf']:
+            try:validate(value,branch,path);matches+=1
+            except ValueError:pass
+        if matches!=1:raise ValueError(f'{path}: fields do not match the selected operation kind')
     types=schema.get('type');types=types if isinstance(types,list) else [types]
     checks={'object':lambda v:isinstance(v,dict),'array':lambda v:isinstance(v,list),'string':lambda v:isinstance(v,str),
             'integer':lambda v:type(v)==int,'number':lambda v:type(v) in (float,int) and __import__('math').isfinite(v),'boolean':lambda v:type(v)==bool,'null':lambda v:v is None}

@@ -9,7 +9,7 @@ from agent_mcp import AgentMcp, encoded
 from nengine_bridge import NEngineError
 
 
-def step(route,action,**args):return {'tool':'fitlab_'+route,'arguments':{'action':action,**args}}
+def step(route,action,**args):return {'tool':'fitlab_'+route+'_'+action,'arguments':args}
 
 
 class AgentApi:
@@ -26,15 +26,19 @@ class AgentApi:
             if domain not in OPS or action not in OPS[domain]:raise ValueError('Unknown operation. Use help overview.')
             validate(args,OPS[domain][action][1])
             data,state,issues,next_actions=self.dispatch(domain,action,args)
-            return {'apiVersion':'fitlab-agent-v5','ok':True,'state':state,'data':data,'issues':issues,'next':next_actions}
+            return {'apiVersion':'fitlab-agent-v6','ok':True,'state':state,'data':data,'issues':issues,'next':next_actions}
         except Exception as e:
             error=e.error if isinstance(e,NEngineError) else {'code':'INVALID_ARGUMENT','message':str(e)}
             next_actions=[step('help','operation',domain=domain,operation=action)] if domain in OPS and action in OPS[domain] else [step('help','overview')]
-            if error.get('code') in ('JOB_STORAGE_QUOTA','STORAGE_LOW','JOB_STORAGE_JOB_LIMIT'):next_actions=[step('jobs','list')]
+            if error.get('code')=='POLICY_CAPABILITY_MISMATCH':next_actions=[step('battle','policies',**({'draftId':args['draftId']} if 'draftId' in args else {}))]
+            elif error.get('code') in ('JOB_STORAGE_QUOTA','STORAGE_LOW','JOB_STORAGE_JOB_LIMIT'):next_actions=[step('jobs','list')]
+            elif error.get('code')=='EVE_MODULE_CATEGORY':
+                error={**error,'hint':'install is for slot modules. Use setFighters/setDrones/setSubsystems/setImplants/setBoosters for other collections; inspect fitting roster first.'}
+                next_actions=[step('fitting','roster',sessionId=args['sessionId'])] if args.get('sessionId') else next_actions
             elif error.get('code') in ('JOB_VERSION',):next_actions=[step('jobs','list')]
             elif error.get('code') in ('STALE_REVISION','OUTPUT_EXISTS') and args.get('sessionId'):next_actions=[step('fitting','read',sessionId=args['sessionId'])]
             elif error.get('code')=='CATALOG_ATTRIBUTE':next_actions=[step('catalog','attributes',text='')]
-            return {'apiVersion':'fitlab-agent-v5','ok':False,'state':'error','data':None,'issues':[error],'next':next_actions}
+            return {'apiVersion':'fitlab-agent-v6','ok':False,'state':'error','data':None,'issues':[error],'next':next_actions}
 
     def identity(self,args):
         if ('typeId' in args)==('name' in args):raise ValueError('Supply exactly one of name or typeId.')
@@ -91,7 +95,7 @@ class AgentApi:
                     'buildNumber':status['source']['source']['buildNumber'],'indexHash':status['source']['indexSha256'],
                     'fullFittingSupported':status['fullFittingSupported'],'fullCombatSupported':status['fullCombatSupported']}
             usage=self.native('battle_storage',{})
-            return {'engine':native,'storage':usage,'capabilities':list(OPS),'interface':'v5 task API; engine is numerical authority'},'ready',self.storage_issues(usage),[step('help','overview')]
+            return {'engine':native,'storage':usage,'capabilities':list(OPS),'interface':'v6 task API; engine is numerical authority'},'ready',self.storage_issues(usage),[step('help','overview')]
         if domain=='catalog':return self.catalog(action,a)
         if domain=='fitting':return self.fitting(action,a)
         if domain=='jobs':
@@ -152,10 +156,21 @@ class AgentApi:
         detail=self.native('catalog_item',{'typeId':identity})
         result['description']=detail['description'].get(a.get('locale','zh'),detail['description'].get('en'))
         result['groupNames']=detail['groupNames']
+        result['capabilities']=detail.get('capabilities')
         result.pop('next',None)
         return self.bound(result),'ready',[],[]
 
     def fitting(self,action,a):
+        if action=='roster':
+            inspected=self.native('fit_inspect',{'sessionId':a['sessionId']});session=inspected['session'];analysis=inspected['analysis']
+            return {'sessionId':a['sessionId'],'revision':session['revision'],'fitHash':analysis['fitHash'],
+                'collections':{k:session['working'].get(k,[]) for k in ('fighters','drones','subsystems','implants','boosters')},
+                'projections':{
+                    **{k:analysis.get(k) for k in ('fighterBay','fighterPrimaryNominalDps','fighterPrimaryNominalDpsUnavailableReason','fighterReadoutIssues','droneBay')},
+                    'fighters':{identity:{k:row.get(k) for k in ('instanceId','typeId','deployed','location','tubeIndex','squadronClass','maximumMembers','primaryNominalDps','cycleSeconds','optimalMeters','scope')} for identity,row in analysis.get('fighters',{}).items()},
+                    'drones':{identity:{k:row.get(k) for k in ('instanceId','typeId','deployed','nominalDps','cycleSeconds','scope')} for identity,row in analysis.get('drones',{}).items()}},
+                'detailResultId':self.core.store({'collections':{k:session['working'].get(k,[]) for k in ('fighters','drones','subsystems','implants','boosters')},'analysis':analysis}),
+                'errors':analysis['errors'],'scope':'fitted primary output; not all fighter abilities or combat equivalence'},'needs_correction' if analysis['errors'] else 'ready',analysis['errors'],[]
         if action=='list':
             result=self.native('fit_library',{'query':a})
             n=[step('fitting','list',**{**a,'cursor':result['nextCursor']})] if result.get('nextCursor') else []
@@ -195,6 +210,15 @@ class AgentApi:
         return root/(request_hash+'.json')
 
     def battle(self,action,a):
+        if action=='policies':
+            from agent_battle import preset_support
+            presets=[{'id':'stationary-weapons-v1','supports':['direct','missile'],'behavior':'Locks first enemy, fires conventional weapons. No movement or self modules.'},
+                     {'id':'stationary-weapons-defense-v1','supports':['direct','missile','native conventional hardeners'],'behavior':'Activates all admitted conventional hardeners on self and fires weapons. Paid cycles/capacitor enforced by engine; no propulsion/repair/EWAR/drones.'}]
+            if 'draftId' in a:
+                draft=self.core.load_result(a['draftId'])
+                if draft.get('kind')!='fitlab-battle-draft-v1':raise ValueError('Expected prepared draftId')
+                for p in presets:p['blockers']=preset_support(draft,p['id']);p['compatible']=not p['blockers']
+            return {'presets':presets,'custom':'Explicit supported JavaScript policies remain available; no automatic refitting to make a preset pass.'},'ready',[],[]
         if action=='prepare':
             result=self.legacy('fitlab_battle',{'action':action,**a});result.pop('scriptTemplate',None);result.pop('next',None)
             return result,'prepared',[],[]
@@ -281,4 +305,11 @@ class AgentApi:
                                 'Outcome applies only to these fits/conditions/seed/policy. No general strength multiplier.',
                                 'Time-to-kill reduction and inverse-time efficiency increase are different metrics.'],
               'detailResultId':self.core.store(result)}
+        data['citableFacts']=[{'kind':'destruction','text':f"{d['shipId']} was destroyed at t={d['timeSeconds']} s.",'evidence':d} for d in timeline['destructions']]
+        for ship in timeline['ships']:
+            damage=ship['lastDamageSnapshot']
+            if damage:
+                data['citableFacts'].append({'kind':'last_damage_snapshot','text':f"{ship['shipId']}: {damage['hitpoints']} HP immediately after its last recorded damaging hit at t={damage['timeSeconds']} s. This is NOT HP at the opponent's destruction.",
+                    'evidence':{'shipId':ship['shipId'],'timeUs':damage['timeUs'],'eventSequence':damage['eventSequence']}})
+        data['unavailableClaims']=['Exact surviving-ship HP at opponent destruction','Measured sustained DPS over a declared time window','Counterfactual time to kill for the defeated ship','Universal ship-equivalence multiplier']
         return data,'complete' if state['complete'] else 'partial',issues,[]

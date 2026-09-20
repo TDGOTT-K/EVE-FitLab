@@ -791,3 +791,10 @@ Engine r62 adds battle_list/manifest/compact and bounds newly published recovery
 Validation: 2 management + 7 recovery + 9 storage + 10 jobs + 3 public contract tests; generic task acceptance includes traits, four weapon families, preview immutability, edit/run replay, unrelated frigate experiment, identity mismatch, compaction preservation, native/task CLI parity and actual DSH projection. Evidence and scope: agent-platform-v5.md and output/agent-v5-*.json. This does not certify autonomous DeepSeek behavior.
 
 Isolated artifacts/agent-v5-build-001 + UI-AGENT-V5-BASELINE.json; DSH uses fresh fitlab-agent-v5-state. Old r59 state is preserved, not deleted/migrated; webpage r60 and parallel i18n untouched. No packaging/push.
+
+
+## NUI-115: operation-specific MCP v6 and non-module fitting coverage
+
+35 explicit operation tools replace domain/action union schemas; CLI grouping remains. Existing native fighter/drone/subsystem/implant/booster setters are typed, roster reports diagnostics and primary outputs. New explicit weapons-defense policy validates native hardener bindings; capability mismatch never auto-refits. Battle reports expose timestamp-bound citable facts and unavailable claims. Skill/prompt updated. Engine r62 unchanged; old frozen v5 stays intact, same state/binaries retained.
+
+Shared API, fighter/defense regression and actual DSH model-facing/CLI parity pass; evidence and limits in agent-platform-v6.md and output/agent-v6-*.json. No package/push or webpage changes; actual model obedience still requires observation.

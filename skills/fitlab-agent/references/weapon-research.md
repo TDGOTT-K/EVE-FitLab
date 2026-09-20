@@ -15,5 +15,5 @@ Present curves with units, assumptions and excluded contributions. Changing hull
 
 Example request after creating an actual fitting:
 ```json
-{"action":"curves","sessionId":"laser-example","target":{"distanceMeters":1000,"signatureMeters":40,"speedMetersPerSecond":100,"angularRadiansPerSecond":0.02},"intervals":16}
+{"sessionId":"laser-example","target":{"distanceMeters":1000,"signatureMeters":40,"speedMetersPerSecond":100,"angularRadiansPerSecond":0.02},"intervals":16}
 ```
