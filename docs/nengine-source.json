@@ -1,0 +1,17 @@
+{
+  "repository": "https://github.com/TDGOTT-K/NEngine",
+  "commit": "d5a5066a4a21a18910ffda4f9d15d3d11c15bc89",
+  "integrationScope": "Static FitLab UI integration; not full runtime-mechanism certification",
+  "engineVersion": "0.211.0-ui.workbench1",
+  "revision": 59,
+  "toolCount": 38,
+  "staticRule": "eve-static-dogma-v59",
+  "buildNumber": 3503375,
+  "indexSha256": "a73672fa5526f05d04095674b75d0d06b8763c1b0c542713b834daefee3d71da",
+  "contractDirectory": "contracts/headless-v1/r59-ui-workbench1",
+  "contractHashes": {
+    "tool-schemas.json": "f5f7b7f265ee527bdbce20e4c821c3ba2e9fb111e51397728f190808014bc185",
+    "output-schemas.json": "dfd2bf71c51ddc418a3ffab82705c12e5f9ef390af7412ad74fe8070416e80a8",
+    "semantics.md": "9267405e55ee505e97deb913a6a23b1aa82f6c86eaace5b833124bf1a50a33a0"
+  }
+}

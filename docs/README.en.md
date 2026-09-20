@@ -1,8 +1,8 @@
 # EVE FitLab — current development source
 
-FitLab combines a browser UI, Python local service and Electron desktop shell. Its only calculation backend is the independent NEngine MCP host: **0.211.0-ui.workbench1, contract r59, 38 tools, SDE 3503375, static rules v59**. The old bundled Dogma engine and .NET 9 host have been removed.
+FitLab combines a browser UI, Python local service and Electron desktop shell. Its only calculation backend is the independent [NEngine MCP host](https://github.com/TDGOTT-K/NEngine): **0.211.0-ui.workbench1, contract r59, 38 tools, SDE 3503375, static rules v59**. The old bundled Dogma engine and .NET 9 host have been removed.
 
-Place `EVE-FitLab/` and `NEngine/` next to each other. Prepare NEngine's pinned .NET 10.0.401 SDK, SDE index and MCP/CLI builds following its README. Then run:
+Clone the [FitLab](https://github.com/TDGOTT-K/EVE-FitLab) and [NEngine](https://github.com/TDGOTT-K/NEngine) repositories next to each other. Pin NEngine to `d5a5066a4a21a18910ffda4f9d15d3d11c15bc89`; its source is kept in the separate repository. See [source binding](nengine-source.json). Prepare NEngine's pinned .NET 10.0.401 SDK, SDE index and MCP/CLI builds following its README. Then run:
 
 ```powershell
 npm ci
