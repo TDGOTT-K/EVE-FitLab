@@ -17,6 +17,6 @@ export function valuationSummary(v,locale='zh-CN'){
 }
 export function valuationMarkup(v,locale){
  const s=valuationSummary(v,locale),format=n=>Number.isFinite(n)?n.toLocaleString(locale,{maximumFractionDigits:2}):'—';
- const detail={title:'装配估价',result:s.value,terms:v.lines.map(l=>[(l.name||'库存')+' × '+(l.quantity??'未知'),l.state==='available'?format(l.subtotal)+' ISK':valuationReason(l.reason)]),conditions:[['来源',s.source],['范围',s.scope],['完整性',v.complete?'完整':s.reason||'部分报价'],['报价地址',v.marketSource.url],['快照',v.snapshotHash],...(v.marketSource.reason?[['来源状态',v.marketSource.reason]]:[])]};
+ const detail={lockable:true,title:'装配估价',result:s.value,terms:v.lines.map(l=>[(l.name||'库存')+' × '+(l.quantity??'未知'),l.state==='available'?format(l.subtotal)+' ISK':valuationReason(l.reason)]),conditions:[['来源',s.source],['范围',s.scope],['完整性',v.complete?'完整':s.reason||'部分报价'],['报价地址',v.marketSource.url],['快照',v.snapshotHash],...(v.marketSource.reason?[['来源状态',v.marketSource.reason]]:[])]};
  return '<div class="stat-row" '+panelTip(detail)+'><span>'+esc(s.label)+'</span><b>'+esc(s.value)+'</b></div><p class="profile-note">'+esc(s.source)+'<br>'+esc(s.scope)+'</p>';
 }

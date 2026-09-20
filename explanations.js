@@ -54,7 +54,7 @@ export function installExplanations(){
     if(!panel.isConnected)return;renderPlanAffixes(host,data.summary,{find:(kind,id)=>(kind==='implants'?implantCatalog:boosterCatalog).find(t=>t.id===id)});
    }).catch(e=>{if(panel.isConnected)host.textContent='加成暂不可用：'+e.message;});
   }
-  const lockable=!!detail.planAffixes||!!panel.querySelector('[data-explain]'),interactive=!lockable&&!!(detail.chart||detail.capacitor||detail.nativeCapacitor);
+  const lockable=!!detail.lockable||!!detail.planAffixes||!!panel.querySelector('[data-explain]'),interactive=!lockable&&!!(detail.chart||detail.capacitor||detail.nativeCapacitor);
   if(!lockable){
    panel.querySelector('.explain-lock').remove();
    if(interactive){panel.inert=false;panel.classList.add('interactive');bridge.classList.add('interactive');}
