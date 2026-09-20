@@ -558,3 +558,8 @@ UI改动只在已有入口、显示与悬停说明：角色管理＋→从EVE官
 ### NUI-109：原子工作台接入
 
 2026-09-20，UI-LOCAL-021，0.211.0-ui.workbench1/r59/38工具。公开fit_workbench合并编辑及摘要；完整接口保留，按需追溯，增量DOM，后台只读进程隔离排队。真实金鹏热进程首次316ms，20次重复状态中位125ms/P95 144ms；12个新状态99–271ms。冷启动和偶发尖峰仍开放。验证及方法见workbench-performance-r59.md。未打包、未推送，不纳入并行本地化修改。
+
+
+### NUI-110：DSH agent MCP入口与负零修复
+
+0.211.1-ui.agent1/r59，UI-LOCAL-022。原生38工具不变；独立agent-mcp-v1六工具提供批量检索、会话摘要、按需schema和结果引用。仅组合公开原生调用，无新公式。实际DSH负零校验及幽灵级MCP/CLI对照通过，合成battle start/status/result通过。详见agent-mcp-v1.md。DSH配置备份后切换、已重启，原会话保留；默认引擎构建同步，未重新打包。

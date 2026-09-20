@@ -1,0 +1,159 @@
+{
+  "id": "fitlab-agent-mcp",
+  "revision": 1,
+  "tools": [
+    {
+      "name": "fitlab_status",
+      "description": "Start here. Returns source version, workflow and supported capability boundaries. UI does not need to be running.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_search",
+      "description": "Batch resolve up to 30 item names. Returns candidates, never silently picks an ambiguous match. Use returned typeId.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "maxItems": 30
+          },
+          "categoryId": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "names"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_fit",
+      "description": "Create/read/edit a durable fitting by sessionId. Read needs only sessionId. Create needs shipTypeId; omitted skills are explicitly untrained. Edit needs revision, stable requestId and commands. Example remove: {kind:\"remove\",instanceId:\"gun1\"}; install: {kind:\"install\",item:{id:\"gun1\",typeId:484,slotIndex:0,active:true}}. Retry uncertain writes with the SAME revision/requestId/commands. Returns engine summary and full-result reference; no automatic save. Use fitlab_tools for advanced command schema.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "create",
+              "read",
+              "edit",
+              "undo",
+              "redo",
+              "save"
+            ]
+          },
+          "sessionId": {
+            "type": "string"
+          },
+          "shipTypeId": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "skills": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 5
+            }
+          },
+          "revision": {
+            "type": "integer"
+          },
+          "requestId": {
+            "type": "string"
+          },
+          "commands": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "context": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "action",
+          "sessionId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_tools",
+      "description": "Discover native tool descriptions on demand. No name lists all native tools; name returns description and a reference to its inputSchema. Large schema objects are explored with fitlab_result JSON pointers. Battle simulation exists; fullCombatSupported=false means incomplete EVE coverage, not absence of battle tools.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_call",
+      "description": "Invoke an advanced native tool using its discovered schema. Arguments are forwarded unchanged, including revision/requestId. Results are bounded and stored by reference, never silently truncated. For ordinary fits prefer fitlab_fit.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "arguments": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "name",
+          "arguments"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fitlab_result",
+      "description": "Read a stored result by opaque resultId and JSON pointer (for example /analysis/weapons). Large objects return paged keys and child pointers; arrays return paged entries. References are content-addressed and persist across restarts.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "resultId": {
+            "type": "string"
+          },
+          "pointer": {
+            "type": "string"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30
+          }
+        },
+        "required": [
+          "resultId"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ]
+}
