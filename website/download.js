@@ -1,7 +1,7 @@
 (() => {
  const tabs = [...document.querySelectorAll('[data-channel]')];
  function activate(channel, focus = false) {
-  const current = tabs.find(tab => tab.dataset.channel === channel) || tabs.find(tab => tab.dataset.channel === 'stable');
+  const current = tabs.find(tab => tab.dataset.channel === channel) || tabs.find(tab => tab.dataset.channel === 'preview');
   for (const tab of tabs) {
    const selected = tab === current;
    tab.setAttribute('aria-selected', String(selected));
