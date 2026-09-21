@@ -27,7 +27,7 @@
   }
   let saved;
   try { saved = localStorage.getItem('fitlab-site-language'); } catch {}
-  let locale = supported.includes(saved) ? saved : detect();
+  let locale = supported.includes(saved) ? saved : 'zh-CN';
   window.siteT = key => dictionary[key]?.[locale] || key;
   function apply(value) {
     locale = supported.includes(value) ? value : 'en';

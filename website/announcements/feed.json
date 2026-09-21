@@ -2,6 +2,15 @@
   "schemaVersion": 1,
   "announcements": [
     {
+      "id": "release-0.1.3",
+      "kind": "update",
+      "version": "0.1.3",
+      "title": "FitLab v0.1.3 已发布",
+      "body": "新增应用内更新、官网公告和下载中心。\n点击立即更新，检查并下载最新兼容版本；安装前会保存与备份数据。",
+      "publishedAt": "2026-09-21T16:00:00Z",
+      "startup": true
+    },
+    {
       "id": "fitlab-announcements-welcome-20260922",
       "kind": "info",
       "title": "欢迎来到 FitLab 公告中心",
