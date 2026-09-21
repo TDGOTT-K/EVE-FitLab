@@ -22,7 +22,9 @@ module.exports=String.raw`(async()=>{
  const sandboxShips=frame.contentDocument.querySelectorAll('#roster button').length;
  if(sandboxShips!==6)throw Error('Sandbox roster incomplete');
  document.querySelector('#manage-characters').click();if(document.querySelector('#sandbox-preview-overlay'))throw Error('Sandbox navigation stuck');
- return {sandboxShips,sandboxNavigation:true,title:document.title,characters:chars.length,cpu:preview.attributes.cpuAvailable,desktop:!!window.fitlabDesktop,
+ const updater=await window.fitlabDesktop.updates.state();if(updater.currentVersion!=='0.1.3')throw Error('Updater version mismatch');
+ const backup=await api('update-backup',{});if(!backup.files)throw Error('Update backup missing');
+ return {updater,updateBackup:backup,sandboxShips,sandboxNavigation:true,title:document.title,characters:chars.length,cpu:preview.attributes.cpuAvailable,desktop:!!window.fitlabDesktop,
   engineVersion:preview.engineVersion,source:preview.source,previewHash:preview.editPreview.candidateHash,
   saved:saved.nativeSession,workingRevision:history.state().revision,undoRedo:true,artifactModules:true};
 })()`;

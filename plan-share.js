@@ -1,9 +1,10 @@
+import {saveDownload} from './download-center.js';
 import {getLocale,translateFor,gameName} from './i18n.js';
 import {qrCanvas,scanFitImage} from './fit-image-code.js';
 import {planShareText,parsePlanText,encodePlanCodes,decodePlanCodes,parsePlanCode} from './plan-share-code.js';
 const filename=name=>(name||'脑插方案').replace(/[<>:"/\\|?*\x00-\x1f]/g,'_').slice(0,80);
 function dialog(title,body){const d=document.createElement('dialog');d.className='share-dialog plan-share-dialog';d.innerHTML='<div class="flow-head"><b></b><button type="button" aria-label="关闭分享窗口">×</button></div>'+body;d.querySelector('b').textContent=title;d.querySelector('button').onclick=()=>d.close();d.addEventListener('close',()=>d.remove(),{once:true});document.body.append(d);d.showModal();return d}
-function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000)}
+const download=saveDownload;
 const number=x=>(x>0?'+':'')+x.toLocaleString(getLocale(),{maximumFractionDigits:3});
 const affixValue=r=>r.state!=='available'?'—':[r.percent?number(r.percent)+'%':'',r.additive?number(r.additive)+(r.unit?' '+r.unit:''):''].filter(Boolean).join(' · ')||'0';
 function icon(id){return new Promise(resolve=>{const im=new Image();im.crossOrigin='anonymous';let done=false;const end=value=>{if(done)return;done=true;clearTimeout(timer);resolve(value)};const timer=setTimeout(()=>end(null),5000);im.onload=()=>end(im);im.onerror=()=>end(null);im.src='https://images.evetech.net/types/'+id+'/icon?size=64'})}

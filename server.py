@@ -227,6 +227,9 @@ class Handler(SimpleHTTPRequestHandler):
    if self.path=='/api/mutation-review':return self.reply(nengine_mutations.review_receipt(body,TYPES))
    if self.path in ('/api/mutation-rule','/api/mutation-roll'):
     return self.reply(nengine_mutations.generate(body,TYPES,roll=self.path.endswith('-roll')))
+   if self.path=='/api/update-backup':
+    from update_backup import backup_for_update
+    with LOCK:return self.reply(backup_for_update(STATE,storage_location.CONFIG))
    if self.path=='/api/storage/open':
     with LOCK:storage_location.open_directory(STATE)
     return self.reply({'opened':True})

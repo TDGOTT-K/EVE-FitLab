@@ -1,0 +1,18 @@
+const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
+const {verifyManifest}=require('../desktop/update-security.cjs');
+const args=process.argv.slice(2);if(args.length!==4)throw Error('Usage: node create-update-feed.cjs INSTALLER BASELINE NOTES_JSON OUTPUT_DIRECTORY');
+const [installer,baseline,notesFile,out]=args;
+const name=path.basename(installer),match=/^EVE-FitLab-(\d+\.\d+\.\d+)-Windows-x64-Setup\.exe$/.exec(name);
+if(!match)throw Error('Stable versioned NSIS installer required');
+const b=JSON.parse(fs.readFileSync(baseline,'utf8').replace(/^\uFEFF/,''));
+const engineSource=Object.fromEntries(['engineVersion','revision','staticRule','buildNumber','indexSha256'].map(k=>[k,b[k]]));
+const data=fs.readFileSync(installer),sha512=crypto.createHash('sha512').update(data).digest('base64'),version=match[1];
+const manifest={schema:1,channel:'stable',version,engineSource,notes:JSON.parse(fs.readFileSync(notesFile,'utf8')),installer:{url:`https://github.com/TDGOTT-K/EVE-FitLab/releases/download/v${version}/${name}`,sha512,size:data.length}};
+const payload=Buffer.from(JSON.stringify(manifest));
+const privateKey=fs.readFileSync(path.join(process.env.LOCALAPPDATA,'EVE-FitLab-Release/update-signing-private.pem'));
+const envelope={payload:payload.toString('base64'),signature:crypto.sign(null,payload,privateKey).toString('base64')};
+verifyManifest(envelope,fs.readFileSync(path.resolve(__dirname,'../desktop/update-public-key.pem')));
+fs.mkdirSync(out,{recursive:true});
+fs.writeFileSync(path.join(out,'manifest.json'),JSON.stringify(envelope,null,2)+'\n');
+fs.writeFileSync(path.join(out,'latest.yml'),`version: ${version}\nfiles:\n  - url: ${manifest.installer.url}\n    sha512: ${sha512}\n    size: ${data.length}\npath: ${manifest.installer.url}\nsha512: ${sha512}\nreleaseDate: '${new Date().toISOString()}'\n`);
+console.log('Signed stable update feed generated. Upload assets before deploying this directory.');

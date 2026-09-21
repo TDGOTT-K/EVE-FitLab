@@ -1,4 +1,7 @@
 import {patchHtml} from './dom-patch.js';
+import {installAppUpdates} from './app-updates.js';
+import {installDownloadCenter} from './download-center.js';
+import {installAnnouncements} from './app-announcements.js';
 import {capacitorHtml} from './native-capacitor-view.js';
 import {requestError} from './localized-diagnostics.js';
 import {pilotPortrait} from './pilot-portrait.js';
@@ -890,7 +893,7 @@ function updateScenarioStatus(){
 }
 
 
-$('#app-settings').onclick=async e=>{e.preventDefault();openFlow('设置','<div class="app-settings-row"><span>界面语言</span><select id="settings-language" aria-label="界面语言" translate="no"><option value="zh-CN">简体中文</option><option value="zh-TW">繁體中文</option><option value="en">English</option><option value="ja">日本語</option><option value="de">Deutsch</option><option value="ru">Русский</option><option value="fr">Français</option></select></div><div class="app-settings-row"><span>界面主题</span><select id="settings-theme" aria-label="界面主题"><option value="dark">夜间</option><option value="light">日间</option></select></div><section class="storage-settings"><h3>数据存储目录</h3><p class="profile-note">装配、角色、授权配置和计算引擎状态存放于此。浏览器缓存由浏览器管理。</p><form id="storage-settings-form"><input id="storage-directory" aria-label="数据存储目录" placeholder="正在读取…" required disabled><div class="storage-actions"><button type="button" id="storage-choose" hidden>选择文件夹</button><button type="button" id="storage-open" disabled>在文件浏览器中打开</button><button id="storage-migrate" disabled>迁移到此目录</button></div></form><p id="storage-status" role="status"></p></section>');$('#settings-language').value=getLocale();$('#settings-language').onchange=e=>setLocale(e.target.value);$('#settings-theme').value=document.body.classList.contains('light')?'light':'dark';$('#settings-theme').onchange=e=>{document.body.classList.toggle('light',e.target.value==='light');$('#theme').textContent=e.target.value==='light'?'☾ 夜间':'☼ 日间'};
+$('#app-settings').onclick=async e=>{e.preventDefault();openFlow('设置','<div class="app-settings-row"><span>界面语言</span><select id="settings-language" aria-label="界面语言" translate="no"><option value="zh-CN">简体中文</option><option value="zh-TW">繁體中文</option><option value="en">English</option><option value="ja">日本語</option><option value="de">Deutsch</option><option value="ru">Русский</option><option value="fr">Français</option></select></div><div class="app-settings-row"><span>界面主题</span><select id="settings-theme" aria-label="界面主题"><option value="dark">夜间</option><option value="light">日间</option></select></div><section class="storage-settings"><h3>数据存储目录</h3><p class="profile-note">装配、角色、授权配置和计算引擎状态存放于此。浏览器缓存由浏览器管理。</p><form id="storage-settings-form"><input id="storage-directory" aria-label="数据存储目录" placeholder="正在读取…" required disabled><div class="storage-actions"><button type="button" id="storage-choose" hidden>选择文件夹</button><button type="button" id="storage-open" disabled>在文件浏览器中打开</button><button id="storage-migrate" disabled>迁移到此目录</button></div></form><p id="storage-status" role="status"></p></section>');appUpdates.mount($('#storage-settings-form').closest('.storage-settings').parentElement);appAnnouncements.mount($('#storage-settings-form').closest('.storage-settings').parentElement);$('#settings-language').value=getLocale();$('#settings-language').onchange=e=>setLocale(e.target.value);$('#settings-theme').value=document.body.classList.contains('light')?'light':'dark';$('#settings-theme').onchange=e=>{document.body.classList.toggle('light',e.target.value==='light');$('#theme').textContent=e.target.value==='light'?'☾ 夜间':'☼ 日间'};
  const input=$('#storage-directory'),status=$('#storage-status'),migrate=$('#storage-migrate'),open=$('#storage-open'),form=$('#storage-settings-form');let current='';
  try{const data=await api('storage');if(!form.isConnected)return;current=data.directory;input.value=current;input.disabled=false;open.disabled=false}catch(error){status.textContent=error.message}
  if(window.fitlabDesktop){$('#storage-choose').hidden=false;$('#storage-choose').onclick=async()=>{const directory=await window.fitlabDesktop.chooseDataFolder();if(directory){input.value=directory;input.dispatchEvent(new Event('input'))}}}
@@ -955,3 +958,13 @@ async function editCrystal(typeId,key=null,id=null){
 fighterCatalogReady.then(()=>{renderTree();const old=document.querySelector('#fighter-config');if(old)old._key=null;renderBayConfig();});
 
 api('characters').then(rows=>{pilotPortraitCharacters=rows;renderPilot()}).catch(()=>{});
+
+installDownloadCenter();
+const appUpdates=installAppUpdates({prepare:async()=>{
+ if(pageMode==='characters'||document.querySelector('#sandbox-preview-overlay'))throw Error('请先保存当前方案并返回装配库或装配工作台，再安装更新。');
+ const current=nativeHistory.state();
+ if(current.busy||current.pending||libraryNavigationSaves.size)throw Error('装配编辑或保存尚未确认，请完成操作后再更新。');
+ if(pageMode==='editor'&&!editorFitDeleted)await persistFit();
+ const after=nativeHistory.state();if(after.busy||after.pending)throw Error('保存结果尚未确认，本次不安装更新。');
+}});
+const appAnnouncements=installAnnouncements({openUpdates:()=>{$('#app-settings').click();appUpdates.start();}});

@@ -35,7 +35,7 @@ def revision(path):
     frozen=path/'SOURCE-REVISION.txt'
     return frozen.read_text(encoding='utf-8').strip() if frozen.exists() else subprocess.check_output(['git','-C',str(path),'rev-parse','HEAD'],text=True).strip()
 release={'version':json.loads((ROOT/'package.json').read_text(encoding='utf-8'))['version'],
- 'channel':'release-candidate','uiCommit':revision(ROOT),'engineCommit':revision(source),
+ 'channel':'stable','uiCommit':revision(ROOT),'engineCommit':revision(source),
  'engineVersion':baseline['engineVersion'],'contractDirectory':baseline['contractDirectory'],
  'contractHashes':baseline['contractHashes'],'staticRule':baseline['staticRule'],
  'buildNumber':baseline['buildNumber'],'indexSha256':baseline['indexSha256'],

@@ -1,10 +1,9 @@
 import {analysisStatusText} from './analysis-status.js';
+import {saveDownload} from './download-center.js';
 
 export async function exportFitPackage(api,fit){
  const document=await api('fit-package/export',{fit});
- const url=URL.createObjectURL(new Blob([JSON.stringify(document,null,2)],{type:'application/json'}));
- const link=globalThis.document.createElement('a');link.href=url;link.download=(fit.name||'装配').replace(/[<>:"/\\|?*]/g,'_')+'.fitlab.json';
- globalThis.document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);
+ saveDownload(new Blob([JSON.stringify(document,null,2)],{type:'application/json'}),(fit.name||'装配').replace(/[<>:"/\\|?*]/g,'_')+'.fitlab.json');
 }
 
 export function importFitPackage(api,onSaved){

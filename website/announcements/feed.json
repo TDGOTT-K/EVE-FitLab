@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "announcements": [
+    {
+      "id": "fitlab-announcements-welcome-20260922",
+      "kind": "info",
+      "title": "欢迎来到 FitLab 公告中心",
+      "body": "版本动态、功能介绍和重要通知将在这里与你见面。\n\n新公告可在启动时展示，关闭后不会重复弹出。你也可以随时在「设置 → 公告」中重新查看。\n\n收到版本更新公告后，点击「立即更新」即可前往应用更新界面，开始检查和下载。下载完成后，保存并重启即可安装。",
+      "publishedAt": "2026-09-21T16:00:00Z",
+      "startup": true
+    }
+  ]
+}
