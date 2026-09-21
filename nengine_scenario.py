@@ -14,6 +14,19 @@ def resolve_context(fit, fits, analyze):
     signature=report['native']['attributes'].get('ship/552',{}).get('value')
     if signature is None: raise ValueError('目标信号半径不可计算，未使用默认半径代替')
     target={'id':str(victim['id']),'signatureMeters':signature}
+    # Convert explicitly declared world-space vectors into the engine's target
+    # inputs: missile speed is absolute, turret angular speed is relative.
+    if 'geometry' in value:
+        g=value['geometry']
+        if not isinstance(g,dict):raise ValueError('情景位置或速度矢量无效')
+        for key in ('x','y','vx','vy','ownVx','ownVy'):
+            n=g.get(key,0) if key.startswith('own') else g.get(key)
+            if type(n) not in (int,float) or not math.isfinite(n) or abs(n)>1e7:
+                raise ValueError('情景位置或速度矢量无效：'+key)
+        distance=math.hypot(g['x'],g['y'])
+        rx=g['vx']-g.get('ownVx',0);ry=g['vy']-g.get('ownVy',0)
+        value={**value,'distance':distance,'speed':math.hypot(g['vx'],g['vy']),
+               'angular':abs(g['x']*ry-g['y']*rx)/(distance*distance) if distance else 0}
     for old,new,default,maximum in [('distance','distanceMeters',10000,1e7),('speed','speedMetersPerSecond',200,1e6),('angular','angularRadiansPerSecond',.01,100)]:
         n=value.get(old,default)
         if type(n) not in (float,int) or not math.isfinite(n) or not 0<=n<=maximum:

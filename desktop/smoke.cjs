@@ -6,12 +6,12 @@ module.exports=String.raw`(async()=>{
  const after={...before,slots:[{key:'high-0',kind:'high',item:2881,ammo:185,state:'Active',loadedCharges:10}],cargo:[]};
  const preview=await api('preview',{before,after});
  const {createNativeEditHistory}=await import('/native-edit-history.js');
- const history=createNativeEditHistory(api);
+ const history=createNativeEditHistory(api,{workbench:true});
  const applied=await history.apply(before,after);
  if(applied.result.analysis.fitHash!==preview.editPreview.candidateHash)throw Error('Preview/commit hash mismatch');
  const saved=await history.save(after,input=>api('save',{...input,_saveRequestId:crypto.randomUUID()}));
  if(saved.nativeSession.id!==history.state().id)throw Error('Save did not retain the edit session');
- const undo=await history.undo();if(undo.result.working.items.length!==0)throw Error('Native undo failed');
+ const undo=await history.undo();if(undo.report.nativeFit.items.length!==0)throw Error('Native undo failed');
  const redo=await history.redo();if(redo.result.analysis.fitHash!==preview.editPreview.candidateHash)throw Error('Native redo failed');
  const exports=await api('native-session/export',{sessionId:history.state().id,snapshot:'saved'});
  if(exports.result.fitHash!==preview.editPreview.candidateHash)throw Error('Saved document differs from preview');

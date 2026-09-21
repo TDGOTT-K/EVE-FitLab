@@ -1,5 +1,6 @@
 import {gameNameMarkup,gameName,getLocale,registerGameTypes,localizeData,metricMarkup} from './i18n.js';
 import {fighterOutputOption,toggleFighterOutput,defaultFighterOutput} from './fighter-output-selection.js';
+import {validateFighterLoadout} from './fighter-validation.js';
 // Native fighter loadout presenter; server validates every change through the pinned engine.
 let catalogError='';
 let types=[];
@@ -34,7 +35,18 @@ export function mountFighters(root,{ship,fit,report,mutate,browse,say,validate,o
  if(!report?.native?.fighterBay&&!fit.fighterLoadout&&report?.native?.bayReadouts?.fighterBay?.state!=='unknown')return;
  const bay=report?.native?.fighterBay;const count=bay?.maximumSquadrons||0;
  const state=fit.fighterLoadout||{tubes:Array(count).fill(null),reserve:[]};
- const change=async (fn,newSquadronId=null)=>{if(host._busy)return;host._busy=true;const next=structuredClone(state);fn(next);say('正在校验舰载机配置…');try{const result=await validate({...fit,fighterLoadout:next});if(!host.isConnected)return;const blocking=result.issues.filter(e=>e.code==='STATIC_COVERAGE_INCOMPLETE'||e.code.startsWith('FIGHTER_')||e.code.startsWith('EVE_FIGHTER'));if(blocking.length){say('无法装载：'+blocking.map(e=>fighterIssueMessage(e,result.native?.resources)).join('；'));return}const defaults=newSquadronId?defaultFighterOutput(next,result.native?.outputContributions?.items||[],newSquadronId):null;mutate(()=>{fit.fighterLoadout=defaults?.loadout||next;if(defaults)fit.outputMetric=defaults.metric},'舰载机已更新 · N 号引擎校验')}catch(e){say(e.message)}finally{host._busy=false}};
+ const change=async (fn,newSquadronId=null)=>{
+  if(host._busy)return;host._busy=true;
+  try{
+   const next=structuredClone(state);fn(next);say('正在校验舰载机配置…');
+   const result=await validateFighterLoadout(signal=>validate({...fit,fighterLoadout:next},{signal}));
+   if(!host.isConnected)return;
+   const blocking=result.issues.filter(e=>e.code==='STATIC_COVERAGE_INCOMPLETE'||e.code?.startsWith('FIGHTER_')||e.code?.startsWith('EVE_FIGHTER'));
+   if(blocking.length){say('无法装载：'+blocking.map(e=>fighterIssueMessage(e,result.native?.resources)).join('；'));return}
+   const defaults=newSquadronId?defaultFighterOutput(next,result.native?.outputContributions?.items||[],newSquadronId):null;
+   mutate(()=>{fit.fighterLoadout=defaults?.loadout||next;if(defaults)fit.outputMetric=defaults.metric},'舰载机已更新 · N 号引擎校验');
+  }catch(e){if(host.isConnected)say(e.message)}finally{host._busy=false}
+ };
  const host=document.createElement('section');host.id='fighter-config';root.prepend(host);host._catalogMenu=(e,el,t)=>menu(e,el,t,[['装入发射管',()=>{},{disabled:true,title:'等待可用的装配计算结果'}],['加入备用机库',()=>{},{disabled:true,title:'等待可用的装配计算结果'}],['详细信息',()=>onInfo(t)]]);if(!bay||!types.length){host.innerHTML='<div class="slot-heading">铁骑舰载机</div><p class="profile-note">'+(catalogError||'等待引擎返回发射管与机库参数…')+'</p>';return;}
  const row=(entry,index,reserve=false)=>{
   const t=entry&&type(entry.typeId),key=reserve?'reserve':'tubes';

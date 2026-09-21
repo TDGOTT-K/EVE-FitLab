@@ -25,6 +25,10 @@ def validate_presets(body):
    if key not in value:continue
    g=value[key];keys=['x','y','vx','vy'] if key=='geometry' else ['x','y']
    if not isinstance(g,dict) or any(type(g.get(k)) not in (int,float) or not math.isfinite(g[k]) for k in keys):raise ValueError('情景位置或速度无效')
+   if key=='geometry':
+    for k in ['vx','vy','ownVx','ownVy']:
+     v=g.get(k,0)
+     if type(v) not in (int,float) or not math.isfinite(v) or abs(v)>1e6:raise ValueError('情景速度矢量无效')
    if math.hypot(g['x'],g['y'])>500000.001:raise ValueError('情景位置超出范围')
   health=value.get('targetHealth',{})
   if not isinstance(health,dict) or any(type(v) is not bool for v in health.values()):raise ValueError('目标防御状态无效')

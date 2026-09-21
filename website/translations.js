@@ -1067,3 +1067,46 @@ Object.assign(window.siteTranslations, {
     "ja": "第4回公開テスト版 · 2026-09-20"
   }
 });
+
+Object.assign(window.siteTranslations, {
+  "第六个公开测试版现已上线，欢迎体验并反馈问题。": {
+    "zh-CN": "第六个公开测试版现已上线，欢迎体验并反馈问题。",
+    "zh-TW": "第六個公開測試版現已上線，歡迎體驗並回報問題。",
+    "en": "The sixth public test release is available. Try it and share feedback.",
+    "ja": "第6回公開テスト版を公開しました。ぜひお試しいただき、ご意見をお寄せください。"
+  },
+  "内置 FitLab Agent，加入七语言本地化更新。": {
+    "zh-CN": "内置 FitLab Agent，加入七语言本地化更新。",
+    "zh-TW": "內建 FitLab Agent，加入七語言在地化更新。",
+    "en": "Includes FitLab Agent and seven-language localization updates.",
+    "ja": "FitLab Agent を同梱し、7言語のローカライズを更新。"
+  },
+  "内置独立 Agent，支持通过 MCP 或 CLI 查询数据、研究装配与输出曲线。": {
+    "zh-CN": "内置独立 Agent，支持通过 MCP 或 CLI 查询数据、研究装配与输出曲线。",
+    "zh-TW": "內建獨立 Agent，支援透過 MCP 或 CLI 查詢資料、研究裝配與輸出曲線。",
+    "en": "Standalone Agent for data queries, fitting research and output curves via MCP or CLI.",
+    "ja": "独立 Agent で MCP・CLI 経由のデータ照会、装備研究、出力曲線に対応。"
+  },
+  "支持 Agent 战斗实验，附带使用技能与提示词资源，无需另装 Python。": {
+    "zh-CN": "支持 Agent 战斗实验，附带使用技能与提示词资源，无需另装 Python。",
+    "zh-TW": "支援 Agent 戰鬥實驗，附帶使用技能與提示詞資源，無需另裝 Python。",
+    "en": "Agent combat experiments with bundled skills and prompts; no separate Python installation needed.",
+    "ja": "Agent の戦闘実験に対応し、スキルとプロンプトを同梱。Python の別途インストールは不要。"
+  },
+  "包含七语言本地化修改，桌面与 Agent 使用独立引擎及状态目录。": {
+    "zh-CN": "包含七语言本地化修改，桌面与 Agent 使用独立引擎及状态目录。",
+    "zh-TW": "包含七語言在地化修改，桌面與 Agent 使用獨立引擎及狀態目錄。",
+    "en": "Includes seven-language localization changes; desktop and Agent use separate engines and state directories.",
+    "ja": "7言語のローカライズ変更を含み、デスクトップと Agent は独立したエンジンと状態ディレクトリを使用。"
+  },
+  "第五个公开测试版 · 2026-09-20": {
+    "zh-CN": "第五个公开测试版 · 2026-09-20",
+    "zh-TW": "第五個公開測試版 · 2026-09-20",
+    "en": "Fifth public test release · 2026-09-20",
+    "ja": "第5回公開テスト版 · 2026-09-20"
+  }
+});
+
+Object.assign(window.siteTranslations,{"本群有猫娘":{"zh-CN":"本群有猫娘","zh-TW":"本群有貓娘","en":"Meet our catgirl","ja":"猫娘がいるよ"}});
+
+Object.assign(window.siteTranslations,{"第七个公开测试版现已上线，欢迎体验并反馈问题。": {"zh-TW": "第七個公開測試版現已上線，歡迎體驗並回報問題。", "en": "The seventh public test release is available. Try it and share feedback.", "ja": "第7回公開テスト版を公開しました。ぜひお試しいただき、ご意見をお寄せください。"}, "修复装填、情景速度、深渊定位、子系统槽位与舰载机校验问题。": {"zh-TW": "修復裝填、情景速度、深淵定位、子系統槽位與艦載機校驗問題。", "en": "Fixes charge loading, scenario velocities, Abyssal navigation, subsystem slots and fighter validation.", "ja": "装填、シナリオ速度、アビサル装備の表示位置、サブシステムスロット、艦載機検証を修正。"}, "修复自动锁定导弹和扫描探针装填，情景支持双方独立速度矢量。": {"zh-TW": "修復自動鎖定飛彈和掃描探針裝填，情景支援雙方獨立速度向量。", "en": "Fixes auto-targeting missile and probe loading; scenarios now use separate ship velocity vectors.", "ja": "自動捕捉型ミサイルとプローブの装填を修正。両艦の速度ベクトルを個別に設定できます。"}, "修复深渊浏览器定位、战略巡洋舰槽位闪失和舰载机校验卡锁。": {"zh-TW": "修復深淵瀏覽器定位、戰略巡洋艦槽位閃失和艦載機校驗卡鎖。", "en": "Fixes Abyssal browser scrolling, disappearing strategic cruiser slots and stuck fighter validation.", "ja": "アビサルブラウザーのスクロール、戦略巡洋艦スロットの消失、艦載機検証の停止を修正。"}, "桌面与 Agent 均更新修复引擎，保留七语言与独立状态目录。": {"zh-TW": "桌面與 Agent 均更新修復引擎，保留七語言與獨立狀態目錄。", "en": "Desktop and Agent include the repaired engine, with seven languages and separate state directories.", "ja": "デスクトップと Agent のエンジンを更新。7言語と独立した状態ディレクトリを維持。"}});

@@ -13,5 +13,13 @@
     "tool-schemas.json": "f5f7b7f265ee527bdbce20e4c821c3ba2e9fb111e51397728f190808014bc185",
     "output-schemas.json": "dfd2bf71c51ddc418a3ffab82705c12e5f9ef390af7412ad74fe8070416e80a8",
     "semantics.md": "9267405e55ee505e97deb913a6a23b1aa82f6c86eaace5b833124bf1a50a33a0"
+  },
+  "packagedEngine": {
+    "engineVersion": "0.213.1-ui.charge1",
+    "revision": 62,
+    "staticRule": "eve-static-dogma-v60",
+    "commit": "f01aab4dbf2c149d981578a237d644fe5baccd4a",
+    "sourceArchive": "https://github.com/TDGOTT-K/EVE-FitLab/releases/download/v0.1.2-rc.6/NEngine-0.213.1-ui.charge1-source.zip",
+    "note": "Top-level repository pin is historical; rc.6 uses this separately archived maintenance derivative."
   }
 }

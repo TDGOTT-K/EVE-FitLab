@@ -19,7 +19,7 @@ export function installAbyssalLibrary({host,catalog,api,render,onLocate,onInfo,b
  switchButton.onclick=()=>switchTo(!active);
  const path=t=>[...t.path,t.meta||'未标注科技分类'];
  function reveal(t){let key='';for(const part of path(t)){key+='/'+part;open.add(key)}open.add('base/'+t.id);located=t.id;}
- function locate(t){onLocate();reveal(t);if(!active)switchTo(true);search.value='';render();if(!loaded)load();}
+ function locate(t){onLocate();if(!active)switchTo(true);search.value='';reveal(t);render();if(!loaded)load();}
  function edit(t,record=null,copy=false){
   const current=record&&!copy?record:null;
   openAbyssalWorkbench({type:t,record,copy,api,options:mutationOptions[t.id]||[],onSave:async fields=>{const saved=await api('abyssal-instance',{...(current?{id:current.id,revision:current.revision}:{}),baseTypeId:t.id,...fields});records=records.filter(x=>x.id!==saved.id).concat(saved);loaded=true;reveal(t);search.value='';render();}});
