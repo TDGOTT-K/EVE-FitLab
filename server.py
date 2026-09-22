@@ -199,6 +199,7 @@ class Handler(SimpleHTTPRequestHandler):
     self.send_response(303);self.send_header('Location',destination);self.send_header('Set-Cookie','fitlab-sso=; Path=/api/eve; HttpOnly; SameSite=Lax; Max-Age=0');self.send_header('Referrer-Policy','no-referrer');self.send_header('Cache-Control','no-store');self.end_headers();return
    if self.path.startswith('/api/'):return self.reply({'error':'接口不存在'},404)
    path=self.path.split('?')[0]
+   if re.fullmatch(r'/after-hours/[A-Za-z0-9_./-]+',path) and '..' not in path.split('/') and Path(path).suffix in {'.html','.css','.js','.wasm','.glb','.txt'}:return super().do_GET()
    if not(path=='/' or re.fullmatch(r'/[\w-]+\.(html|css|js)',path) or re.fullmatch(r'/data/(full-catalog|market-icons|locale-game)\.json',path) or re.fullmatch(r'/locales/(source|en|zh-TW|ja|de|ru|fr|legacy-aliases)\.json',path) or re.fullmatch(r'/assets/[\w-]+\.png',path)):return self.reply({'error':'资源不存在'},404)
    return super().do_GET()
   except Exception as e:self.reply({'error':str(e)},503)

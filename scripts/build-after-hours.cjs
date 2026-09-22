@@ -1,0 +1,12 @@
+const fs=require('node:fs'),path=require('node:path'),esbuild=require('esbuild');
+const root=path.resolve(__dirname,'..'),source=path.join(root,'output/ship-assets-probe/after-hours'),dest=path.join(root,'after-hours');
+fs.mkdirSync(dest,{recursive:true});
+for(const name of ['assets'])fs.cpSync(path.join(source,name),path.join(dest,name),{recursive:true});
+fs.copyFileSync(path.join(source,'style.css'),path.join(dest,'style.css'));
+const basis='vendor/three/examples/jsm/libs/basis';fs.mkdirSync(path.join(dest,basis),{recursive:true});
+for(const name of ['basis_transcoder.js','basis_transcoder.wasm'])fs.copyFileSync(path.join(source,basis,name),path.join(dest,basis,name));
+fs.copyFileSync(path.join(source,'vendor/three/LICENSE'),path.join(dest,'THREE-LICENSE.txt'));
+let html=fs.readFileSync(path.join(source,'index.html'),'utf8').replace(/<script type="importmap">.*?<\/script>/s,'');
+fs.writeFileSync(path.join(dest,'index.html'),html);
+esbuild.buildSync({entryPoints:[path.join(source,'game.js')],bundle:true,format:'esm',minify:true,outfile:path.join(dest,'game.js'),alias:{'three/addons':path.join(source,'vendor/three/examples/jsm'),'three':path.join(source,'vendor/three/build/three.module.js')}});
+console.log('Built bundled After Hours game');

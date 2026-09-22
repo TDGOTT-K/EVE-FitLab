@@ -22,7 +22,7 @@ web.mkdir(parents=True,exist_ok=True);target.mkdir(parents=True,exist_ok=True)
 for pattern in ['*.js','*.css','*.html']:
     for p in ROOT.glob(pattern): shutil.copy2(p,web/p.name)
 shutil.copy2(ROOT/'index.html',web/'index.html')
-for name in ['data','assets','locales']:shutil.copytree(ROOT/name,web/name,dirs_exist_ok=True)
+for name in ['data','assets','locales','after-hours']:shutil.copytree(ROOT/name,web/name,dirs_exist_ok=True)
 (web/'app-version.json').write_text(json.dumps({'version':json.loads((ROOT/'package.json').read_text(encoding='utf-8'))['version']}),encoding='utf-8')
 shutil.copy2(source/'UI-BASELINE.json',target/'UI-BASELINE.json')
 if manifest.name!='UI-BASELINE.json':shutil.copy2(manifest,target/manifest.name)
