@@ -1,11 +1,12 @@
+import {pilotPortrait} from './pilot-portrait.js';
 import {installLoadoutManager} from './loadout-manager.js';
 import {installSkillHover} from './skill-hover.js';
 import {completeSkillPrerequisites,skillPreset} from './character-skill-levels.js';
 import {createSkillPointDisplay,skillPointNote as pointNote} from './skill-points.js';
 import {matchesName,getLocale,gameNameMarkup} from './i18n.js';
-import {readPilotFolders,writePilotFolders,onPilotFoldersChanged} from './pilot-folders.js';
+import {readPilotFolders,writePilotFolders,onPilotFoldersChanged,initializePilotFolders,orderedPilots,reorderPilot} from './pilot-folders.js';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const portrait='<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><circle cx="16" cy="11" r="6"/><path d="M5 30v-4c0-8 22-8 22 0v4"/></svg>';
+
 export function installCharacterManager({api,catalog,onReturn}){
  const root=document.createElement('main');root.id='characters-page';root.hidden=true;
  root.innerHTML='<div class="character-heading"><div><small>CHARACTER ROSTER / 角色管理</small><h1>角色管理</h1></div></div><div class="character-workspace"><aside class="character-roster"><div class="character-tree-title"><span>角色</span><button id="character-add" aria-label="新增角色或文件夹" title="新增角色或文件夹">＋</button></div><div id="character-folder-editor" hidden></div><input id="character-search" aria-label="搜索角色" placeholder="搜索角色或文件夹"><div id="character-list" tabindex="0" aria-label="角色列表"></div><div class="character-tree-footer">Ctrl+C / V 复制粘贴 · 右键管理</div></aside><section class="character-editor"><div id="character-status" role="status"></div><div id="character-detail"></div></section></div>';
@@ -39,7 +40,7 @@ export function installCharacterManager({api,catalog,onReturn}){
  const cacheDraft=()=>{try{if(draft&&dirty)sessionStorage.setItem('fitlab-character-draft',JSON.stringify(draft));else sessionStorage.removeItem('fitlab-character-draft')}catch{}};
  async function guard(){if(!dirty)return true;if(!await ask('未保存的修改','尚有未保存的角色修改，是否放弃？',{accept:'放弃修改'}))return false;dirty=false;draft=null;cacheDraft();drawList();drawDetail();status('');return true}
 
- const icon=c=>c?.eveCharacterId?'<img src="https://images.evetech.net/characters/'+Number(c.eveCharacterId)+'/portrait?size=128" alt="">':portrait;
+ const icon=pilotPortrait;
  const folderIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 6h7l2 3h9v12H3Z"/></svg>';
  const folderOf=c=>folders.folders.some(f=>f.id===folders.assignment[String(c.id)])?folders.assignment[String(c.id)]:'';
  function saveFolders(){try{writePilotFolders(folders)}catch{status('文件夹保存失败，请检查浏览器存储')}}
@@ -79,6 +80,7 @@ export function installCharacterManager({api,catalog,onReturn}){
   }catch(e){detail.querySelector('[role=status]')?.replaceChildren(document.createTextNode('读取失败：'+e.message));}
  }
  function drawList(){
+  initializePilotFolders(folders,people);people=orderedPilots(people,folders,pointText);
   const q=$('#character-search').value.trim().toLowerCase();
   const row=c=>'<button class="character-person" draggable="true" data-character="'+esc(c.id)+'" aria-pressed="'+(selected?.id===c.id)+'">'+icon(c)+'<span>'+esc(displayName(c))+'<small>'+esc(c.source)+' · '+c.skills.filter(s=>s.level>0).length+' 项技能</small><small class="character-row-sp" title="'+esc(pointText.note(c))+'">'+pointText(c)+' SP</small></span></button>';
   $('#character-list').innerHTML=folders.folders.map(f=>{const rows=people.filter(c=>folderOf(c)===f.id),matches=rows.filter(c=>c.name.toLowerCase().includes(q)||f.name.toLowerCase().includes(q));if(q&&!matches.length&&!f.name.toLowerCase().includes(q))return '';return '<details class="character-folder" data-folder="'+esc(f.id)+'" '+((q||f.open!==false)?'open':'')+'><summary>'+folderIcon+'<span>'+esc(f.name)+'</span><small>'+rows.length+'</small></summary>'+matches.map(row).join('')+(!matches.length?'<div class="pilot-empty">拖入角色</div>':'')+'</details>'}).join('')+'<div class="character-root" data-folder=""><div class="character-root-label">未分组</div>'+people.filter(c=>!folderOf(c)&&c.name.toLowerCase().includes(q)).map(row).join('')+'</div>';
@@ -87,6 +89,9 @@ export function installCharacterManager({api,catalog,onReturn}){
    b.onclick=async()=>{if(!await guard())return;selected=c;activeFolder=folderOf(c);draft=null;dirty=false;status('');drawList();drawDetail();$('#character-list').focus({preventScroll:true})};
    const open=e=>menu(e,[['修改名称',()=>renameCharacter(c),editable(c)],['复制角色',()=>copyCharacter(c)],['编辑角色',()=>editCharacter(c),editable(c)],['删除角色',()=>deleteCharacter(c),!['内置','EdenOS 已保存快照'].includes(c.source)],...(c.source==='EVE 官网'?[['重新授权更新',login]]:[]),['移到未分组',()=>movePerson(c.id,'')],...folders.folders.map(f=>['移到 '+f.name,()=>movePerson(c.id,f.id)])]);
    b.oncontextmenu=open;b.onkeydown=e=>{if(e.key==='ContextMenu'||e.shiftKey&&e.key==='F10')open(e)};
+   b.ondragover=e=>{if(draggedPerson===null)return;e.preventDefault();e.stopPropagation();b.classList.toggle('drop-after',e.clientY>b.getBoundingClientRect().top+b.offsetHeight/2);b.classList.add('drop-target');};
+   b.ondragleave=()=>b.classList.remove('drop-target','drop-after');
+   b.ondrop=e=>{if(draggedPerson===null)return;e.preventDefault();e.stopPropagation();const id=draggedPerson;draggedPerson=null;reorderPilot(folders,people,id,c.id,e.clientY>b.getBoundingClientRect().top+b.offsetHeight/2,folderOf(c));};
    b.ondragstart=e=>{draggedPerson=c.id;e.dataTransfer.setData('text/plain',String(c.id));e.dataTransfer.effectAllowed='move'};b.ondragend=()=>{draggedPerson=null;root.querySelectorAll('.drop-target').forEach(e=>e.classList.remove('drop-target'))};
   });
   $('#character-list').querySelectorAll('[data-folder]').forEach(el=>{

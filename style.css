@@ -817,3 +817,6 @@ html:lang(zh-TW) body{font-family:'Segoe UI','Microsoft JhengHei',sans-serif}
 .character-skill-info{border:0;background:transparent;color:inherit;text-align:left;padding:0;cursor:pointer}.character-skill-info:hover{color:var(--accent);text-decoration:underline}#skill-presets{display:inline-flex;gap:4px;flex-wrap:wrap}.character-skill-toolbar{flex-wrap:wrap}
 
 .skill-hover{position:fixed;z-index:2000;width:340px;max-width:calc(100vw - 20px);padding:16px;background:var(--panel,#12202a);color:var(--text);border:1px solid var(--line);box-shadow:0 12px 36px #0007;pointer-events:none}.skill-hover[hidden]{display:none}.skill-hover p{white-space:pre-wrap;line-height:1.6}.skill-hover small{opacity:.6}.skill-level-box.preview-lit{background:#65bdca!important;box-shadow:0 0 8px #65bdca99;transform:translateY(-1px)}.group-skill-sp{margin-left:36px;margin-right:auto;color:var(--accent);font-size:12px}
+
+.character-person.drop-target,.pilot-tree-person.drop-target{box-shadow:inset 0 2px var(--accent)}
+.character-person.drop-target.drop-after,.pilot-tree-person.drop-target.drop-after{box-shadow:inset 0 -2px var(--accent)}
