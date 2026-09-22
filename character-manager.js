@@ -1,4 +1,5 @@
 import {installLoadoutManager} from './loadout-manager.js';
+import {installSkillHover} from './skill-hover.js';
 import {completeSkillPrerequisites,skillPreset} from './character-skill-levels.js';
 import {createSkillPointDisplay,skillPointNote as pointNote} from './skill-points.js';
 import {matchesName,getLocale,gameNameMarkup} from './i18n.js';
@@ -19,7 +20,10 @@ export function installCharacterManager({api,catalog,onReturn}){
  const contextMenu=document.createElement('div');contextMenu.className='character-context-menu';contextMenu.role='menu';contextMenu.hidden=true;document.body.append(contextMenu);
  const $=s=>root.querySelector(s),skills=catalog.filter(t=>t.kind==='skill').sort((a,b)=>a.name.localeCompare(b.name,'zh-CN'));
  const group=t=>t.path?.at(-1)||'其他技能';
- const pointText=createSkillPointDisplay(api,()=>{drawList();if($('#character-skill-points strong'))updateSkillSummary()});
+ const hover=installSkillHover(api);
+ const pointText=createSkillPointDisplay(api,()=>{drawList();if($('#character-skill-points strong')){updateSkillSummary();updateGroupPoints();}});
+ const displayName=c=>c.name.replace(/^全技能 (I|II|III|IV) · 对比角色$/,'技能 $1 · 对比角色');
+ function updateGroupPoints(){const c=current();if(!c)return;root.querySelectorAll('[data-group-sp]').forEach(el=>{const ids=new Set(skills.filter(t=>group(t)===el.dataset.groupSp).map(t=>t.id));el.textContent=pointText.group(c,ids)+' SP';el.title=pointText.note(c);});}
  function updateSkillSummary(){const c=current();if(!c)return;$('#character-skill-count').textContent=c.skills.filter(s=>s.level>0).length+' 项已学技能';$('#character-skill-points strong').textContent=pointText(c);$('#character-skill-points').title=pointText.note(c);}
 
  let people=[],selected=null,draft=null,dirty=false,loaded=false,generation=0;
@@ -61,7 +65,7 @@ export function installCharacterManager({api,catalog,onReturn}){
  async function createComparisonCharacters(){
   if(!await guard()||!await ask('创建技能对比角色','创建四个可独立编辑的 I、II、III、IV 级角色；必要前置技能按官方要求提高，船体等技能仍可分别微调。',{accept:'创建四个角色'}))return;
   let count=0;
-  try{for(let level=1;level<=4;level++){const result=skillPreset(skills,level);const c=await api('character',{name:'全技能 '+['','I','II','III','IV'][level]+' · 对比角色',skills:result.skills,source:'自定义角色'});people.push(c);if(activeFolder)movePerson(c.id,activeFolder);selected=c;count++;}status('已创建四个技能对比角色，可分别编辑并在装配中切换。');}
+  try{for(let level=1;level<=4;level++){const result=skillPreset(skills,level);const c=await api('character',{name:'技能 '+['','I','II','III','IV'][level]+' · 对比角色',skills:result.skills,source:'自定义角色'});people.push(c);if(activeFolder)movePerson(c.id,activeFolder);selected=c;count++;}status('已创建四个技能对比角色，可分别编辑并在装配中切换。');}
   catch(e){status('已创建 '+count+' 个角色；后续创建失败：'+e.message);}finally{drawList();drawDetail();}
  }
  function setAllSkills(level){const result=skillPreset(skills,level);draft.skills=result.skills;markDirty();drawSkills();status('已设置全技能 '+level+' 级'+(result.raised.length?'；'+result.raised.length+' 项前置技能已补至要求等级':'')+'，可继续微调后保存。');}
@@ -76,7 +80,7 @@ export function installCharacterManager({api,catalog,onReturn}){
  }
  function drawList(){
   const q=$('#character-search').value.trim().toLowerCase();
-  const row=c=>'<button class="character-person" draggable="true" data-character="'+esc(c.id)+'" aria-pressed="'+(selected?.id===c.id)+'">'+icon(c)+'<span>'+esc(c.name)+'<small>'+esc(c.source)+' · '+c.skills.filter(s=>s.level>0).length+' 项技能</small><small class="character-row-sp" title="'+esc(pointText.note(c))+'">'+pointText(c)+' SP</small></span></button>';
+  const row=c=>'<button class="character-person" draggable="true" data-character="'+esc(c.id)+'" aria-pressed="'+(selected?.id===c.id)+'">'+icon(c)+'<span>'+esc(displayName(c))+'<small>'+esc(c.source)+' · '+c.skills.filter(s=>s.level>0).length+' 项技能</small><small class="character-row-sp" title="'+esc(pointText.note(c))+'">'+pointText(c)+' SP</small></span></button>';
   $('#character-list').innerHTML=folders.folders.map(f=>{const rows=people.filter(c=>folderOf(c)===f.id),matches=rows.filter(c=>c.name.toLowerCase().includes(q)||f.name.toLowerCase().includes(q));if(q&&!matches.length&&!f.name.toLowerCase().includes(q))return '';return '<details class="character-folder" data-folder="'+esc(f.id)+'" '+((q||f.open!==false)?'open':'')+'><summary>'+folderIcon+'<span>'+esc(f.name)+'</span><small>'+rows.length+'</small></summary>'+matches.map(row).join('')+(!matches.length?'<div class="pilot-empty">拖入角色</div>':'')+'</details>'}).join('')+'<div class="character-root" data-folder=""><div class="character-root-label">未分组</div>'+people.filter(c=>!folderOf(c)&&c.name.toLowerCase().includes(q)).map(row).join('')+'</div>';
   $('#character-list').querySelectorAll('[data-character]').forEach(b=>{
    const c=people.find(c=>String(c.id)===b.dataset.character);
@@ -95,15 +99,18 @@ export function installCharacterManager({api,catalog,onReturn}){
   });
  }
  function drawSkills(){
+  hover.hide();
   const c=current();if(!c)return;
   const q=$('#skill-search').value.trim().toLowerCase(),learned=$('#skills-learned').checked;
   const levels=new Map(c.skills.map(s=>[s.skillTypeId,s.level]));
   const rows=skills.filter(t=>(!q||matchesName(t,q))&&(!learned||q||(levels.get(t.id)||0)>0));
   updateSkillSummary();
-  const skillRow=t=>{const level=levels.get(t.id)||0;return '<div class="character-skill"><span><button type="button" class="character-skill-info" data-skill-info="'+t.id+'" title="查看每级加成与技能说明">'+gameNameMarkup(t)+'</button>'+'<small>'+esc(group(t))+'</small></span><div class="skill-level-boxes" role="group" aria-label="'+esc(t.name)+'等级" data-skill="'+t.id+'" data-level="'+level+'">'+[1,2,3,4,5].map(n=>'<button type="button" class="skill-level-box '+(n<=level?'lit':'')+'" data-level="'+n+'" aria-label="'+esc(t.name)+' '+n+' 级" aria-pressed="'+(n<=level)+'" title="'+n+' 级 · 再次点击当前等级可清零" '+(!draft?'disabled':'')+'></button>').join('')+'</div></div>'};
-  $('#character-skills').innerHTML=[...new Set(rows.map(group))].map(g=>{const entries=rows.filter(t=>group(t)===g);return '<details class="character-skill-group" data-group="'+esc(g)+'" '+((q||skillOpen.has(g))?'open':'')+'><summary><span>'+esc(g)+'</span><small>'+entries.length+' 项</small></summary>'+entries.map(skillRow).join('')+'</details>'}).join('')||'<p class="pilot-empty">暂无已学技能。取消“仅已学习”或搜索技能以添加。</p>';
+  const skillRow=t=>{const level=levels.get(t.id)||0;return '<div class="character-skill"><span><button type="button" class="character-skill-info" data-skill-info="'+t.id+'" title="查看每级加成与技能说明">'+gameNameMarkup(t)+'</button>'+'<small>'+esc(group(t))+'</small></span><div class="skill-level-boxes" role="group" aria-label="'+esc(t.name)+'等级" data-skill="'+t.id+'" data-level="'+level+'">'+[1,2,3,4,5].map(n=>'<button type="button" class="skill-level-box '+(n<=level?'lit':'')+'" data-level="'+n+'" aria-label="'+esc(t.name)+' '+n+' 级" aria-pressed="'+(n<=level)+'" aria-disabled="'+(!draft)+'" '+'></button>').join('')+'</div></div>'};
+  $('#character-skills').innerHTML=[...new Set(rows.map(group))].map(g=>{const entries=rows.filter(t=>group(t)===g);return '<details class="character-skill-group" data-group="'+esc(g)+'" '+((q||skillOpen.has(g))?'open':'')+'><summary><span>'+esc(g)+'</span><span class="group-skill-sp" data-group-sp="'+esc(g)+'"></span><small>'+entries.length+' 项</small></summary>'+entries.map(skillRow).join('')+'</details>'}).join('')||'<p class="pilot-empty">暂无已学技能。取消“仅已学习”或搜索技能以添加。</p>';
   $('#character-skills').querySelectorAll('details').forEach(el=>el.ontoggle=()=>{if(!el.isConnected||q )return;if(el.open)skillOpen.add(el.dataset.group);else skillOpen.delete(el.dataset.group)});
-  $('#character-skills').querySelectorAll('[data-skill-info]').forEach(b=>b.onclick=()=>showSkill(Number(b.dataset.skillInfo)));
+  updateGroupPoints();
+  $('#character-skills').querySelectorAll('[data-skill-info]').forEach(b=>{const id=Number(b.dataset.skillInfo);b.removeAttribute('title');hover.bind(b,id,skills.find(t=>t.id===id)?.name);b.onclick=()=>showSkill(id);});
+  $('#character-skills').querySelectorAll('[data-skill]').forEach(el=>{const id=Number(el.dataset.skill);el.querySelectorAll('button').forEach(b=>{hover.bind(b,id,skills.find(t=>t.id===id)?.name,Number(b.dataset.level));b.addEventListener('mouseenter',()=>el.querySelectorAll('button').forEach(x=>x.classList.toggle('preview-lit',Number(x.dataset.level)<=Number(b.dataset.level))));});el.onmouseleave=()=>el.querySelectorAll('button').forEach(b=>b.classList.remove('preview-lit'));});
   $('#character-skills').querySelectorAll('[data-skill]').forEach(el=>el.querySelectorAll('button').forEach(button=>button.onclick=()=>{
    if(!draft)return;const id=Number(el.dataset.skill),n=Number(button.dataset.level),level=Number(el.dataset.level)===n?0:n;
    draft.skills=draft.skills.filter(s=>s.skillTypeId!==id);if(level)draft.skills.push({skillTypeId:id,level});el.dataset.level=level;

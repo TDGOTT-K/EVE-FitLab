@@ -24,5 +24,10 @@ export function createSkillPointDisplay(api,onReady=()=>{}){
   const reasons=result?.items?.filter(i=>i.reason).map(i=>i.typeId+': '+i.reason).join('；');
   return skillPointNote+'；'+(result?.pending?'正在读取':result?.reason||reasons||'技能点暂不可用');
  };
+ display.group=(character,ids)=>{
+  display(character);const result=cache.get(keyOf(character));
+  if(character.skillSnapshot){const entries=character.skillSnapshot.skills?.filter(s=>ids.has(s.skillTypeId));if(entries?.every(s=>Number.isFinite(s.skillPoints)))return entries.reduce((n,s)=>n+s.skillPoints,0).toLocaleString(getLocale());}
+  if(!result?.items)return '—';const items=result.items.filter(i=>ids.has(i.typeId));return items.every(i=>Number.isFinite(i.value))?items.reduce((n,i)=>n+i.value,0).toLocaleString(getLocale()):'—';
+ };
  return display;
 }
