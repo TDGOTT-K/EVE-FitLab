@@ -33,6 +33,7 @@ export function installPilotPicker(anchor,{api,select,current,catalog}){
   tree.querySelectorAll('[data-folder]').forEach(el=>{el.ondragover=e=>{if(dragged===null)return;e.preventDefault();e.stopPropagation();e.dataTransfer.dropEffect='move';el.classList.add('drop-target')};el.ondragleave=()=>el.classList.remove('drop-target');el.ondrop=e=>{if(dragged===null)return;e.preventDefault();e.stopPropagation();move(dragged,el.dataset.folder);dragged=null};if(el.tagName==='DETAILS'){const f=prefs.folders.find(f=>f.id===el.dataset.folder);el.ontoggle=()=>{if(el.isConnected&&!search.value&&f.open!==el.open){f.open=el.open;save()}};el.querySelector('summary').oncontextmenu=e=>context(e,[['重命名文件夹',()=>folderEditor(f)],['删除文件夹（角色移回根目录）',()=>{prefs.folders=prefs.folders.filter(x=>x.id!==f.id);save();draw()}]])}});
   tree.scrollTop=scrollTop;
  }
+ window.addEventListener('pilot-avatar-changed',()=>{if(!panel.hidden)draw()});
  onPilotFoldersChanged(()=>{prefs=readPilotFolders();if(!panel.hidden)draw()});
  anchor.onclick=async()=>{prefs=readPilotFolders();if(!panel.hidden){close();return}panel.hidden=false;anchor.setAttribute('aria-expanded','true');position();search.focus({preventScroll:true});error.textContent='';const token=++generation;loading=true;tree.textContent='正在读取驾驶员…';try{const result=await api('characters');if(token!==generation)return;characters=result;loading=false;draw(savedScroll)}catch(e){if(token===generation){error.textContent=e.message}}};
  anchor.setAttribute('aria-expanded','false');anchor.setAttribute('aria-controls',panel.id);

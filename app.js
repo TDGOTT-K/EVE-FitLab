@@ -962,3 +962,5 @@ const appUpdates=installAppUpdates({prepare:async()=>{
  const after=nativeHistory.state();if(after.busy||after.pending)throw Error('保存结果尚未确认，本次不安装更新。');
 }});
 const appAnnouncements=installAnnouncements({openUpdates:()=>{$('#app-settings').click();appUpdates.start();}});
+
+window.addEventListener('pilot-avatar-changed',()=>renderPilot());
