@@ -22,7 +22,7 @@ module.exports=String.raw`(async()=>{
  const sandboxShips=frame.contentDocument.querySelectorAll('#roster button').length;
  if(sandboxShips!==6)throw Error('Sandbox roster incomplete');
  document.querySelector('#manage-characters').click();if(document.querySelector('#sandbox-preview-overlay'))throw Error('Sandbox navigation stuck');
- const updater=await window.fitlabDesktop.updates.state();const packagedVersion=await (await fetch('/app-version.json')).json();if(!packagedVersion.version||updater.currentVersion!==packagedVersion.version)throw Error('Updater version mismatch');
+ const updater=await window.fitlabDesktop.updates.state();const packagedVersion=await api('version');if(!packagedVersion.version||updater.currentVersion!==packagedVersion.version)throw Error('Updater version mismatch');
  const backup=await api('update-backup',{});if(!backup.files)throw Error('Update backup missing');
  return {updater,updateBackup:backup,sandboxShips,sandboxNavigation:true,title:document.title,characters:chars.length,cpu:preview.attributes.cpuAvailable,desktop:!!window.fitlabDesktop,
   engineVersion:preview.engineVersion,source:preview.source,previewHash:preview.editPreview.candidateHash,
