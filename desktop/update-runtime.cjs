@@ -4,7 +4,7 @@ const {promisify}=require('node:util');
 const {createUpdateController}=require('./update-controller.cjs');
 function installUpdates({app,ipcMain,win,apiPort,apiKey,resources}){
  const pending=new Map();const trusted=e=>e.sender===win.webContents&&e.senderFrame===win.webContents.mainFrame;
- async function local(route,body){const r=await fetch(`http://127.0.0.1:${apiPort}/api/${route}`,{method:'POST',headers:{'X-FitLab-Key':apiKey,'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(300000)});const d=await r.json();if(!r.ok)throw Error(d.error?.message||d.error||'更新准备失败');return d;}
+ async function local(route,body){const origin=`http://127.0.0.1:${apiPort}`;const r=await fetch(`${origin}/api/${route}`,{method:'POST',headers:{'X-FitLab-Key':apiKey,'Content-Type':'application/json',Origin:origin},body:JSON.stringify(body),signal:AbortSignal.timeout(300000)});const d=await r.json();if(!r.ok)throw Error(d.error?.message||d.error||'更新准备失败');return d;}
  async function noAgent(){
   if(process.platform!=='win32')return;
   const {stdout}=await promisify(execFile)('powershell.exe',['-NoProfile','-NonInteractive','-Command',"$root=$env:FITLAB_UPDATE_RESOURCES; @(Get-CimInstance Win32_Process -ErrorAction Stop | Where-Object { ($_.ExecutablePath -and $_.ExecutablePath.StartsWith((Join-Path $root 'agent'),[StringComparison]::OrdinalIgnoreCase)) -or ($_.CommandLine -and $_.CommandLine.Contains((Join-Path $root 'nengine\\agent-runtime'))) }).Count"],{env:{...process.env,FITLAB_UPDATE_RESOURCES:resources},windowsHide:true,timeout:15000});
