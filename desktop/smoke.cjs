@@ -22,7 +22,7 @@ module.exports=String.raw`(async()=>{
  const sandboxShips=frame.contentDocument.querySelectorAll('#roster button').length;
  if(sandboxShips!==6)throw Error('Sandbox roster incomplete');
  document.querySelector('#manage-characters').click();if(document.querySelector('#sandbox-preview-overlay'))throw Error('Sandbox navigation stuck');
- document.querySelector('#developer-about').click();document.querySelector('#developer-play-game').click();
+ await new Promise(r=>setTimeout(r,300));document.querySelector('#developer-about').click();document.querySelector('#developer-play-game').click();
  const game=document.querySelector('.after-hours-overlay iframe');const gameDeadline=Date.now()+60000;
  while(!game.contentDocument?.querySelector('#start:not([disabled])')){if(Date.now()>gameDeadline)throw Error('Bundled game failed to load: '+game.contentDocument?.querySelector('#load')?.textContent);await new Promise(r=>setTimeout(r,200));}
  game.contentDocument.querySelector('#start').click();if(game.contentDocument.querySelector('#hud').hidden)throw Error('Bundled game did not start');
