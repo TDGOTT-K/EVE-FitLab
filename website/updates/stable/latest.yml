@@ -1,8 +1,8 @@
-version: 0.1.4
+version: 0.1.5
 files:
-  - url: https://github.com/TDGOTT-K/EVE-FitLab/releases/download/v0.1.4/EVE-FitLab-0.1.4-Windows-x64-Setup.exe
-    sha512: 71LG/rGKeT5vvBaVjenAiYzpt19U7SxGRypB8u6LAEvYajraOt4Kn0yGsDGUW2aDLed5Ck5+cGe+j3Qt0dtfpQ==
-    size: 228851421
-path: https://github.com/TDGOTT-K/EVE-FitLab/releases/download/v0.1.4/EVE-FitLab-0.1.4-Windows-x64-Setup.exe
-sha512: 71LG/rGKeT5vvBaVjenAiYzpt19U7SxGRypB8u6LAEvYajraOt4Kn0yGsDGUW2aDLed5Ck5+cGe+j3Qt0dtfpQ==
-releaseDate: '2026-09-22T13:48:14.815Z'
+  - url: https://github.com/TDGOTT-K/EVE-FitLab/releases/download/v0.1.5/EVE-FitLab-0.1.5-Windows-x64-Setup.exe
+    sha512: hTyxTUIhEGBJgsUI9fU96b1s7ppbSMqh0xNT1/kZWT/m8TNRU4zw6DWUXoe3aqwzcWLtEElUiHh+aSOdLY9+aw==
+    size: 252395222
+path: https://github.com/TDGOTT-K/EVE-FitLab/releases/download/v0.1.5/EVE-FitLab-0.1.5-Windows-x64-Setup.exe
+sha512: hTyxTUIhEGBJgsUI9fU96b1s7ppbSMqh0xNT1/kZWT/m8TNRU4zw6DWUXoe3aqwzcWLtEElUiHh+aSOdLY9+aw==
+releaseDate: '2026-09-22T14:48:04.524Z'
