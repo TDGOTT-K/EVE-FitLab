@@ -100,7 +100,7 @@ export function installCharacterManager({api,catalog,onReturn}){
    if(el.tagName==='DETAILS'){
     const f=folders.folders.find(f=>f.id===el.dataset.folder);el.querySelector('summary').onclick=()=>{activeFolder=f.id};
     el.ontoggle=()=>{if(!el.isConnected||q||f.open===el.open)return;f.open=el.open;saveFolders()};
-    el.querySelector('summary').oncontextmenu=e=>{activeFolder=f.id;menu(e,[['粘贴',()=>pasteFromClipboard(f.id)],['在此新建角色',newCharacter],['重命名文件夹',()=>editFolder(f)],['删除文件夹（角色移到未分组）',()=>{folders=readPilotFolders();folders.folders=folders.folders.filter(x=>x.id!==f.id);for(const id in folders.assignment)if(folders.assignment[id]===f.id)delete folders.assignment[id];activeFolder='';saveFolders()}]])};
+    el.querySelector('summary').oncontextmenu=e=>{activeFolder=f.id;menu(e,[['粘贴',()=>pasteFromClipboard(f.id)],['在此新建角色',newCharacter],['从 EVE 官网导入',login],['重命名文件夹',()=>editFolder(f)],['删除文件夹（角色移到未分组）',()=>{folders=readPilotFolders();folders.folders=folders.folders.filter(x=>x.id!==f.id);for(const id in folders.assignment)if(folders.assignment[id]===f.id)delete folders.assignment[id];activeFolder='';saveFolders()}]])};
    }
   });
  }
