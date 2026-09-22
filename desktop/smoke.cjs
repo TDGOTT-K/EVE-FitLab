@@ -26,7 +26,7 @@ module.exports=String.raw`(async()=>{
  const game=document.querySelector('.after-hours-overlay iframe');const gameDeadline=Date.now()+60000;
  while(!game.contentDocument?.querySelector('#start:not([disabled])')){if(Date.now()>gameDeadline)throw Error('Bundled game failed to load: '+game.contentDocument?.querySelector('#load')?.textContent);await new Promise(r=>setTimeout(r,200));}
  game.contentDocument.querySelector('#start').click();if(game.contentDocument.querySelector('#hud').hidden)throw Error('Bundled game did not start');
- document.querySelector('.after-hours-bar button').click();if(document.querySelector('.after-hours-overlay'))throw Error('Game did not close');
+ document.querySelector('.after-hours-bar button').click();await new Promise(r=>setTimeout(r,100));if(document.querySelector('.after-hours-overlay'))throw Error('Game did not close');
  const updater=await window.fitlabDesktop.updates.state();const packagedVersion=await api('version');if(!packagedVersion.version||updater.currentVersion!==packagedVersion.version)throw Error('Updater version mismatch');
  const backup=await api('update-backup',{});if(!backup.files)throw Error('Update backup missing');
  return {afterHoursGame:true,updater,updateBackup:backup,sandboxShips,sandboxNavigation:true,title:document.title,characters:chars.length,cpu:preview.attributes.cpuAvailable,desktop:!!window.fitlabDesktop,
