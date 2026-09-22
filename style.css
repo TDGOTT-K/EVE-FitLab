@@ -811,3 +811,7 @@ html:lang(zh-TW) body{font-family:'Segoe UI','Microsoft JhengHei',sans-serif}
 .fit-breadcrumb button{flex-shrink:0}
 #fit-action-bottom{flex-wrap:wrap}
 #fit-action-bottom .fit-edit-tools{flex-shrink:1;max-width:100%;flex-wrap:wrap}
+
+
+/* Character skill references and editable level presets. */
+.character-skill-info{border:0;background:transparent;color:inherit;text-align:left;padding:0;cursor:pointer}.character-skill-info:hover{color:var(--accent);text-decoration:underline}#skill-presets{display:inline-flex;gap:4px;flex-wrap:wrap}.character-skill-toolbar{flex-wrap:wrap}

@@ -470,14 +470,8 @@ async function navigateFitPage(){
  document.title=t(next==='characters'?'EVE FitLab · 角色管理':next==='library'?'EVE FitLab · 装配库':'EVE FitLab · 装配工作台');
  restorePageScroll(next);
  if(next==='library'&&!(previous==='characters'&&libraryLoaded)){
-  const pending=leavingEditor?{id:fitRecord.id,snapshot:currentFit()}:null;
-  if(pending)libraryNavigationSaves.set(pending.id,pending);
   if(libraryLoaded||libraryFits.length){libraryTree.update(libraryFits);drawFitLibrary();restorePageScroll(next);}
-  else $('#library-list').innerHTML='<div class="library-empty">正在读取装配库…</div>';
-  if(leavingEditor){
-   try{const saved=await persistFit();const index=libraryFits.findIndex(f=>f.id===pending.id);if(index>=0&&sameSavedContent(libraryFits[index],pending.snapshot))libraryFits[index]=saved;}catch(e){say('草稿已保留，保存失败：'+e.message)}
-   finally{if(libraryNavigationSaves.get(pending.id)===pending){libraryNavigationSaves.delete(pending.id);if(pageMode==='library')drawFitLibrary();}}
-  }
+  else $('#library-list').innerHTML='<div class="library-empty">'+t('正在读取装配库…')+'</div>';
   if(version!==navigationVersion)return;
   try{const fits=await api('library');if(version!==navigationVersion)return;libraryFits=fits.sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||''));
  const draft=JSON.parse(localStorage.getItem('fitlab-working-draft')||'null');
