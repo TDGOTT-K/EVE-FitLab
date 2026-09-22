@@ -2,6 +2,15 @@
   "schemaVersion": 1,
   "announcements": [
     {
+      "id": "release-0.1.4",
+      "kind": "update",
+      "version": "0.1.4",
+      "title": "FitLab v0.1.4 公开测试版已发布",
+      "body": "修复装配退出保存和下载面板交互问题。\n完善技能累计加成、分类技能点、对比角色及前置技能。\n新增角色分组排序、16 个内置头像和图片上传。\n补齐角色与脑插方案右键复制粘贴及官网导入入口。\n点击立即更新即可检查并下载；完成后保存并重启安装。",
+      "publishedAt": "2026-09-22T13:44:41.057525+00:00",
+      "startup": true
+    },
+    {
       "id": "release-0.1.3",
       "kind": "update",
       "version": "0.1.3",
