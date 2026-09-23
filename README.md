@@ -79,4 +79,7 @@ python scripts/check-phase1.py
 
 深海的鱼 · EVE ID **ImFishMan** · [官网](https://imfishman.com/) · [支持开发](SPONSOR.md)
 
-原创代码采用 [MIT](LICENSE)；CCP 游戏数据与图像、第三方组件分别遵循其权利和许可，见 [第三方声明](THIRD_PARTY_NOTICES.md)。本项目与 CCP Games 无隶属或背书关系。
+原创代码采用 [GNU AGPL v3（AGPL-3.0-only）](LICENSE)；CCP 游戏数据与图像、第三方组件分别遵循其权利和许可，见 [第三方声明](THIRD_PARTY_NOTICES.md)。本项目与 CCP Games 无隶属或背书关系。
+
+
+自本次许可证变更起，本项目原创代码以 GNU AGPL 第 3 版授权（仅此版本）。分发衍生作品及通过网络向用户提供修改版服务时，须遵守协议中的对应源码提供义务；详见 [授权说明](LICENSING.md)。先前已按 MIT 发布的版本仍保留其原有授权。

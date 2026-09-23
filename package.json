@@ -102,7 +102,7 @@
       }
     ]
   },
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "homepage": "https://imfishman.com/",
   "repository": {
     "type": "git",

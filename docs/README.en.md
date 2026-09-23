@@ -16,3 +16,8 @@ The UI includes fitting libraries, skills, abyssal items, implants/boosters, fig
 Run `npm run check:ui`, `npm run check:locales`, `npm run test:i18n`, `npm run test:share-code`. Install `requirements-dev.txt` before running `python scripts/check-phase1.py`, which additionally requires the engine and fixed data and uses temporary state. These checks do not certify complete game mechanics or a release installer.
 
 See [documentation](README.md), [desktop packaging](../desktop/README.md), [cleanup scope](workspace-cleanup.md) and [contributing](../CONTRIBUTING.md). The website's historical downloads and the package version are not a release announcement for this development snapshot.
+
+
+## License
+
+Original FitLab code is licensed under [GNU AGPL v3 only](../LICENSE) (`AGPL-3.0-only`). Distribution and modified versions offered for remote network interaction carry the corresponding source obligations specified in the license. Previously published MIT versions retain their original grants. Third-party components, CCP assets and separately maintained NEngine sources retain their own terms; see [licensing](../LICENSING.md) and [third-party notices](../THIRD_PARTY_NOTICES.md).
