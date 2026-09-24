@@ -785,11 +785,11 @@ window.siteTranslations = {
     "en": "Download beta",
     "ja": "ベータ版をダウンロード"
   },
-  "由 GitHub Releases 提供下载。": {
-    "zh-CN": "由 GitHub Releases 提供下载。",
-    "zh-TW": "由 GitHub Releases 提供下載。",
-    "en": "Downloads hosted on GitHub Releases.",
-    "ja": "GitHub Releases からダウンロードします。"
+  "由 Cloudflare 提供加速下载。": {
+    "zh-CN": "由 Cloudflare 提供加速下载。",
+    "zh-TW": "由 Cloudflare 提供加速下載。",
+    "en": "Downloads accelerated by Cloudflare.",
+    "ja": "Cloudflare 経由で高速ダウンロードできます。"
   },
   "发行说明与下载文件 ↗": {
     "zh-CN": "发行说明与下载文件 ↗",
